@@ -665,6 +665,9 @@ static struct attribute *node_state_attrs[] = {
 #ifdef CONFIG_HIGHMEM
 	&node_state_attr[N_HIGH_MEMORY].attr.attr,
 #endif
+	//<<<2018.03.05 Yongseob
+	&node_state_attr[N_PRAM].attr.attr,
+	//>>>
 	&node_state_attr[N_MEMORY].attr.attr,
 	&node_state_attr[N_CPU].attr.attr,
 	NULL
