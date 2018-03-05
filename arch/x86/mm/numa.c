@@ -21,11 +21,20 @@
 
 int numa_off;
 nodemask_t numa_nodes_parsed __initdata;
-
+//<<<2018.03.05 Yongseob
+nodemask_t numa_nodes_parsed_pram __initdata;
+//>>>
 struct pglist_data *node_data[MAX_NUMNODES] __read_mostly;
 EXPORT_SYMBOL(node_data);
 
 static struct numa_meminfo numa_meminfo
+#ifndef CONFIG_MEMORY_HOTPLUG
+__initdata
+#endif
+;
+//<<<2018.03.05 Yongseob
+static struct numa_meminfo numa_meminfo_pram
+//>>>
 #ifndef CONFIG_MEMORY_HOTPLUG
 __initdata
 #endif
@@ -676,7 +685,64 @@ static int __init numa_init(int (*init_func)(void))
 
 	return 0;
 }
+//<<<2018.03.05 Yongseob
+static int __init numa_init_pram(int (*init_func)(void))
+{
+	int i;
+	int ret;
 
+	for (i = 0; i < MAX_LOCAL_APIC; i++)
+		set_apicid_to_node(i, NUMA_NO_NODE);
+
+	nodes_clear(numa_nodes_parsed_pram);
+	nodes_clear(node_possible_map);
+	nodes_clear(node_online_map);
+	memset(&numa_meminfo_pram, 0, sizeof(numa_meminfo_pram));
+	WARN_ON(memblock_set_node(0, ULLONG_MAX, &memblock.pram,
+				  MAX_NUMNODES));
+	//WARN_ON(memblock_set_node(0, ULLONG_MAX, &memblock.reserved,
+	//			  MAX_NUMNODES));
+	/* In case that parsing SRAT failed. */
+	WARN_ON(memblock_clear_hotplug(0, ULLONG_MAX));
+	numa_reset_distance();
+
+	ret = init_func();
+	if (ret < 0)
+		return ret;
+
+	/*
+	 * We reset memblock back to the top-down direction
+	 * here because if we configured ACPI_NUMA, we have
+	 * parsed SRAT in init_func(). It is ok to have the
+	 * reset here even if we did't configure ACPI_NUMA
+	 * or acpi numa init fails and fallbacks to dummy
+	 * numa init.
+	 */
+	memblock_set_bottom_up(false);
+
+	ret = numa_cleanup_meminfo(&numa_meminfo_pram);
+	if (ret < 0)
+		return ret;
+
+	numa_emulation(&numa_meminfo_pram, numa_distance_cnt);
+
+	ret = numa_register_memblks(&numa_meminfo_pram);
+	if (ret < 0)
+		return ret;
+
+	for (i = 0; i < nr_cpu_ids; i++) {
+		int nid = early_cpu_to_node(i);
+
+		if (nid == NUMA_NO_NODE)
+			continue;
+		if (!node_online(nid))
+			numa_clear_node(i);
+	}
+	numa_init_array();
+
+	return 0;
+}
+//>>>
 /**
  * dummy_numa_init - Fallback dummy NUMA init
  *
@@ -721,6 +787,23 @@ void __init x86_numa_init(void)
 
 	numa_init(dummy_numa_init);
 }
+//<<<2018.03.05 Yongseob
+void __init x86_numa_init_pram(void)
+{
+	if (!numa_off) {
+#ifdef CONFIG_ACPI_NUMA
+		if (!numa_init_pram(x86_acpi_numa_init))
+			return;
+#endif
+#ifdef CONFIG_AMD_NUMA
+//		if (!numa_init(amd_numa_init))
+			return;
+#endif
+	}
+return;
+//	numa_init(dummy_numa_init);
+}
+//>>>
 
 static void __init init_memory_less_node(int nid)
 {

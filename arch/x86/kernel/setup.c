@@ -1252,8 +1252,8 @@ void __init setup_arch(char **cmdline_p)
 	early_acpi_boot_init();
 
 	initmem_init();
-	//<<<2018.02.14 Yongsebo
-	initpram_init();
+	//<<<2018.02.14 Yongseob
+	//initpram_init();
 	//>>>
 	dma_contiguous_reserve(max_pfn_mapped << PAGE_SHIFT);
 

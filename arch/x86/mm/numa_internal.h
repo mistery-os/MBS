@@ -21,7 +21,9 @@ int __init numa_cleanup_meminfo(struct numa_meminfo *mi);
 void __init numa_reset_distance(void);
 
 void __init x86_numa_init(void);
-
+//<<<2018.03.05 Yongseob
+void __init x86_numa_init_pram(void);
+//>>>
 #ifdef CONFIG_NUMA_EMU
 void __init numa_emulation(struct numa_meminfo *numa_meminfo,
 			   int numa_dist_cnt);

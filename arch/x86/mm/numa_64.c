@@ -11,3 +11,9 @@ void __init initmem_init(void)
 {
 	x86_numa_init();
 }
+//<<<2018.03.05 Yongseob
+void __init initpram_init(void)
+{
+	x86_numa_init_pram();
+}
+//>>>
