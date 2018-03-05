@@ -6,7 +6,7 @@ EXTRAVERSION =
 NAME = Petit Gorille
 #2018.03.05 Yongseob
 #https://stackoverflow.com/questions/1704907/how-can-i-get-my-c-code-to-automatically-print-out-its-git-version-hash
-EXTRAVERSION :=-$(shell git describe --abbrev=7 --dirty --always --tags)
+#EXTRAVERSION :=-$(shell git describe --abbrev=7 --dirty --always --tags)
 # *DOCUMENTATION*
 # To see a list of typical targets execute "make help"
 # More info can be located in ./README
