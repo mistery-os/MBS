@@ -5658,7 +5658,7 @@ void __init sparse_memory_present_with_active_regions(int nid)
 	for_each_mem_pfn_range(i, nid, &start_pfn, &end_pfn, &this_nid)
 		memory_present(this_nid, start_pfn, end_pfn);
 	//<<<2018.02.14 Yongseob
-	for_each_pram_pfn_range(i_pram, nid_pram, &start_pfn_pram, &end_pfn_pram, &this_nid_pram)
+	for_each_pram_pfn_range(i_pram, nid, &start_pfn_pram, &end_pfn_pram, &this_nid_pram)
 		memory_present(this_nid_pram, start_pfn_pram, end_pfn_pram);
 	//>>>
 }
