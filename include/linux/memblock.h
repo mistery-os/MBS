@@ -92,7 +92,7 @@ int memblock_free(phys_addr_t base, phys_addr_t size);
 int memblock_reserve(phys_addr_t base, phys_addr_t size);
 void memblock_trim_memory(phys_addr_t align);
 //<<<2018.02.13 Yongseob
-void memblock_trim_memory_pram(phys_addr_t align);
+void memblock_trim_pram(phys_addr_t align);
 //>>>
 bool memblock_overlaps_region(struct memblock_type *type,
 			      phys_addr_t base, phys_addr_t size);

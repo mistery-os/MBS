@@ -845,7 +845,7 @@ unsigned long __init e820__end_of_low_ram_pfn(void)
 	return e820_end_pfn(1UL << (32 - PAGE_SHIFT), E820_TYPE_RAM);
 }
 //<<<2018.02.13 Yongseob
-static unsigned long __init e820__end_pfn_pram(unsigned long limit_pfn, enum e820_type type)
+static unsigned long __init e820_end_pfn_pram(unsigned long limit_pfn, enum e820_type type)
 {
 	int i;
 	unsigned long last_pfn = 0;
@@ -853,8 +853,8 @@ static unsigned long __init e820__end_pfn_pram(unsigned long limit_pfn, enum e82
 
 	for (i = 0; i < e820_table->nr_entries; i++) {
 		struct e820_entry *entry = &e820_table->entries[i];
-		unsigned long start_pfn;
-		unsigned long end_pfn;
+		unsigned long start_pfn_pram;
+		unsigned long end_pfn_pram;
 
 		if (entry->type != type)
 			continue;

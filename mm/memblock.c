@@ -71,6 +71,9 @@ static bool system_has_some_mirror __initdata_memblock = false;
 static int memblock_can_resize __initdata_memblock;
 static int memblock_memory_in_slab __initdata_memblock = 0;
 static int memblock_reserved_in_slab __initdata_memblock = 0;
+//<<<2018.03.05 Yongseob
+static int memblock_pram_in_slab __initdata_memblock = 0;
+//>>>
 
 ulong __init_memblock choose_memblock_flags(void)
 {
@@ -366,7 +369,7 @@ static int __init_memblock memblock_double_array(struct memblock_type *type,
 	if (type == &memblock.memory)
 		in_slab = &memblock_memory_in_slab;
 	//<<<2018.02.13 Yongseob
-	else if (type == &memblock_pram)
+	else if (type == &memblock.pram)
 		in_slab = &memblock_pram_in_slab;
 	//>>>
 	else

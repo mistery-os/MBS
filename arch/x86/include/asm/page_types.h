@@ -71,7 +71,9 @@ extern unsigned long init_memory_mapping(unsigned long start,
 					 unsigned long end);
 
 extern void initmem_init(void);
-
+//<<<2018.03.05 Yongseob
+extern void initpram_init(void);
+//>>>
 #endif	/* !__ASSEMBLY__ */
 
 #endif	/* _ASM_X86_PAGE_DEFS_H */
