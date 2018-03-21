@@ -645,6 +645,10 @@ static int __init numa_init(int (*init_func)(void))
 				  MAX_NUMNODES));
 	WARN_ON(memblock_set_node(0, ULLONG_MAX, &memblock.reserved,
 				  MAX_NUMNODES));
+	//<<<2018.03.21 Yongseob
+	WARN_ON(memblock_set_node(0, ULLONG_MAX, &memblock.pram,
+				  MAX_NUMNODES));
+	//>>>
 	/* In case that parsing SRAT failed. */
 	WARN_ON(memblock_clear_hotplug(0, ULLONG_MAX));
 	numa_reset_distance();

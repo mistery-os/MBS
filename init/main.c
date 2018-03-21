@@ -532,7 +532,7 @@ asmlinkage __visible void __init start_kernel(void)
 	boot_cpu_init();
 	page_address_init();
 	pr_notice("%s", linux_banner);
-	setup_arch(&command_line);
+	setup_arch(&command_line);// arch/x86/kernel/setup.c
 	/*
 	 * Set up the the initial canary and entropy after arch
 	 * and after adding latent and command line entropy.
@@ -583,7 +583,7 @@ asmlinkage __visible void __init start_kernel(void)
 	 * timer interrupt). Full topology setup happens at smp_init()
 	 * time - but meanwhile we still have a functioning scheduler.
 	 */
-	sched_init();
+	sched_init();// kernel/sched/core.c
 	/*
 	 * Disable preemption - early bootup scheduling is extremely
 	 * fragile until we cpu_idle() for the first time.

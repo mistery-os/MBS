@@ -9,7 +9,7 @@
 
 void __init initmem_init(void)
 {
-	x86_numa_init();
+	x86_numa_init();// arch/x86/mm/numa.c
 }
 //<<<2018.03.05 Yongseob
 void __init initpram_init(void)

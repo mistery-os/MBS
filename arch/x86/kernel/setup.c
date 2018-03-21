@@ -1251,7 +1251,7 @@ void __init setup_arch(char **cmdline_p)
 
 	early_acpi_boot_init();
 
-	initmem_init();
+	initmem_init();// arch/x86/mm/numa_64.c
 	//<<<2018.02.14 Yongseob
 	//initpram_init();
 	//>>>

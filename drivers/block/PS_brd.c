@@ -1,7 +1,7 @@
 /*
  * Persistent Ram backed block device driver.
  *
- * Copyright (C) 2017 Yongseob. Yi
+ * Copyright (C) 2017 Yongseob LEE
  * Copyright (C) 2007 Nick Piggin
  * Copyright (C) 2007 Novell Inc.
  *
@@ -33,7 +33,7 @@
 #define PAGE_SECTORS		(1 << PAGE_SECTORS_SHIFT)
 
 extern struct memblock memblock;
-extern void *vmalloc_PS(unsigned long size, int node, gfp_t flags);
+extern void *vmalloc_pram(unsigned long size, int node, gfp_t flags);
 /*
  * Each block persistent ramdisk device has a radix_tree PS_brd_pages of pages
  * that stores the pages containing the block device's contents.
@@ -118,12 +118,11 @@ static struct page *PS_brd_insert_page(struct PS_brd_device *PS_brd, sector_t se
 	 * restriction might be able to be lifted.
 	 */
 	gfp_flags = GFP_NOIO | __GFP_ZERO;
-#ifdef CONFIG_ZONE_PSTORAGE
-//	gfp_flags |= __GFP_PSTORAGE | __GFP_THISNODE;
-	gfp_flags |= __GFP_PSTORAGE;
-#endif
+	//	
+//	gfp_flags |= __GFP_PRAM | __GFP_THISNODE;
+	gfp_flags |= __GFP_PRAM;
 //	page = alloc_page(gfp_flags);
-	page = vmalloc_PS(memblock.pstorage.total_size, NUMA_NO_NODE, gfp_flags);
+	page = vmalloc_pram(memblock.pram.total_size, NUMA_NO_NODE, gfp_flags);
 	if (!page)
 		return NULL;
 
@@ -403,10 +402,10 @@ static long PS_brd_direct_access(struct block_device *bdev, sector_t sector,
 //	*kaddr = page_address(page);
 //	*pfn = page_to_pfn_t(page);
 	*kaddr = page_address(page);
-	//*pfn = memblock.pstorage.regions.base;;
+	//*pfn = memblock.pram.regions.base;;
 	*pfn = page_to_pfn_t(page);
 	
-	return memblock.pstorage.total_size;
+	return memblock.pram.total_size;
 	return PAGE_SIZE;
 }
 #else
@@ -462,8 +461,8 @@ module_param(PS_rd_nr, int, S_IRUGO);
 MODULE_PARM_DESC(PS_rd_nr, "Maximum number of PS_brd devices");
 
 int PS_rd_size = CONFIG_BLK_DEV_PS_RAM_SIZE;
-//phys_addr_t PS_rd_size = memblock.pstorage.total_size/1024 ;/*convert to kbyte*/
-//int PS_rd_size= memblock.pstorage.total_size/1024 ;/*convert to kbyte*/
+//phys_addr_t PS_rd_size = memblock.pram.total_size/1024 ;/*convert to kbyte*/
+//int PS_rd_size= memblock.pram.total_size/1024 ;/*convert to kbyte*/
 module_param(PS_rd_size, int, S_IRUGO);
 MODULE_PARM_DESC(PS_rd_size, "Size of total  PRAM/PMEM disk in kbytes.");
 
@@ -497,8 +496,8 @@ static struct PS_brd_device *PS_brd_alloc(int i)
 	struct PS_brd_device *PS_brd;
 	struct gendisk *disk;
 
-	PS_rd_size= memblock.pstorage.total_size/1024 ;/*convert to kbyte*/
-	PS_brd = kzalloc(sizeof(*PS_brd), GFP_KERNEL | __GFP_PSTORAGE | __GFP_THISNODE);
+	PS_rd_size= memblock.pram.total_size/1024 ;/*convert to kbyte*/
+	PS_brd = kzalloc(sizeof(*PS_brd), GFP_KERNEL | __GFP_PRAM | __GFP_THISNODE);
 	//PS_brd = kzalloc(sizeof(*PS_brd), GFP_KERNEL);
 	if (!PS_brd)
 		goto out;
@@ -645,8 +644,8 @@ static int __init PS_brd_init(void)
 			THIS_MODULE, PS_brd_probe, NULL, NULL);
 
 	pr_info("PS_brd: module loaded\n");
-	pr_info("pstorage zone total size : [ %#018Lx ]\n",
-			(u64)memblock.pstorage.total_size);
+	pr_info("pram zone total size : [ %#018Lx ]\n",
+			(u64)memblock.pram.total_size);
 	return 0;
 
 out_free:

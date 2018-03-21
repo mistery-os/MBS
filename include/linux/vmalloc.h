@@ -69,6 +69,9 @@ static inline void vmalloc_init(void)
 #endif
 
 extern void *vmalloc(unsigned long size);
+//<<<2018.03.21 Yongseob
+extern void *vmalloc_pram(unsigned long size, int node, gfp_t flags);
+//>>>
 extern void *vzalloc(unsigned long size);
 extern void *vmalloc_user(unsigned long size);
 extern void *vmalloc_node(unsigned long size, int node);

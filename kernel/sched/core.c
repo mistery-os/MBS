@@ -5798,8 +5798,8 @@ void __init sched_init(void)
 	int i, j;
 	unsigned long alloc_size = 0, ptr;
 
-	sched_clock_init();
-	wait_bit_init();
+	sched_clock_init();// kernel/sched/clock.c
+	wait_bit_init();// kernel/sched/wait_bit.c
 
 #ifdef CONFIG_FAIR_GROUP_SCHED
 	alloc_size += 2 * nr_cpu_ids * sizeof(void **);
