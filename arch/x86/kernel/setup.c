@@ -1040,7 +1040,7 @@ void __init setup_arch(char **cmdline_p)
 		early_dump_pci_devices();
 #endif
 
-	e820__reserve_setup_data();
+	e820__reserve_setup_data(); //arch/x86/kernel/e820.c
 	e820__finish_early_params();
 
 	if (efi_enabled(EFI_BOOT))
@@ -1093,7 +1093,7 @@ void __init setup_arch(char **cmdline_p)
 	if (mtrr_trim_uncached_memory(max_pfn)) {
 		max_pfn = e820__end_of_ram_pfn();
 		//<<<2018.02.13 Yongseob
-		max_pfn_pram = e820__end_of_pram_pfn();
+		max_pfn_pram = e820__end_of_pram_pfn();//arch/x86/kernel/e820.c
 		//>>>
 	}
 	max_possible_pfn = max_pfn;
@@ -1156,7 +1156,7 @@ void __init setup_arch(char **cmdline_p)
 	cleanup_highmap();
 
 	memblock_set_current_limit(ISA_END_ADDRESS);
-	e820__memblock_setup();
+	e820__memblock_setup(); // arch/x86/kernel/e820.c
 
 	if (!early_xdbc_setup_hardware())
 		early_xdbc_register_console();
