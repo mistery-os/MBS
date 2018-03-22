@@ -848,8 +848,8 @@ unsigned long __init e820__end_of_low_ram_pfn(void)
 static unsigned long __init e820_end_pfn_pram(unsigned long limit_pfn, enum e820_type type)
 {
 	int i;
-	unsigned long last_pfn = 0;
-	unsigned long max_arch_pfn = MAX_ARCH_PFN;
+//	unsigned long last_pfn = 0;
+	unsigned long first_arch_pfn = MAX_ARCH_PFN;
 
 	for (i = 0; i < e820_table->nr_entries; i++) {
 		struct e820_entry *entry = &e820_table->entries[i];
@@ -864,18 +864,18 @@ static unsigned long __init e820_end_pfn_pram(unsigned long limit_pfn, enum e820
 
 		printk(KERN_DEBUG "e820: PRAM type = ");
 		e820_print_type(entry->type);
-		printk(KERN_DEBUG "e820: PRAM start_pfn = %#lx "
-				"end_pfn = %#lx\n",
+		printk(KERN_DEBUG "e820: PRAM start_pfn_pram = %#lx "
+				"end_pfn_pram = %#lx\n",
 				start_pfn_pram, end_pfn_pram);
 
-		if (start_pfn_pram > max_arch_pfn)
+		if (start_pfn_pram > first_arch_pfn)
 			continue;
-		if (start_pfn_pram <= max_arch_pfn) 
-			max_arch_pfn = start_pfn_pram;
+		if (start_pfn_pram <= first_arch_pfn) 
+			first_arch_pfn = start_pfn_pram;
 	}
-	pr_info("e820: PRAM max_arch_pfn = %#lx\n",
-			  max_arch_pfn);
-	return max_arch_pfn;
+	pr_info("e820: PRAM first_arch_pfn = %#lx\n",
+			  first_arch_pfn);
+	return first_arch_pfn;
 }
 
 unsigned long __init e820__end_of_pram_pfn(void)

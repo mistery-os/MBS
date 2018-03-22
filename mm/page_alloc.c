@@ -6775,7 +6775,7 @@ void __init free_area_init_nodes(unsigned long *max_zone_pfn)
 
 	//<<<2018.02.14 Yongseob
 	pr_info("Early pram node ranges\n");
-	for_each_pram_pfn_range(i, MAX_NUMNODES, &start_pfn_pram, &end_pfn_pram, &nid_pram)
+	for_each_pram_pfn_range(i_pram, MAX_NUMNODES, &start_pfn_pram, &end_pfn_pram, &nid_pram)
 		pr_info("  node %3d: [pram %#018Lx-%#018Lx]\n", nid_pram,
 			(u64)start_pfn_pram << PAGE_SHIFT,
 			((u64)end_pfn_pram << PAGE_SHIFT) - 1);
