@@ -67,7 +67,7 @@ struct vm_area_struct;
 //<<<2018.02.14 Yongseob
 #define __GFP_PRAM	((__force gfp_t)___GFP_PRAM)
 //#define GFP_ZONEMASK	(__GFP_DMA|__GFP_HIGHMEM|__GFP_DMA32|__GFP_MOVABLE)
-#define GFP_ZONEMASK	(__GFP_DMA|__GFP_HIGHMEM|__GFP_DMA32|__GFP_MOVABLE|__GFP_PRAM)
+#define GFP_ZONEMASK	(__GFP_DMA|__GFP_PRAM|__GFP_DMA32|__GFP_MOVABLE)
 
 /*
  * Page mobility and placement hints
@@ -228,8 +228,8 @@ struct vm_area_struct;
 
 /* Room for N __GFP_FOO bits */
 //<<<2018.02.14 Yongseob
-//#define __GFP_BITS_SHIFT (25 + IS_ENABLED(CONFIG_LOCKDEP))
-#define __GFP_BITS_SHIFT (26 + IS_ENABLED(CONFIG_LOCKDEP))
+#define __GFP_BITS_SHIFT (25 + IS_ENABLED(CONFIG_LOCKDEP))
+//#define __GFP_BITS_SHIFT (26 + IS_ENABLED(CONFIG_LOCKDEP))
 //>>>
 #define __GFP_BITS_MASK ((__force gfp_t)((1 << __GFP_BITS_SHIFT) - 1))
 
