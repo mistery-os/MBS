@@ -233,6 +233,7 @@ static char * const zone_names[MAX_NR_ZONES] = {
 #ifdef CONFIG_ZONE_DEVICE
 	 "Device",
 #endif
+	 "PRAM",
 };
 
 char * const migratetype_names[MIGRATE_TYPES] = {
@@ -6287,7 +6288,8 @@ void __paginginit free_area_init_node(int nid, unsigned long *zones_size,
 	get_pfn_range_for_nid_pram(nid, &start_pfn_pram, &end_pfn_pram);
 	pr_info("Initpram setup node %d [mem %#018Lx-%#018Lx]\n", nid,
 		(u64)start_pfn_pram << PAGE_SHIFT,
-		end_pfn_pram ? ((u64)end_pfn_pram << PAGE_SHIFT) - 1 : 0);
+		end_pfn ? ((u64)end_pfn_pram << PAGE_SHIFT) - 1 : 0);
+		//end_pfn_pram ? ((u64)end_pfn_pram << PAGE_SHIFT) - 1 : 0);
 	//>>>
 #else
 	start_pfn = node_start_pfn;
@@ -6774,7 +6776,7 @@ void __init free_area_init_nodes(unsigned long *max_zone_pfn)
 	//<<<2018.02.14 Yongseob
 	pr_info("Early pram node ranges\n");
 	for_each_pram_pfn_range(i, MAX_NUMNODES, &start_pfn_pram, &end_pfn_pram, &nid_pram)
-		pr_info("  node %3d: [mem %#018Lx-%#018Lx]\n", nid_pram,
+		pr_info("  node %3d: [pram %#018Lx-%#018Lx]\n", nid_pram,
 			(u64)start_pfn_pram << PAGE_SHIFT,
 			((u64)end_pfn_pram << PAGE_SHIFT) - 1);
 	//>>>
