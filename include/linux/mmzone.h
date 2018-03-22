@@ -334,9 +334,6 @@ enum zone_type {
 	 * transfers to all addressable memory.
 	 */
 	ZONE_NORMAL,
-	//<<<2018.02.14 Yongseob
-	ZONE_PRAM,
-	//>>>
 #ifdef CONFIG_HIGHMEM
 	/*
 	 * A memory area that is only addressable by the kernel through
@@ -352,6 +349,9 @@ enum zone_type {
 #ifdef CONFIG_ZONE_DEVICE
 	ZONE_DEVICE,
 #endif
+	//<<<2018.02.14 Yongseob
+	ZONE_PRAM,
+	//>>>
 	__MAX_NR_ZONES
 
 };
