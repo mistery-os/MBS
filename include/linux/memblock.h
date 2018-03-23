@@ -51,13 +51,13 @@ struct memblock {
 	bool bottom_up;  /* is bottom up direction? */
 	phys_addr_t current_limit;
 	struct memblock_type memory;
+	//<<<2018.02.13 Yongseob
+	struct memblock_type pram;
+	//>>>
 	struct memblock_type reserved;
 #ifdef CONFIG_HAVE_MEMBLOCK_PHYS_MAP
 	struct memblock_type physmem;
 #endif
-	//<<<2018.02.13 Yongseob
-	struct memblock_type pram;
-	//>>>
 };
 
 extern struct memblock memblock;
@@ -347,7 +347,7 @@ extern void __memblock_dump_all(void);
 static inline void memblock_dump_all(void)
 {
 	if (memblock_debug)
-		__memblock_dump_all();
+		__memblock_dump_all(); // mm/memblock.c
 }
 
 /**

@@ -6288,8 +6288,8 @@ void __paginginit free_area_init_node(int nid, unsigned long *zones_size,
 	get_pfn_range_for_nid_pram(nid, &start_pfn_pram, &end_pfn_pram);
 	pr_info("Initpram setup node %d [mem %#018Lx-%#018Lx]\n", nid,
 		(u64)start_pfn_pram << PAGE_SHIFT,
-		end_pfn ? ((u64)end_pfn_pram << PAGE_SHIFT) - 1 : 0);
-		//end_pfn_pram ? ((u64)end_pfn_pram << PAGE_SHIFT) - 1 : 0);
+		end_pfn_pram ? ((u64)end_pfn_pram << PAGE_SHIFT) - 1 : 0);
+		//end_pfn ? ((u64)end_pfn_pram << PAGE_SHIFT) - 1 : 0);
 	//>>>
 #else
 	start_pfn = node_start_pfn;

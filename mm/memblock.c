@@ -541,6 +541,10 @@ int __init_memblock memblock_add_range(struct memblock_type *type,
 		type->regions[0].size = size;
 		type->regions[0].flags = flags;
 		memblock_set_region_node(&type->regions[0], nid);
+		//<<<2018.03.23 Yongseob
+		if(memblock_debug)
+	pr_info(" %s.cnt  = 0x%lx   nid=%d\n", type->name, type->cnt,nid);
+		//>>>
 		type->total_size = size;
 		return 0;
 	}
@@ -637,7 +641,7 @@ int __init_memblock memblock_add_pram(phys_addr_t base, phys_addr_t size)
 		     &base, &end, (void *)_RET_IP_);
 
 	return memblock_add_range(&memblock.pram, base, size, MAX_NUMNODES, MEMBLOCK_NOMAP);
-	return memblock_add_range(&memblock.pram, base, size, MAX_NUMNODES, 0);
+	//return memblock_add_range(&memblock.pram, base, size, MAX_NUMNODES, 0);
 }
 //>>>
 
@@ -1883,13 +1887,11 @@ void __init_memblock __memblock_dump_all(void)
 	pr_info(" memory size = %pa reserved size = %pa\n",
 		&memblock.memory.total_size,
 		&memblock.reserved.total_size);
-	//<<<2018.02.13 Yongseob
-	pr_info(" pram size = %pa\n",
-		&memblock.pram.total_size);
-	//>>>
 	memblock_dump(&memblock.memory);
 	memblock_dump(&memblock.reserved);
        	//<<<2018.02.13 Yongseob
+	pr_info(" pram size = %pa\n",
+		&memblock.pram.total_size);
 	memblock_dump(&memblock.pram);
 	//>>>
 #ifdef CONFIG_HAVE_MEMBLOCK_PHYS_MAP
