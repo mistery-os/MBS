@@ -1853,8 +1853,13 @@ static void __init_memblock memblock_dump(struct memblock_type *type)
 			snprintf(nid_buf, sizeof(nid_buf), " on node %d",
 				 memblock_get_region_node(rgn));
 #endif
+		//<<<2018.03.23 Yongseob
+		if (memblock_debug)
+		pr_info(" NODE_ID = %d\t", rgn->nid);
+		//>>>
 		pr_info(" %s[%#x]\t[%pa-%pa], %pa bytes%s flags: %#lx\n",
 			type->name, idx, &base, &end, &size, nid_buf, flags);
+			
 	}
 }
 

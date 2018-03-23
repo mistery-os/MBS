@@ -1298,11 +1298,10 @@ void __init e820__memblock_setup(void)
 #endif
 		if (entry->type != E820_TYPE_RAM && entry->type != E820_TYPE_RESERVED_KERN && entry->type != E820_TYPE_PRAM)
 			continue;
-		if  (entry->type == E820_TYPE_PRAM ){
-			memblock_add_pram(entry->addr, entry->size);
-			continue;
-		}
+		if  (entry->type != E820_TYPE_PRAM )
 			memblock_add(entry->addr, entry->size);
+		else
+			memblock_add_pram(entry->addr, entry->size);
 			// mm/memblock.c
 		//>>>
 	}
