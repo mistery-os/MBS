@@ -1842,11 +1842,11 @@ void *vmalloc(unsigned long size)
 }
 EXPORT_SYMBOL(vmalloc);
 //<<<2018.03.21 Yongseob
-void *vmalloc_pram(unsigned long size, int node, gfp_t flags)
+void *vmalloc_mbs(unsigned long size, int node, gfp_t flags)
 {
 	return __vmalloc_node_flags(size, node, flags);
 }
-EXPORT_SYMBOL(vmalloc_pram);
+EXPORT_SYMBOL(vmalloc_mbs);
 //>>>
 
 /**

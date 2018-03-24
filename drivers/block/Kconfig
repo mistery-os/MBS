@@ -345,53 +345,47 @@ config BLK_DEV_RAM_DAX
 	  and will prevent RAM block device backing store memory from being
 	  allocated from highmem (only a problem for highmem systems).
 
-config BLK_DEV_PS_RAM
-	tristate "RAM block device support"
-	select DAX if BLK_DEV_PS_RAM_DAX
+config BLK_DEV_MBS
+	tristate "MBS(Memory Bus Storage block device support"
+	select DAX if BLK_DEV_MBS_DAX
 	---help---
-	  Saying Y here will allow you to use a portion of your RAM memory as
+	  Saying Y here will allow you to use a portion of your MBS memory as
 	  a block device, so that you can make file systems on it, read and
 	  write to it and do all the other things that you can do with normal
-	  block devices (such as hard drives). It is usually used to load and
-	  store a copy of a minimal root file system off of a floppy into RAM
-	  during the initial install of Linux.
-
-	  Note that the kernel command line option "ramdisk=XX" is now obsolete.
-	  For details, read <file:Documentation/blockdev/ramdisk.txt>.
+	  block devices (such as hard drives).
 
 	  To compile this driver as a module, choose M here: the
-	  module will be called brd. An alias "rd" has been defined
-	  for historical reasons.
+	  module will be called mbs.
 
-	  Most normal users won't need the RAM disk functionality, and can
+	  Most normal users won't need the MBS disk functionality, and can
 	  thus say N here.
 
-config BLK_DEV_PS_RAM_COUNT
-	int "Default number of PS_RAM disks"
+config BLK_DEV_MBS_COUNT
+	int "Default number of MBS disks"
 	default "16"
-	depends on BLK_DEV_PS_RAM
+	depends on BLK_DEV_MBS
 	help
-	  The default value is 16 PS_RAM disks. Change this if you know what you
+	  The default value is 16 MBS disks. Change this if you know what you
 	  are doing. If you boot from a filesystem that needs to be extracted
-	  in memory, you will need at least one PS_RAM disk (e.g. root on cramfs).
+	  in memory, you will need at least one MBS disk (e.g. root on cramfs).
 
-config BLK_DEV_PS_RAM_SIZE
-	int "Default RAM disk size (kbytes)"
-	depends on BLK_DEV_PS_RAM
+config BLK_DEV_MBS_SIZE
+	int "Default MBS disk size (kbytes)"
+	depends on BLK_DEV_MBS
 	default "4096"
 	help
 	  The default value is 4096 kilobytes. Only change this if you know
 	  what you are doing.
 
-config BLK_DEV_PS_RAM_DAX
-	bool "Support Direct Access (DAX) to RAM block devices"
-	depends on BLK_DEV_PS_RAM && FS_DAX
+config BLK_DEV_MBS_DAX
+	bool "Support Direct Access (DAX) to MBS block devices"
+	depends on BLK_DEV_MBS && FS_DAX
 	default n
 	help
-	  Support filesystems using DAX to access PS_RAM block devices.  This
+	  Support filesystems using DAX to access MBS block devices.  This
 	  avoids double-buffering data in the page cache before copying it
 	  to the block device.  Answering Y will slightly enlarge the kernel,
-	  and will prevent PS_RAM block device backing store memory from being
+	  and will prevent MBS block device backing store memory from being
 	  allocated from highmem (only a problem for highmem systems).
 
 
