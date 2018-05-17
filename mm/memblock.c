@@ -62,9 +62,9 @@ struct memblock memblock __initdata_memblock = {
 	.current_limit		= MEMBLOCK_ALLOC_ANYWHERE,
 };
 //<<<2018.02.13 Yongseob
-#if IS_ENABLED(CONFIG_BLK_DEV_MBS)
+//#if IS_ENABLED(CONFIG_BLK_DEV_MBS)
 EXPORT_SYMBOL(memblock);
-#endif
+//#endif
 //>>>
 int memblock_debug __initdata_memblock;
 static bool system_has_some_mirror __initdata_memblock = false;
