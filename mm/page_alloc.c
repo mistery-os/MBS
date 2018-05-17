@@ -236,7 +236,7 @@ static char * const zone_names[MAX_NR_ZONES] = {
 #ifdef CONFIG_ZONE_DEVICE
 	 "Device",
 #endif
-	 "PramStorage",
+	 "PStorage",
 };
 
 char * const migratetype_names[MIGRATE_TYPES] = {

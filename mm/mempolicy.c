@@ -289,6 +289,9 @@ void __mpol_put(struct mempolicy *p)
 		return;
 	kmem_cache_free(policy_cache, p);
 }
+//<<<2018.05.18 Yongseob
+EXPORT_SYMBOL_GPL(__mpol_put);
+//>>>
 
 static void mpol_rebind_default(struct mempolicy *pol, const nodemask_t *nodes)
 {
@@ -2004,6 +2007,9 @@ alloc_pages_vma(gfp_t gfp, int order, struct vm_area_struct *vma,
 out:
 	return page;
 }
+//<<<2018.05.18 Yongseob
+EXPORT_SYMBOL_GPL(alloc_pages_vma);
+//>>>
 
 /**
  * 	alloc_pages_current - Allocate pages.
@@ -2461,6 +2467,9 @@ put_mpol:
 		mpol_put(mpol);	/* drop our incoming ref on sb mpol */
 	}
 }
+//<<<2018.05.18 Yongseob
+EXPORT_SYMBOL_GPL(mpol_shared_policy_init);
+//>>>
 
 int mpol_set_shared_policy(struct shared_policy *info,
 			struct vm_area_struct *vma, struct mempolicy *npol)
@@ -2506,7 +2515,9 @@ void mpol_free_shared_policy(struct shared_policy *p)
 	}
 	write_unlock(&p->lock);
 }
-
+//<<<2018.05.18 Yongseob
+EXPORT_SYMBOL_GPL(mpol_free_shared_policy);
+//>>>
 #ifdef CONFIG_NUMA_BALANCING
 static int __initdata numabalancing_override;
 
@@ -2763,6 +2774,9 @@ out:
 		*mpol = new;
 	return err;
 }
+//<<<2018.05.18 Yongseob
+EXPORT_SYMBOL_GPL(mpol_parse_str);
+//>>>
 #endif /* CONFIG_TMPFS */
 
 /**
@@ -2824,3 +2838,6 @@ void mpol_to_str(char *buffer, int maxlen, struct mempolicy *pol)
 		p += scnprintf(p, buffer + maxlen - p, ":%*pbl",
 			       nodemask_pr_args(&nodes));
 }
+//<<<2018.05.18 Yongseob
+EXPORT_SYMBOL_GPL(mpol_to_str);
+//>>>
