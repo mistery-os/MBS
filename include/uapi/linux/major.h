@@ -178,6 +178,6 @@
 #define SCSI_OSD_MAJOR		260	/* open-osd's OSD scsi device */
 
 //<<<2018.03.24 Yongseob
-#define MBSDISK_MAJOR		808	/* MBS cluster device */
+#define MBSDISK_MAJOR		333	/* MBS cluster device */
 //>>>
 #endif

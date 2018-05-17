@@ -110,6 +110,9 @@ EXPORT_SYMBOL(latent_entropy);
 nodemask_t node_states[NR_NODE_STATES] __read_mostly = {
 	[N_POSSIBLE] = NODE_MASK_ALL,
 	[N_ONLINE] = { { [0] = 1UL } },
+	//<<<2018.05.17 Yongseob
+	[N_PRAM] = { { [0] = 1UL } },
+	//>>>
 #ifndef CONFIG_NUMA
 	[N_NORMAL_MEMORY] = { { [0] = 1UL } },
 #ifdef CONFIG_HIGHMEM

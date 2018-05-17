@@ -752,9 +752,17 @@ void __init paging_init(void)
 	 *	 numa support is not compiled in, and later node_set_state
 	 *	 will not set it back.
 	 */
+	//<<<2018.05.17 Yongseob
+#if 0
 	node_clear_state(0, N_MEMORY);
 	if (N_MEMORY != N_NORMAL_MEMORY)
 		node_clear_state(0, N_NORMAL_MEMORY);
+#endif
+	// I don't know exactly what below means...
+	node_clear_state(0, N_MEMORY);
+	if (N_PRAM != N_NORMAL_MEMORY)
+		node_clear_state(0, N_NORMAL_MEMORY);
+	//>>>
 
 	zone_sizes_init();
 }

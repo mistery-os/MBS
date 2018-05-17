@@ -2201,6 +2201,9 @@ mpol_shared_policy_lookup(struct shared_policy *sp, unsigned long idx)
 	read_unlock(&sp->lock);
 	return pol;
 }
+//<<<2018.05.17 Yongseob
+EXPORT_SYMBOL_GPL(mpol_shared_policy_lookup);
+//>>>
 
 static void sp_free(struct sp_node *n)
 {
@@ -2482,6 +2485,9 @@ int mpol_set_shared_policy(struct shared_policy *info,
 		sp_free(new);
 	return err;
 }
+//<<<2018.05.17 Yongseob
+EXPORT_SYMBOL_GPL(mpol_set_shared_policy);
+//>>>
 
 /* Free a backing policy store on inode delete. */
 void mpol_free_shared_policy(struct shared_policy *p)
