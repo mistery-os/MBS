@@ -4206,9 +4206,11 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
 
 	/* First allocation attempt */
 	//<<<2018.05.17 Yongseob
+#if 0
 	if (ac.high_zoneidx == ZONE_PRAM )
 	page = get_page_from_freelist(alloc_mask, order, alloc_flags, &ac);
 	else
+#endif
 	page = get_page_from_freelist(alloc_mask, order, alloc_flags | ALLOC_NO_WATERMARKS, &ac);
 	//>>>
 	if (likely(page))
@@ -5887,7 +5889,7 @@ static unsigned long __meminit zone_absent_pages_in_node(int nid,
 			node_start_pfn, node_end_pfn,
 			&zone_start_pfn, &zone_end_pfn);
 	//<<<2018.05.17 Yongseob
-	if ( zone_type != ZONE_PRAM)
+	if ( zone_type != ZONE_PRAM )
 	nr_absent = __absent_pages_in_range(nid, zone_start_pfn, zone_end_pfn);
 	else
 	nr_absent = __absent_pages_in_range_pram(nid, zone_start_pfn, zone_end_pfn);
