@@ -1990,6 +1990,10 @@ extern void free_area_init_nodes(unsigned long *max_zone_pfn);
 unsigned long node_map_pfn_alignment(void);
 unsigned long __absent_pages_in_range(int nid, unsigned long start_pfn,
 						unsigned long end_pfn);
+//<<<2018.05.17 Yongseob
+unsigned long __absent_pages_in_range_pram(int nid, unsigned long start_pfn,
+						unsigned long end_pfn);
+//>>>
 extern unsigned long absent_pages_in_range(unsigned long start_pfn,
 						unsigned long end_pfn);
 extern void get_pfn_range_for_nid(unsigned int nid,
