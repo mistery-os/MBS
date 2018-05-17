@@ -4206,10 +4206,11 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
 
 	/* First allocation attempt */
 	//<<<2018.05.17 Yongseob
-	if (ac.high_zoneidx != ZONE_PRAM )
+	if (ac.high_zoneidx == ZONE_PRAM )
 	page = get_page_from_freelist(alloc_mask, order, alloc_flags, &ac);
 	else
 	page = get_page_from_freelist(alloc_mask, order, alloc_flags | ALLOC_NO_WATERMARKS, &ac);
+	//>>>
 	if (likely(page))
 		goto out;
 
@@ -5890,7 +5891,7 @@ static unsigned long __meminit zone_absent_pages_in_node(int nid,
 	nr_absent = __absent_pages_in_range(nid, zone_start_pfn, zone_end_pfn);
 	else
 	nr_absent = __absent_pages_in_range_pram(nid, zone_start_pfn, zone_end_pfn);
-
+	//>>>
 	/*
 	 * ZONE_MOVABLE handling.
 	 * Treat pages to be ZONE_MOVABLE in ZONE_NORMAL as absent pages

@@ -1487,12 +1487,12 @@ no_page:
 			__SetPageReferenced(page);
 
 		//<<<2018.05.17 Yongseob
-		if ( mapping->flags & GFP_PRAM ) {
+		if ( mapping->flags & __GFP_PRAM ) {
 		err = add_to_page_cache_locked(page, mapping, offset,
 				gfp_mask );
 		} else {
 		err = add_to_page_cache_lru(page, mapping, offset,
-				gfp_mask & GFP_RECLAIM_MASK);
+			gfp_mask & GFP_RECLAIM_MASK);
 		}
 		//>>>
 		if (unlikely(err)) {
