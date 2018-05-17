@@ -236,7 +236,7 @@ static char * const zone_names[MAX_NR_ZONES] = {
 #ifdef CONFIG_ZONE_DEVICE
 	 "Device",
 #endif
-	 "PRAM",
+	 "PramStorage",
 };
 
 char * const migratetype_names[MIGRATE_TYPES] = {
@@ -5810,6 +5810,23 @@ static unsigned long __meminit zone_spanned_pages_in_node(int nid,
  * Return the number of holes in a range on a node. If nid is MAX_NUMNODES,
  * then all holes in the requested range will be accounted for.
  */
+//<<<2018.05.17 Yongseob
+unsigned long __meminit __absent_pages_in_range_pram(int nid,
+				unsigned long range_start_pfn,
+				unsigned long range_end_pfn)
+{
+	unsigned long nr_absent = range_end_pfn - range_start_pfn;
+	unsigned long start_pfn, end_pfn;
+	int i;
+
+	for_each_pram_pfn_range(i, nid, &start_pfn, &end_pfn, NULL) {
+		start_pfn = clamp(start_pfn, range_start_pfn, range_end_pfn);
+		end_pfn = clamp(end_pfn, range_start_pfn, range_end_pfn);
+		nr_absent -= end_pfn - start_pfn;
+	}
+	return nr_absent;
+}
+//>>>
 unsigned long __meminit __absent_pages_in_range(int nid,
 				unsigned long range_start_pfn,
 				unsigned long range_end_pfn)
@@ -5861,7 +5878,12 @@ static unsigned long __meminit zone_absent_pages_in_node(int nid,
 	adjust_zone_range_for_zone_movable(nid, zone_type,
 			node_start_pfn, node_end_pfn,
 			&zone_start_pfn, &zone_end_pfn);
+	//<<<2018.05.17 Yongseob
+	if ( zone_type != ZONE_PRAM )
 	nr_absent = __absent_pages_in_range(nid, zone_start_pfn, zone_end_pfn);
+	else
+	nr_absent = __absent_pages_in_range_pram(nid, zone_start_pfn, zone_end_pfn);
+	//>>>
 
 	/*
 	 * ZONE_MOVABLE handling.
