@@ -345,13 +345,13 @@ enum zone_type {
 	 */
 	ZONE_HIGHMEM,
 #endif
-	//<<<2018.02.14 Yongseob
-	ZONE_PRAM,
-	//>>>
 	ZONE_MOVABLE,
 #ifdef CONFIG_ZONE_DEVICE
 	ZONE_DEVICE,
 #endif
+	//<<<2018.02.14 Yongseob
+	ZONE_PRAM,
+	//>>>
 	__MAX_NR_ZONES
 
 };

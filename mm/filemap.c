@@ -1485,18 +1485,8 @@ no_page:
 		/* Init accessed so avoid atomic mark_page_accessed later */
 		if (fgp_flags & FGP_ACCESSED)
 			__SetPageReferenced(page);
-
-		//<<<2018.05.17 Yongseob
-#if 0
-		if ( mapping->flags & __GFP_PRAM ) {
-		err = add_to_page_cache_locked(page, mapping, offset,
-				gfp_mask );
-		} else {
-#endif
 		err = add_to_page_cache_lru(page, mapping, offset,
 				gfp_mask & GFP_RECLAIM_MASK);
-//		}
-		//>>>
 		if (unlikely(err)) {
 			put_page(page);
 			page = NULL;
