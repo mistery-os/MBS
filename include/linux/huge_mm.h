@@ -264,6 +264,9 @@ static inline bool transparent_hugepage_enabled(struct vm_area_struct *vma)
 static inline void prep_transhuge_page(struct page *page) {}
 
 #define transparent_hugepage_flags 0UL
+//<<<2018.05.18 Yongseob
+EXPORT_SYMBOL_GPL(transparent_hugepage_flags);
+//>>>
 
 #define thp_get_unmapped_area	NULL
 

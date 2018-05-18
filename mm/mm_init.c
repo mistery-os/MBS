@@ -143,6 +143,9 @@ EXPORT_SYMBOL_GPL(mm_kobj);
 
 #ifdef CONFIG_SMP
 s32 vm_committed_as_batch = 32;
+//<<<2018.05.18 Yongseob
+EXPORT_SYMBOL_GPL(vm_committed_as_batch);
+//>>>
 
 static void __meminit mm_compute_batch(void)
 {

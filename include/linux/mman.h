@@ -17,6 +17,9 @@ extern struct percpu_counter vm_committed_as;
 extern s32 vm_committed_as_batch;
 #else
 #define vm_committed_as_batch 0
+//<<<2018.05.18 Yongseob
+EXPORT_SYMBOL_GPL(vm_committed_as_batch);
+//>>>
 #endif
 
 unsigned long vm_memory_committed(void);
