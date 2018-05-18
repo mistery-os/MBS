@@ -1060,6 +1060,9 @@ void *__radix_tree_lookup(const struct radix_tree_root *root,
 		*slotp = slot;
 	return node;
 }
+//<<<2018.05.19 Yongseob
+EXPORT_SYMBOL_GPL(__radix_tree_lookup);
+//>>>
 
 /**
  *	radix_tree_lookup_slot    -    lookup a slot in a radix tree
@@ -1208,7 +1211,9 @@ void __radix_tree_replace(struct radix_tree_root *root,
 
 	delete_node(root, node, update_node, private);
 }
-
+//<<<2018.05.19 Yongseob
+EXPORT_SYMBOL_GPL(__radix_tree_replace);
+//>>>
 /**
  * radix_tree_replace_slot	- replace item in a slot
  * @root:	radix tree root
