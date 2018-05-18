@@ -57,6 +57,10 @@ unsigned long transparent_hugepage_flags __read_mostly =
 	(1<<TRANSPARENT_HUGEPAGE_DEFRAG_KHUGEPAGED_FLAG)|
 	(1<<TRANSPARENT_HUGEPAGE_USE_ZERO_PAGE_FLAG);
 
+//<<<2018.05.18 Yongseob
+EXPORT_SYMBOL_GPL(transparent_hugepage_flags);
+//>>>
+
 static struct shrinker deferred_split_shrinker;
 
 static atomic_t huge_zero_refcount;
