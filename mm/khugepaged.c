@@ -429,6 +429,9 @@ int __khugepaged_enter(struct mm_struct *mm)
 
 	return 0;
 }
+//<<<2018.05.18 Yongseob
+EXPORT_SYMBOL_GPL(__khugepaged_enter);
+//>>>
 
 int khugepaged_enter_vma_merge(struct vm_area_struct *vma,
 			       unsigned long vm_flags)

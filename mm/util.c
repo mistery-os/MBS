@@ -566,6 +566,9 @@ unsigned long vm_commit_limit(void)
  * other variables. It can be updated by several CPUs frequently.
  */
 struct percpu_counter vm_committed_as ____cacheline_aligned_in_smp;
+//<<<2018.05.18 Yongseob
+EXPORT_SYMBOL_GPL(vm_committed_as);
+//>>>
 
 /*
  * The global memory commitment made in the system can be a metric

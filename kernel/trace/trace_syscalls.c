@@ -503,10 +503,16 @@ static int __init init_syscall_trace(struct trace_event_call *call)
 struct trace_event_functions enter_syscall_print_funcs = {
 	.trace		= print_syscall_enter,
 };
+//<<<2018.05.18 Yongseob
+EXPORT_SYMBOL_GPL(enter_syscall_print_funcs);
+//>>>
 
 struct trace_event_functions exit_syscall_print_funcs = {
 	.trace		= print_syscall_exit,
 };
+//<<<2018.05.18 Yongseob
+EXPORT_SYMBOL_GPL(exit_syscall_print_funcs);
+//>>>
 
 struct trace_event_class __refdata event_class_syscall_enter = {
 	.system		= "syscalls",
@@ -515,6 +521,9 @@ struct trace_event_class __refdata event_class_syscall_enter = {
 	.get_fields	= syscall_get_enter_fields,
 	.raw_init	= init_syscall_trace,
 };
+//<<<2018.05.18 Yongseob
+EXPORT_SYMBOL_GPL(event_class_syscall_enter);
+//>>>
 
 struct trace_event_class __refdata event_class_syscall_exit = {
 	.system		= "syscalls",
@@ -523,6 +532,9 @@ struct trace_event_class __refdata event_class_syscall_exit = {
 	.fields		= LIST_HEAD_INIT(event_class_syscall_exit.fields),
 	.raw_init	= init_syscall_trace,
 };
+//<<<2018.05.18 Yongseob
+EXPORT_SYMBOL_GPL(event_class_syscall_exit);
+//>>>
 
 unsigned long __init __weak arch_syscall_addr(int nr)
 {
