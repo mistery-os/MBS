@@ -325,6 +325,9 @@ int security_vm_enough_memory_mm(struct mm_struct *mm, long pages)
 	}
 	return __vm_enough_memory(mm, pages, cap_sys_admin);
 }
+//<<<2018.05.18 Yongseob
+EXPORT_SYMBOL_GPL(security_vm_enough_memory_mm);
+//>>>
 
 int security_bprm_set_creds(struct linux_binprm *bprm)
 {

@@ -420,6 +420,9 @@ void lru_cache_add_anon(struct page *page)
 		ClearPageActive(page);
 	__lru_cache_add(page);
 }
+//<<<2018.05.18 Yongseob
+EXPORT_SYMBOL_GPL(lru_cache_add_anon);
+//>>>
 
 void lru_cache_add_file(struct page *page)
 {
@@ -955,6 +958,9 @@ void pagevec_remove_exceptionals(struct pagevec *pvec)
 	}
 	pvec->nr = j;
 }
+//<<<2018.05.18 Yongseob
+EXPORT_SYMBOL_GPL(pagevec_remove_exceptionals);
+//>>>
 
 /**
  * pagevec_lookup_range - gang pagecache lookup

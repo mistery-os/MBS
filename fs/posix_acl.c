@@ -952,3 +952,6 @@ int simple_acl_create(struct inode *dir, struct inode *inode)
 		posix_acl_release(acl);
 	return 0;
 }
+//<<<2018.05.18 Yongseob
+EXPORT_SYMBOL_GPL(simple_acl_create);
+//>>>

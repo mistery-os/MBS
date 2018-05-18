@@ -1578,6 +1578,9 @@ export:
 	rcu_read_unlock();
 	return ret;
 }
+//<<<2018.05.18 Yongseob
+EXPORT_SYMBOL_GPL(find_get_entries);
+//>>>
 
 /**
  * find_get_pages_range - gang pagecache lookup

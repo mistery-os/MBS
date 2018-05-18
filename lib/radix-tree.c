@@ -595,6 +595,9 @@ int radix_tree_maybe_preload_order(gfp_t gfp_mask, int order)
 
 	return __radix_tree_preload(gfp_mask, nr_nodes);
 }
+//<<<2018.05.18 Yongseob
+EXPORT_SYMBOL_GPL(radix_tree_maybe_preload_order);
+//>>>
 
 static unsigned radix_tree_load_root(const struct radix_tree_root *root,
 		struct radix_tree_node **nodep, unsigned long *maxindex)

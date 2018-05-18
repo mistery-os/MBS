@@ -566,6 +566,9 @@ int handle_userfault(struct vm_fault *vmf, unsigned long reason)
 out:
 	return ret;
 }
+//<<<2018.05.18 Yongseob
+EXPORT_SYMBOL_GPL(handle_userfault);
+//>>>
 
 static void userfaultfd_event_wait_completion(struct userfaultfd_ctx *ctx,
 					      struct userfaultfd_wait_queue *ewq)

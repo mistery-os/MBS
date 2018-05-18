@@ -5531,6 +5531,9 @@ out:
 	*memcgp = memcg;
 	return ret;
 }
+//<<<2018.05.18 Yongseob
+EXPORT_SYMBOL_GPL(mem_cgroup_try_charge);
+//>>>
 
 /**
  * mem_cgroup_commit_charge - commit a page charge
@@ -5584,6 +5587,9 @@ void mem_cgroup_commit_charge(struct page *page, struct mem_cgroup *memcg,
 		mem_cgroup_uncharge_swap(entry, nr_pages);
 	}
 }
+//<<<2018.05.18 Yongseob
+EXPORT_SYMBOL_GPL(mem_cgroup_commit_charge);
+//>>>
 
 /**
  * mem_cgroup_cancel_charge - cancel a page charge
@@ -5610,6 +5616,9 @@ void mem_cgroup_cancel_charge(struct page *page, struct mem_cgroup *memcg,
 
 	cancel_charge(memcg, nr_pages);
 }
+//<<<2018.05.18 Yongseob
+EXPORT_SYMBOL_GPL(mem_cgroup_cancel_charge);
+//>>>
 
 struct uncharge_gather {
 	struct mem_cgroup *memcg;
