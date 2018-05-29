@@ -258,6 +258,18 @@ struct lruvec {
 
 /* LRU Isolation modes. */
 typedef unsigned __bitwise isolate_mode_t;
+//<<<2018.05.28 Yongseob
+enum zone_pramW {
+	pramW_MIN,
+	pramW_LOW,
+	pramW_HIGH,
+	NR_pramWMARK
+};
+
+#define min_pram_pages(z) (z->watermark[pramW_MIN])
+#define low_pram_pages(z) (z->watermark[pramW_LOW])
+#define high_pram_pages(z) (z->watermark[pramW_HIGH])
+//>>>
 
 enum zone_watermarks {
 	WMARK_MIN,
@@ -363,6 +375,9 @@ struct zone {
 
 	/* zone watermarks, access with *_wmark_pages(zone) macros */
 	unsigned long watermark[NR_WMARK];
+	//<<<2018.05.28 Yongseob
+	//unsigned long pramWmark[NR_pramWMARK];
+	//>>>
 
 	unsigned long nr_reserved_highatomic;
 

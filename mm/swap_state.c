@@ -360,6 +360,9 @@ struct page *lookup_swap_cache(swp_entry_t entry, struct vm_area_struct *vma,
 	}
 	return page;
 }
+//<<<2018.05.19 Yongseob
+EXPORT_SYMBOL_GPL(lookup_swap_cache);
+//>>>
 
 struct page *__read_swap_cache_async(swp_entry_t entry, gfp_t gfp_mask,
 			struct vm_area_struct *vma, unsigned long addr,

@@ -17,12 +17,7 @@ struct vm_area_struct;
 
 /* Plain integer GFP bitmasks. Do not use this directly. */
 #define ___GFP_DMA		0x01u
-//<<<2018.02.14 Yongseob
-//#define ___GFP_PRAM	0x4000000u
-#define ___GFP_PRAM	0x01u
-//#define ___GFP_HIGHMEM		0x02u
-#define ___GFP_HIGHMEM		0x04000000u
-//>>>
+#define ___GFP_HIGHMEM		0x02u
 #define ___GFP_DMA32		0x04u
 #define ___GFP_MOVABLE		0x08u
 #define ___GFP_RECLAIMABLE	0x10u
@@ -46,8 +41,11 @@ struct vm_area_struct;
 #define ___GFP_DIRECT_RECLAIM	0x400000u
 #define ___GFP_WRITE		0x800000u
 #define ___GFP_KSWAPD_RECLAIM	0x1000000u
+//<<<2018.02.14 Yongseob
+#define ___GFP_PRAM		0x2000000u
+//>>>
 #ifdef CONFIG_LOCKDEP
-#define ___GFP_NOLOCKDEP	0x2000000u
+#define ___GFP_NOLOCKDEP	0x4000000u
 #else
 #define ___GFP_NOLOCKDEP	0
 #endif
@@ -61,14 +59,10 @@ struct vm_area_struct;
  * be used in bit comparisons.
  */
 #define __GFP_DMA	((__force gfp_t)___GFP_DMA)
-//<<<2018.02.14 Yongseob
-#define __GFP_PRAM	((__force gfp_t)___GFP_PRAM)
-//>>>
 #define __GFP_HIGHMEM	((__force gfp_t)___GFP_HIGHMEM)
 #define __GFP_DMA32	((__force gfp_t)___GFP_DMA32)
 #define __GFP_MOVABLE	((__force gfp_t)___GFP_MOVABLE)  /* ZONE_MOVABLE allowed */
-//#define GFP_ZONEMASK	(__GFP_DMA|__GFP_HIGHMEM|__GFP_DMA32|__GFP_MOVABLE)
-#define GFP_ZONEMASK	(__GFP_DMA|__GFP_PRAM|__GFP_DMA32|__GFP_MOVABLE)
+#define GFP_ZONEMASK	(__GFP_DMA|__GFP_HIGHMEM|__GFP_DMA32|__GFP_MOVABLE)
 
 /*
  * Page mobility and placement hints
@@ -229,8 +223,8 @@ struct vm_area_struct;
 
 /* Room for N __GFP_FOO bits */
 //<<<2018.02.14 Yongseob
-#define __GFP_BITS_SHIFT (25 + IS_ENABLED(CONFIG_LOCKDEP))
-//#define __GFP_BITS_SHIFT (26 + IS_ENABLED(CONFIG_LOCKDEP))
+//#define __GFP_BITS_SHIFT (25 + IS_ENABLED(CONFIG_LOCKDEP))
+#define __GFP_BITS_SHIFT (26 + IS_ENABLED(CONFIG_LOCKDEP))
 //>>>
 #define __GFP_BITS_MASK ((__force gfp_t)((1 << __GFP_BITS_SHIFT) - 1))
 
@@ -294,6 +288,8 @@ struct vm_area_struct;
  *   available and will not wake kswapd/kcompactd on failure. The _LIGHT
  *   version does not attempt reclaim/compaction at all and is by default used
  *   in page fault path, while the non-light is used by khugepaged.
+ *
+ * GFP_PRAM is for Memory Bus-connected Storage
  */
 #define GFP_ATOMIC	(__GFP_HIGH|__GFP_ATOMIC|__GFP_KSWAPD_RECLAIM)
 #define GFP_KERNEL	(__GFP_RECLAIM | __GFP_IO | __GFP_FS)
@@ -303,7 +299,8 @@ struct vm_area_struct;
 #define GFP_NOFS	(__GFP_RECLAIM | __GFP_IO)
 #define GFP_USER	(__GFP_RECLAIM | __GFP_IO | __GFP_FS | __GFP_HARDWALL)
 //<<<2018.03.22 Yongseob
-#define GFP_PRAM	__GFP_PRAM
+//#define GFP_PRAM	(___GFP_PRAM | __GFP_IO)
+#define GFP_PRAM	___GFP_PRAM
 //>>>
 #define GFP_DMA		__GFP_DMA
 #define GFP_DMA32	__GFP_DMA32
@@ -402,8 +399,6 @@ static inline bool gfpflags_allow_blocking(const gfp_t gfp_flags)
 #if 16 * GFP_ZONES_SHIFT > BITS_PER_LONG
 #error GFP_ZONES_SHIFT too large to create GFP_ZONE_TABLE integer
 #endif
-//<<<2018.03.22 Yongseob
-#if 0
 #define GFP_ZONE_TABLE ( \
 	(ZONE_NORMAL << 0 * GFP_ZONES_SHIFT)				       \
 	| (OPT_ZONE_DMA << ___GFP_DMA * GFP_ZONES_SHIFT)		       \
@@ -414,18 +409,6 @@ static inline bool gfpflags_allow_blocking(const gfp_t gfp_flags)
 	| (ZONE_MOVABLE << (___GFP_MOVABLE | ___GFP_HIGHMEM) * GFP_ZONES_SHIFT)\
 	| (OPT_ZONE_DMA32 << (___GFP_MOVABLE | ___GFP_DMA32) * GFP_ZONES_SHIFT)\
 )
-#endif
-#define GFP_ZONE_TABLE ( \
-	(ZONE_NORMAL << 0 * GFP_ZONES_SHIFT)				       \
-	| (OPT_ZONE_DMA << ___GFP_DMA * GFP_ZONES_SHIFT)		       \
-	| (OPT_ZONE_PRAM << ___GFP_PRAM * GFP_ZONES_SHIFT)	       \
-	| (OPT_ZONE_DMA32 << ___GFP_DMA32 * GFP_ZONES_SHIFT)		       \
-	| (ZONE_NORMAL << ___GFP_MOVABLE * GFP_ZONES_SHIFT)		       \
-	| (OPT_ZONE_DMA << (___GFP_MOVABLE | ___GFP_DMA) * GFP_ZONES_SHIFT)    \
-	| (ZONE_MOVABLE << (___GFP_MOVABLE ) * GFP_ZONES_SHIFT)\
-	| (OPT_ZONE_DMA32 << (___GFP_MOVABLE | ___GFP_DMA32) * GFP_ZONES_SHIFT)\
-)
-//>>>
 
 /*
  * GFP_ZONE_BAD is a bitmap for all combinations of __GFP_DMA, __GFP_DMA32
@@ -433,8 +416,6 @@ static inline bool gfpflags_allow_blocking(const gfp_t gfp_flags)
  * entry starting with bit 0. Bit is set if the combination is not
  * allowed.
  */
-//<<<2018.03.22 Yongseob
-#if 0
 #define GFP_ZONE_BAD ( \
 	1 << (___GFP_DMA | ___GFP_HIGHMEM)				      \
 	| 1 << (___GFP_DMA | ___GFP_DMA32)				      \
@@ -445,25 +426,13 @@ static inline bool gfpflags_allow_blocking(const gfp_t gfp_flags)
 	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_HIGHMEM)		      \
 	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_DMA | ___GFP_HIGHMEM)  \
 )
-#endif
-#define GFP_ZONE_BAD ( \
-	1 << (___GFP_DMA )				      \
-	| 1 << (___GFP_DMA | ___GFP_DMA32)				      \
-	| 1 << (___GFP_DMA32 )				      \
-	| 1 << (___GFP_DMA | ___GFP_DMA32 )		      \
-	| 1 << (___GFP_MOVABLE | ___GFP_DMA)		      \
-	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_DMA)		      \
-	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 )		      \
-	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_DMA )  \
-)
-//>>>
 static inline enum zone_type gfp_zone(gfp_t flags)
 {
 	enum zone_type z;
 	int bit = (__force int) (flags & GFP_ZONEMASK);
 
 	//<<<2018.02.14 Yongseob
-	if (flags & __GFP_PRAM)
+	if (flags & GFP_PRAM)
 		return ZONE_PRAM;
 	//>>>
 	z = (GFP_ZONE_TABLE >> (bit * GFP_ZONES_SHIFT)) &
