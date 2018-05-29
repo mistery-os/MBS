@@ -4205,10 +4205,6 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
 	//<<<2018.05.29 Yongseob
 	if (ac.high_zoneidx == ZONE_PRAM ) //if ( gfp_mask & GFP_PRAM )
 		alloc_flags |= ALLOC_NO_WATERMARKS;
-	if ( alloc_mask & GFP_PRAM ) 
-		pr_info("alloc_mask: GFP_PRAM??? %s\n", alloc_mask);
-	if ( gfp_mask & GFP_PRAM ) 
-		pr_info("gfp_mask: GFP_PRAM??? %s\n", gfp_mask);
 	//>>>
 	/* First allocation attempt */
 	page = get_page_from_freelist(alloc_mask, order, alloc_flags, &ac);
