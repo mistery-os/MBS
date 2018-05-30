@@ -4145,7 +4145,7 @@ static inline bool prepare_alloc_pages(gfp_t gfp_mask, unsigned int order,
 	ac->nodemask = nodemask;
 	ac->migratetype = gfpflags_to_migratetype(gfp_mask);
 	//<<<2018.05.30 Yongseob
-	if (ac.high_zoneidx == ZONE_PRAM ) //if ( gfp_mask & GFP_PRAM )
+	if (ac->high_zoneidx == ZONE_PRAM ) //if ( gfp_mask & GFP_PRAM )
 		*alloc_flags |= ALLOC_NO_WATERMARKS;
 	//>>>
 
