@@ -388,10 +388,11 @@ enum node_states {
 #else
 	N_HIGH_MEMORY = N_NORMAL_MEMORY,
 #endif
-	N_MEMORY,		/* The node has memory(regular, high, movable) */
-	//<<<2018.02.14 Yongseob
+	//<<<2018.02.14 Yongseob 
+	//   2018.05.30 change the order from after to before N_MEMORY
 	N_PRAM,			/* The node has one or more pram */
 	//>>>
+	N_MEMORY,		/* The node has memory(regular, high, movable) */
 	N_CPU,		/* The node has one or more cpus */
 	NR_NODE_STATES
 };

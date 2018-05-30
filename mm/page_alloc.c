@@ -4144,6 +4144,10 @@ static inline bool prepare_alloc_pages(gfp_t gfp_mask, unsigned int order,
 	ac->zonelist = node_zonelist(preferred_nid, gfp_mask);
 	ac->nodemask = nodemask;
 	ac->migratetype = gfpflags_to_migratetype(gfp_mask);
+	//<<<2018.05.30 Yongseob
+	if (ac.high_zoneidx == ZONE_PRAM ) //if ( gfp_mask & GFP_PRAM )
+		*alloc_flags |= ALLOC_NO_WATERMARKS;
+	//>>>
 
 	if (cpusets_enabled()) {
 		*alloc_mask |= __GFP_HARDWALL;
@@ -4180,15 +4184,15 @@ static inline void finalise_ac(gfp_t gfp_mask,
 	 * may get reset for allocations that ignore memory policies.
 	 */
 	ac->preferred_zoneref = first_zones_zonelist(ac->zonelist,
-					ac->high_zoneidx, ac->nodemask);
+			ac->high_zoneidx, ac->nodemask);
 }
 
 /*
  * This is the 'heart' of the zoned buddy allocator.
  */
-struct page *
+	struct page *
 __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
-							nodemask_t *nodemask)
+		nodemask_t *nodemask)
 {
 	struct page *page;
 	unsigned int alloc_flags = ALLOC_WMARK_LOW;
@@ -4202,10 +4206,6 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
 
 	finalise_ac(gfp_mask, order, &ac);
 
-	//<<<2018.05.29 Yongseob
-	if (ac.high_zoneidx == ZONE_PRAM ) //if ( gfp_mask & GFP_PRAM )
-		alloc_flags |= ALLOC_NO_WATERMARKS;
-	//>>>
 	/* First allocation attempt */
 	page = get_page_from_freelist(alloc_mask, order, alloc_flags, &ac);
 	if (likely(page))
@@ -5249,7 +5249,7 @@ build_all_zonelists_init(void)
 	for_each_possible_cpu(cpu)
 		setup_pageset(&per_cpu(boot_pageset, cpu), 0);
 
-	mminit_verify_zonelist();
+	mminit_verify_zonelist(); // mm/mm_init.c
 	cpuset_init_current_mems_allowed();
 }
 
