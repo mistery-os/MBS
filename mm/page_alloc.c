@@ -4883,7 +4883,7 @@ void show_free_areas(unsigned int filter, nodemask_t *nodemask)
 static void zoneref_set_zone(struct zone *zone, struct zoneref *zoneref)
 {
 	zoneref->zone = zone;
-	zoneref->zone_idx = zone_idx(zone);
+	zoneref->zone_idx = zone_idx(zone); /* include/linux/mmzone.h */
 }
 
 /*
@@ -4894,7 +4894,7 @@ static void zoneref_set_zone(struct zone *zone, struct zoneref *zoneref)
 static int build_zonerefs_node(pg_data_t *pgdat, struct zoneref *zonerefs)
 {
 	struct zone *zone;
-	enum zone_type zone_type = MAX_NR_ZONES;
+	enum zone_type zone_type = MAX_NR_ZONES; /* include/linux/mmzone.h */
 	int nr_zones = 0;
 
 	do {
@@ -4902,7 +4902,7 @@ static int build_zonerefs_node(pg_data_t *pgdat, struct zoneref *zonerefs)
 		zone = pgdat->node_zones + zone_type;
 		if (managed_zone(zone)) {
 			zoneref_set_zone(zone, &zonerefs[nr_zones++]);
-			check_highest_zone(zone_type);
+			check_highest_zone(zone_type); /* include/linux/mempolicy.h */
 		}
 	} while (zone_type);
 
@@ -5206,7 +5206,7 @@ static void __build_all_zonelists(void *data)
 		for_each_online_node(nid) {
 			pg_data_t *pgdat = NODE_DATA(nid);
 
-			build_zonelists(pgdat);
+			build_zonelists(pgdat); /* mm/page_alloc.c */
 		}
 
 #ifdef CONFIG_HAVE_MEMORYLESS_NODES

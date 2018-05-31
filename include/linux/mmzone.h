@@ -365,7 +365,6 @@ enum zone_type {
 	ZONE_PRAM,
 	//>>>
 	__MAX_NR_ZONES
-
 };
 
 #ifndef __GENERATING_BOUNDS_H

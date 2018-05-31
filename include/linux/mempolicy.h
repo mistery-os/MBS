@@ -158,7 +158,11 @@ extern enum zone_type policy_zone;
 
 static inline void check_highest_zone(enum zone_type k)
 {
+	//<<<2018.05.31 Yongseob
+#if 0
 	if (k > policy_zone && k != ZONE_MOVABLE)
+#endif
+		if (k > policy_zone && k != ZONE_MOVABLE && k !=ZONE_PRAM)
 		policy_zone = k;
 }
 
