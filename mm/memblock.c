@@ -1722,7 +1722,7 @@ int __init_memblock memblock_is_map_memory(phys_addr_t addr)
 int __init_memblock memblock_search_pfn_nid_pram(unsigned long pfn,
 			 unsigned long *start_pfn, unsigned long *end_pfn)
 {
-	struct memblock_type *type = &memblock.parm;
+	struct memblock_type *type = &memblock.pram;
 	int mid = memblock_search(type, PFN_PHYS(pfn));
 
 	if (mid == -1)
