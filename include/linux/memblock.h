@@ -199,11 +199,15 @@ int memblock_search_pfn_nid(unsigned long pfn, unsigned long *start_pfn,
 			    unsigned long  *end_pfn);
 void __next_mem_pfn_range(int *idx, int nid, unsigned long *out_start_pfn,
 			  unsigned long *out_end_pfn, int *out_nid);
+unsigned long memblock_next_valid_pfn(unsigned long pfn, unsigned long max_pfn);
 //<<<2018.02.13 Yongseob
+//2018.06.01 memblock_search_pfn_nid_pram, memblock_next_valid_pfn_pram
+int memblock_search_pfn_nid_pram(unsigned long pfn, unsigned long *start_pfn,
+			    unsigned long  *end_pfn);
 void __next_pram_pfn_range(int *idx, int nid, unsigned long *out_start_pfn,
 			  unsigned long *out_end_pfn, int *out_nid);
+unsigned long memblock_next_valid_pfn_pram(unsigned long pfn, unsigned long max_pfn);
 //>>>
-unsigned long memblock_next_valid_pfn(unsigned long pfn, unsigned long max_pfn);
 
 /**
  * for_each_mem_pfn_range - early memory pfn range iterator
