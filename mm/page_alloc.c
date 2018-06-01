@@ -1316,7 +1316,7 @@ meminit_pfn_in_nid(unsigned long pfn, int node,
 {
 	int nid;
 
-	nid = __early_pfn_to_nid(pfn, state);
+	nid = __early_pfn_to_nid(pfn, state); /* mm/page_alloc.c */
 	if (nid >= 0 && nid != node)
 		return false;
 	return true;
@@ -5298,9 +5298,11 @@ void __meminit memmap_init_zone(unsigned long size, int nid, unsigned long zone,
 		unsigned long start_pfn, enum memmap_context context)
 {
 	struct vmem_altmap *altmap = to_vmem_altmap(__pfn_to_phys(start_pfn));
+					/* return NULL at NO CONFIG_DEVICE */
 	unsigned long end_pfn = start_pfn + size;
 	pg_data_t *pgdat = NODE_DATA(nid);
 	unsigned long pfn;
+	unsigned long pfn_memory, pfn_pram;
 	unsigned long nr_initialised = 0;
 #ifdef CONFIG_HAVE_MEMBLOCK_NODE_MAP
 	struct memblock_region *r = NULL, *tmp;
@@ -5331,7 +5333,9 @@ void __meminit memmap_init_zone(unsigned long size, int nid, unsigned long zone,
 			 * end_pfn), such that we hit a valid pfn (or end_pfn)
 			 * on our next iteration of the loop.
 			 */
-			pfn = memblock_next_valid_pfn(pfn, end_pfn) - 1;
+			pfn_memory = memblock_next_valid_pfn(pfn, end_pfn) - 1;
+			pfn_pram = memblock_next_valid_pfn_pram(pfn, end_pfn) - 1;
+			pfn = ( pfn_memory > pfn_pram ? pfn_memory : pfn_pram);
 #endif
 			continue;
 		}
@@ -5607,15 +5611,18 @@ int __meminit __early_pfn_to_nid(unsigned long pfn,
 {
 	unsigned long start_pfn, end_pfn;
 	int nid;
+	unsigned long start_pfn_pram, end_pfn_pram;
+	int nid_pram;
 
 	if (state->last_start <= pfn && pfn < state->last_end)
 		return state->last_nid;
 
 	nid = memblock_search_pfn_nid(pfn, &start_pfn, &end_pfn);
-	if (nid != -1) {
-		state->last_start = start_pfn;
-		state->last_end = end_pfn;
-		state->last_nid = nid;
+	nid_pram = memblock_search_pfn_nid_pram(pfn, &start_pfn_pram, &end_pfn_pram);
+	if (nid != -1 && nid_pram != -1) {
+		state->last_start = (start_pfn > start_pfn_pram ? start_pfn : start_pfn_pram);
+		state->last_end = (end_pfn > end_pfn_pram ? end_pfn : end_pfn_pram);
+		state->last_nid = (nid > nid_pram ? nid : nid_pram);
 	}
 
 	return nid;
@@ -6239,7 +6246,7 @@ static void __paginginit free_area_init_core(struct pglist_data *pgdat)
 			continue;
 
 		set_pageblock_order();
-		setup_usemap(pgdat, zone, zone_start_pfn, size);
+		setup_usemap(pgdat, zone, zone_start_pfn, size);/* do nothing in CONFIG_SPARSEMEM */
 		init_currently_empty_zone(zone, zone_start_pfn, size);
 		memmap_init(size, nid, j, zone_start_pfn);
 	}
@@ -6702,7 +6709,10 @@ static void check_for_memory(pg_data_t *pgdat, int nid)
 	for (zone_type = 0; zone_type <= ZONE_MOVABLE - 1; zone_type++) {
 		struct zone *zone = &pgdat->node_zones[zone_type];
 		if (populated_zone(zone)) {
-			node_set_state(nid, N_HIGH_MEMORY);
+			//<<<2018.06.01 Yongseob
+			//node_set_state(nid, N_HIGH_MEMORY);
+			node_set_state(nid, N_PRAM);
+			//>>>
 			if (N_NORMAL_MEMORY != N_HIGH_MEMORY &&
 					zone_type <= ZONE_NORMAL)
 				node_set_state(nid, N_NORMAL_MEMORY);

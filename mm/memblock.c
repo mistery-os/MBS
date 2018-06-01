@@ -1142,7 +1142,35 @@ void __init_memblock __next_mem_pfn_range(int *idx, int nid,
 	if (out_nid)
 		*out_nid = r->nid;
 }
+//<<<2018.06.01 Yongseob
+unsigned long __init_memblock memblock_next_valid_pfn_pram(unsigned long pfn,
+						      unsigned long max_pfn)
+{
+	struct memblock_type *type = &memblock.pram;
+	unsigned int right = type->cnt;
+	unsigned int mid, left = 0;
+	phys_addr_t addr = PFN_PHYS(pfn + 1);
 
+	do {
+		mid = (right + left) / 2;
+
+		if (addr < type->regions[mid].base)
+			right = mid;
+		else if (addr >= (type->regions[mid].base +
+				  type->regions[mid].size))
+			left = mid + 1;
+		else {
+			/* addr is within the region, so pfn + 1 is valid */
+			return min(pfn + 1, max_pfn);
+		}
+	} while (left < right);
+
+	if (right == type->cnt)
+		return max_pfn;
+	else
+		return min(PHYS_PFN(type->regions[right].base), max_pfn);
+}
+//>>>
 unsigned long __init_memblock memblock_next_valid_pfn(unsigned long pfn,
 						      unsigned long max_pfn)
 {
@@ -1718,6 +1746,22 @@ int __init_memblock memblock_is_map_memory(phys_addr_t addr)
 }
 
 #ifdef CONFIG_HAVE_MEMBLOCK_NODE_MAP
+//<<<2018.06.01 Yongseob
+int __init_memblock memblock_search_pfn_nid_pram(unsigned long pfn,
+			 unsigned long *start_pfn, unsigned long *end_pfn)
+{
+	struct memblock_type *type = &memblock.parm;
+	int mid = memblock_search(type, PFN_PHYS(pfn));
+
+	if (mid == -1)
+		return -1;
+
+	*start_pfn = PFN_DOWN(type->regions[mid].base);
+	*end_pfn = PFN_DOWN(type->regions[mid].base + type->regions[mid].size);
+
+	return type->regions[mid].nid;
+}
+//>>>
 int __init_memblock memblock_search_pfn_nid(unsigned long pfn,
 			 unsigned long *start_pfn, unsigned long *end_pfn)
 {

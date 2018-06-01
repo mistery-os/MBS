@@ -1269,7 +1269,8 @@ void __init setup_arch(char **cmdline_p)
 	kvmclock_init();
 #endif
 
-	x86_init.paging.pagetable_init();
+	x86_init.paging.pagetable_init(); /* arch/x86/mm/init_64.c */
+	/* arch/x86/kernel/x86_init.c */
 
 	kasan_init();
 

@@ -128,7 +128,9 @@ static struct mempolicy default_policy = {
 };
 
 static struct mempolicy preferred_node_policy[MAX_NUMNODES];
-
+//<<<2018.05.31 Yongseob
+static struct mempolicy preferred_node_policy_PRAM[MAX_NUMNODES];
+//>>>
 struct mempolicy *get_task_policy(struct task_struct *p)
 {
 	struct mempolicy *pol = p->mempolicy;
@@ -2583,7 +2585,7 @@ static void __init check_numabalancing_enable(void)
 	if (num_online_nodes() > 1 && !numabalancing_override) {
 		pr_info("%s automatic NUMA balancing. Configure with numa_balancing= or the kernel.numa_balancing sysctl\n",
 			numabalancing_default ? "Enabling" : "Disabling");
-		set_numabalancing_state(numabalancing_default);
+		set_numabalancing_state(numabalancing_default);/*kernel/sched/core.c */
 	}
 }
 
@@ -2624,6 +2626,11 @@ void __init numa_policy_init(void)
 					 sizeof(struct mempolicy),
 					 0, SLAB_PANIC, NULL);
 
+	//<<<2018.05.31 Yongseob
+	policy_cache_PRAM = kmem_cache_create("pram_policy",
+					 sizeof(struct mempolicy),
+					 0, SLAB_PANIC, NULL);
+	//>>>
 	sn_cache = kmem_cache_create("shared_policy_node",
 				     sizeof(struct sp_node),
 				     0, SLAB_PANIC, NULL);
@@ -2635,6 +2642,13 @@ void __init numa_policy_init(void)
 			.flags = MPOL_F_MOF | MPOL_F_MORON,
 			.v = { .preferred_node = nid, },
 		};
+		//<<<2018.05.31 Yongseob
+		preferred_node_policy_PRAM[nid] = (struct mempolicy) {
+			.refcnt = ATOMIC_INIT(1),
+				.mode = MPOL_INTERLEAVE,
+				.flags = MPOL_F_MOF | MPOL_F_MORON,
+		};
+		//>>>
 	}
 
 	/*
@@ -2733,46 +2747,46 @@ int mpol_parse_str(char *str, struct mempolicy **mpol)
 		goto out;
 
 	switch (mode) {
-	case MPOL_PREFERRED:
-		/*
-		 * Insist on a nodelist of one node only
-		 */
-		if (nodelist) {
-			char *rest = nodelist;
-			while (isdigit(*rest))
-				rest++;
-			if (*rest)
+		case MPOL_PREFERRED:
+			/*
+			 * Insist on a nodelist of one node only
+			 */
+			if (nodelist) {
+				char *rest = nodelist;
+				while (isdigit(*rest))
+					rest++;
+				if (*rest)
+					goto out;
+			}
+			break;
+		case MPOL_INTERLEAVE:
+			/*
+			 * Default to online nodes with memory if no nodelist
+			 */
+			if (!nodelist)
+				nodes = node_states[N_MEMORY];
+			break;
+		case MPOL_LOCAL:
+			/*
+			 * Don't allow a nodelist;  mpol_new() checks flags
+			 */
+			if (nodelist)
 				goto out;
-		}
-		break;
-	case MPOL_INTERLEAVE:
-		/*
-		 * Default to online nodes with memory if no nodelist
-		 */
-		if (!nodelist)
-			nodes = node_states[N_MEMORY];
-		break;
-	case MPOL_LOCAL:
-		/*
-		 * Don't allow a nodelist;  mpol_new() checks flags
-		 */
-		if (nodelist)
+			mode = MPOL_PREFERRED;
+			break;
+		case MPOL_DEFAULT:
+			/*
+			 * Insist on a empty nodelist
+			 */
+			if (!nodelist)
+				err = 0;
 			goto out;
-		mode = MPOL_PREFERRED;
-		break;
-	case MPOL_DEFAULT:
-		/*
-		 * Insist on a empty nodelist
-		 */
-		if (!nodelist)
-			err = 0;
-		goto out;
-	case MPOL_BIND:
-		/*
-		 * Insist on a nodelist
-		 */
-		if (!nodelist)
-			goto out;
+		case MPOL_BIND:
+			/*
+			 * Insist on a nodelist
+			 */
+			if (!nodelist)
+				goto out;
 	}
 
 	mode_flags = 0;
@@ -2858,46 +2872,46 @@ int mpol_parse_PRAM(char *str, struct mempolicy **mpol)
 		goto out;
 
 	switch (mode) {
-	case MPOL_PREFERRED:
-		/*
-		 * Insist on a nodelist of one node only
-		 */
-		if (nodelist) {
-			char *rest = nodelist;
-			while (isdigit(*rest))
-				rest++;
-			if (*rest)
+		case MPOL_PREFERRED:
+			/*
+			 * Insist on a nodelist of one node only
+			 */
+			if (nodelist) {
+				char *rest = nodelist;
+				while (isdigit(*rest))
+					rest++;
+				if (*rest)
+					goto out;
+			}
+			break;
+		case MPOL_INTERLEAVE:
+			/*
+			 * Default to online nodes with memory if no nodelist
+			 */
+			if (!nodelist)
+				nodes = node_states[N_PRAM];
+			break;
+		case MPOL_LOCAL:
+			/*
+			 * Don't allow a nodelist;  mpol_new() checks flags
+			 */
+			if (nodelist)
 				goto out;
-		}
-		break;
-	case MPOL_INTERLEAVE:
-		/*
-		 * Default to online nodes with memory if no nodelist
-		 */
-		if (!nodelist)
-			nodes = node_states[N_PRAM];
-		break;
-	case MPOL_LOCAL:
-		/*
-		 * Don't allow a nodelist;  mpol_new() checks flags
-		 */
-		if (nodelist)
+			mode = MPOL_PREFERRED;
+			break;
+		case MPOL_DEFAULT:
+			/*
+			 * Insist on a empty nodelist
+			 */
+			if (!nodelist)
+				err = 0;
 			goto out;
-		mode = MPOL_PREFERRED;
-		break;
-	case MPOL_DEFAULT:
-		/*
-		 * Insist on a empty nodelist
-		 */
-		if (!nodelist)
-			err = 0;
-		goto out;
-	case MPOL_BIND:
-		/*
-		 * Insist on a nodelist
-		 */
-		if (!nodelist)
-			goto out;
+		case MPOL_BIND:
+			/*
+			 * Insist on a nodelist
+			 */
+			if (!nodelist)
+				goto out;
 	}
 
 	mode_flags = 0;
@@ -2975,22 +2989,22 @@ void mpol_to_str(char *buffer, int maxlen, struct mempolicy *pol)
 	}
 
 	switch (mode) {
-	case MPOL_DEFAULT:
-		break;
-	case MPOL_PREFERRED:
-		if (flags & MPOL_F_LOCAL)
-			mode = MPOL_LOCAL;
-		else
-			node_set(pol->v.preferred_node, nodes);
-		break;
-	case MPOL_BIND:
-	case MPOL_INTERLEAVE:
-		nodes = pol->v.nodes;
-		break;
-	default:
-		WARN_ON_ONCE(1);
-		snprintf(p, maxlen, "unknown");
-		return;
+		case MPOL_DEFAULT:
+			break;
+		case MPOL_PREFERRED:
+			if (flags & MPOL_F_LOCAL)
+				mode = MPOL_LOCAL;
+			else
+				node_set(pol->v.preferred_node, nodes);
+			break;
+		case MPOL_BIND:
+		case MPOL_INTERLEAVE:
+			nodes = pol->v.nodes;
+			break;
+		default:
+			WARN_ON_ONCE(1);
+			snprintf(p, maxlen, "unknown");
+			return;
 	}
 
 	p += snprintf(p, maxlen, "%s", policy_modes[mode]);
@@ -3009,7 +3023,7 @@ void mpol_to_str(char *buffer, int maxlen, struct mempolicy *pol)
 
 	if (!nodes_empty(nodes))
 		p += scnprintf(p, buffer + maxlen - p, ":%*pbl",
-			       nodemask_pr_args(&nodes));
+				nodemask_pr_args(&nodes));
 }
 //<<<2018.05.18 Yongseob
 EXPORT_SYMBOL_GPL(mpol_to_str);

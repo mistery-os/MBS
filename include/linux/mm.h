@@ -1769,8 +1769,8 @@ static inline void pte_lock_deinit(struct page *page) {}
 
 static inline void pgtable_init(void)
 {
-	ptlock_cache_init();
-	pgtable_cache_init();
+	ptlock_cache_init(); /* mm/memory.c */
+	pgtable_cache_init(); /* arch/x86/include/asm/pgtable_64.h */
 }
 
 static inline bool pgtable_page_ctor(struct page *page)

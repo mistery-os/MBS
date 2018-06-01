@@ -500,10 +500,10 @@ static void __init mm_init(void)
 	 * bigger than MAX_ORDER unless SPARSEMEM.
 	 */
 	page_ext_init_flatmem();
-	mem_init();
-	kmem_cache_init();
+	mem_init();		/* arch/x86/mm/init_64.c */
+	kmem_cache_init();	/* mm/slub.c */
 	pgtable_init();
-	vmalloc_init();
+	vmalloc_init();		/* mm/vmalloc.c */
 	ioremap_huge_init();
 	/* Should be run before the first non-init thread is created */
 	init_espfix_bsp();
@@ -664,16 +664,16 @@ asmlinkage __visible void __init start_kernel(void)
 		initrd_start = 0;
 	}
 #endif
-	page_ext_init();
+	page_ext_init();		/* mm/page_ext.c */
 	kmemleak_init();
 	debug_objects_mem_init();
-	setup_per_cpu_pageset();
-	numa_policy_init();
+	setup_per_cpu_pageset();	/* mm/page_alloc.c */
+	numa_policy_init();		/* mm/mempolicy.c */
 	if (late_time_init)
 		late_time_init();
 	calibrate_delay();
 	pidmap_init();
-	anon_vma_init();
+	anon_vma_init();		/* mm/rmap.c */
 	acpi_early_init();
 #ifdef CONFIG_X86
 	if (efi_enabled(EFI_RUNTIME_SERVICES))
@@ -683,7 +683,7 @@ asmlinkage __visible void __init start_kernel(void)
 	cred_init();
 	fork_init();
 	proc_caches_init();
-	buffer_init();
+	buffer_init();		/* fs/buffer.c */
 	key_init();
 	security_init();
 	dbg_late_init();
