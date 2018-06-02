@@ -5619,7 +5619,7 @@ int __meminit __early_pfn_to_nid(unsigned long pfn,
 
 	nid = memblock_search_pfn_nid(pfn, &start_pfn, &end_pfn);
 	nid_pram = memblock_search_pfn_nid_pram(pfn, &start_pfn_pram, &end_pfn_pram);
-	if (nid != -1 && nid_pram != -1) {
+	if (nid != -1 || nid_pram != -1) {
 		state->last_start = (start_pfn > start_pfn_pram ? start_pfn : start_pfn_pram);
 		state->last_end = (end_pfn > end_pfn_pram ? end_pfn : end_pfn_pram);
 		state->last_nid = (nid > nid_pram ? nid : nid_pram);
@@ -6706,7 +6706,8 @@ static void check_for_memory(pg_data_t *pgdat, int nid)
 	if (N_MEMORY == N_NORMAL_MEMORY)
 		return;
 
-	for (zone_type = 0; zone_type <= ZONE_MOVABLE - 1; zone_type++) {
+	//for (zone_type = 0; zone_type <= ZONE_MOVABLE - 1; zone_type++) {
+	for (zone_type = 0; zone_type <= ZONE_PRAM - 1; zone_type++) {
 		struct zone *zone = &pgdat->node_zones[zone_type];
 		if (populated_zone(zone)) {
 			//<<<2018.06.01 Yongseob

@@ -357,14 +357,15 @@ enum zone_type {
 	 */
 	ZONE_HIGHMEM,
 #endif
-	//<<<2018.02.14 Yongseob
-	//2018.06.01 from after ZONE_DEVICE to here because check_for_memory
-	ZONE_PRAM,
-	//>>>
 	ZONE_MOVABLE,
 #ifdef CONFIG_ZONE_DEVICE
 	ZONE_DEVICE,
 #endif
+	//<<<2018.02.14 Yongseob
+	//2018.06.01 from after ZONE_DEVICE to here because check_for_memory
+	//2018.06.02 rollback to here
+	ZONE_PRAM,
+	//>>>
 	__MAX_NR_ZONES
 };
 
