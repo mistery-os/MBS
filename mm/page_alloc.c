@@ -5287,6 +5287,7 @@ void __ref build_all_zonelists(pg_data_t *pgdat)
 #ifdef CONFIG_NUMA
 	pr_info("Policy zone: %s\n", zone_names[policy_zone]);
 #endif
+	pr_info("Policy zone_pram: %s\n", zone_names[policy_zone_pram]);
 }
 
 /*
@@ -5333,9 +5334,12 @@ void __meminit memmap_init_zone(unsigned long size, int nid, unsigned long zone,
 			 * end_pfn), such that we hit a valid pfn (or end_pfn)
 			 * on our next iteration of the loop.
 			 */
+#if 0
 			pfn_memory = memblock_next_valid_pfn(pfn, end_pfn) - 1;
 			pfn_pram = memblock_next_valid_pfn_pram(pfn, end_pfn) - 1;
 			pfn = ( pfn_memory > pfn_pram ? pfn_memory : pfn_pram);
+#endif
+			pfn = memblock_next_valid_pfn(pfn, end_pfn) - 1;
 #endif
 			continue;
 		}
@@ -5611,18 +5615,15 @@ int __meminit __early_pfn_to_nid(unsigned long pfn,
 {
 	unsigned long start_pfn, end_pfn;
 	int nid;
-	unsigned long start_pfn_pram, end_pfn_pram;
-	int nid_pram;
 
 	if (state->last_start <= pfn && pfn < state->last_end)
 		return state->last_nid;
 
 	nid = memblock_search_pfn_nid(pfn, &start_pfn, &end_pfn);
-	nid_pram = memblock_search_pfn_nid_pram(pfn, &start_pfn_pram, &end_pfn_pram);
-	if (nid != -1 || nid_pram != -1) {
-		state->last_start = (start_pfn > start_pfn_pram ? start_pfn : start_pfn_pram);
-		state->last_end = (end_pfn > end_pfn_pram ? end_pfn : end_pfn_pram);
-		state->last_nid = (nid > nid_pram ? nid : nid_pram);
+	if (nid != -1 ) {
+		state->last_start = start_pfn;
+		state->last_end = end_pfn;
+		state->last_nid = nid;
 	}
 
 	return nid;
@@ -6245,7 +6246,7 @@ static void __paginginit free_area_init_core(struct pglist_data *pgdat)
 		if (!size)
 			continue;
 
-		set_pageblock_order();
+		set_pageblock_order(); /* CONFIG_HUGETLB_PAGE_SIZE_VARIABLE */
 		setup_usemap(pgdat, zone, zone_start_pfn, size);/* do nothing in CONFIG_SPARSEMEM */
 		init_currently_empty_zone(zone, zone_start_pfn, size);
 		memmap_init(size, nid, j, zone_start_pfn);
@@ -6340,14 +6341,14 @@ void __paginginit free_area_init_node(int nid, unsigned long *zones_size,
 			zones_size, zholes_size);
 	//>>>
 
-	alloc_node_mem_map(pgdat);
+	alloc_node_mem_map(pgdat); /* CONFIG_FLAT_NODE_MEM_MAP */
 #ifdef CONFIG_FLAT_NODE_MEM_MAP
 	printk(KERN_DEBUG "free_area_init_node: node %d, pgdat %08lx, node_mem_map %08lx\n",
 			nid, (unsigned long)pgdat,
 			(unsigned long)pgdat->node_mem_map);
 #endif
 
-	reset_deferred_meminit(pgdat);
+	reset_deferred_meminit(pgdat); /* CONFIG_DEFERRED_STRUCT_PAGE_INIT */
 	free_area_init_core(pgdat);
 }
 
@@ -6822,8 +6823,8 @@ void __init free_area_init_nodes(unsigned long *max_zone_pfn)
 	//>>>
 
 	/* Initialise every node */
-	mminit_verify_pageflags_layout();
-	setup_nr_node_ids();
+	mminit_verify_pageflags_layout(); /* mm/mm_init.c */
+	setup_nr_node_ids(); /* mm/page_alloc.c */
 	for_each_online_node(nid) {
 		pg_data_t *pgdat = NODE_DATA(nid);
 		free_area_init_node(nid, NULL,

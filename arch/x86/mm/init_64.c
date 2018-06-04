@@ -744,7 +744,7 @@ void __init initpram_init(void)
 void __init paging_init(void)
 {
 	sparse_memory_present_with_active_regions(MAX_NUMNODES);
-	sparse_init();
+	sparse_init(); /* mm/sparse.c */
 
 	/*
 	 * clear the default setting with node 0

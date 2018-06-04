@@ -117,7 +117,6 @@ static struct kmem_cache *sn_cache;
 /* Highest zone. An specific allocation for a zone below that is not
    policied. */
 enum zone_type policy_zone = 0;
-
 /*
  * run-time system-wide default policy => local allocation
  */
@@ -128,6 +127,14 @@ static struct mempolicy default_policy = {
 };
 
 static struct mempolicy preferred_node_policy[MAX_NUMNODES];
+//<<<2018.06.04 Yongseob
+enum zone_type policy_zone_pram = 0;
+static struct mempolicy default_policy_pram = {
+	.refcnt = ATOMIC_INIT(1), /* never free it */
+	.mode = MPOL_INTERLEAVE,
+	.flags = MPOL_F_LOCAL,
+};
+//>>>
 //<<<2018.05.31 Yongseob
 static struct mempolicy preferred_node_policy_PRAM[MAX_NUMNODES];
 //>>>

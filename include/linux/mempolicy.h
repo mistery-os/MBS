@@ -155,6 +155,7 @@ extern bool mempolicy_nodemask_intersects(struct task_struct *tsk,
 extern unsigned int mempolicy_slab_node(void);
 
 extern enum zone_type policy_zone;
+extern enum zone_type policy_zone_pram
 
 static inline void check_highest_zone(enum zone_type k)
 {
@@ -164,6 +165,9 @@ static inline void check_highest_zone(enum zone_type k)
 #endif
 		if (k > policy_zone && k != ZONE_MOVABLE && k !=ZONE_PRAM)
 		policy_zone = k;
+		if (k > policy_zone && k != ZONE_MOVABLE)
+		policy_zone_pram = k;
+	//>>>
 }
 
 int do_migrate_pages(struct mm_struct *mm, const nodemask_t *from,
