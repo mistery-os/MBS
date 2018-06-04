@@ -165,7 +165,7 @@ static inline void check_highest_zone(enum zone_type k)
 #endif
 		if (k > policy_zone && k != ZONE_MOVABLE && k !=ZONE_PRAM)
 		policy_zone = k;
-		if (k > policy_zone && k != ZONE_MOVABLE)
+		if (k > policy_zone_pram && k != ZONE_MOVABLE)
 		policy_zone_pram = k;
 	//>>>
 }

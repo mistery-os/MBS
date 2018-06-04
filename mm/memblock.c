@@ -641,7 +641,7 @@ int __init_memblock memblock_add_pram(phys_addr_t base, phys_addr_t size)
 		     &base, &end, (void *)_RET_IP_);
 
 	return memblock_add_range(&memblock.pram, base, size, MAX_NUMNODES, 0);
-	return memblock_add_range(&memblock.pram, base, size, MAX_NUMNODES, MEMBLOCK_NOMAP);
+	//return memblock_add_range(&memblock.pram, base, size, MAX_NUMNODES, MEMBLOCK_NOMAP);
 }
 //>>>
 
