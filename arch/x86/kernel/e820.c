@@ -1091,6 +1091,7 @@ static bool __init do_mark_busy(enum e820_type type, struct resource *res)
 	 * Treat persistent memory like device memory, i.e. reserve it
 	 * for exclusive use of a driver
 	 */
+#if 0
 	switch (type) {
 	case E820_TYPE_RESERVED:
 	case E820_TYPE_PRAM:
@@ -1104,6 +1105,22 @@ static bool __init do_mark_busy(enum e820_type type, struct resource *res)
 	default:
 		return true;
 	}
+#endif
+	//<<<2018.06.05 Yongseob
+	switch (type) {
+	case E820_TYPE_RESERVED:
+	case E820_TYPE_PMEM:
+		return false;
+	case E820_TYPE_RESERVED_KERN:
+	case E820_TYPE_RAM:
+	case E820_TYPE_ACPI:
+	case E820_TYPE_NVS:
+	case E820_TYPE_UNUSABLE:
+	case E820_TYPE_PRAM:
+	default:
+		return true;
+	}
+	//>>>
 }
 
 /*
