@@ -6862,9 +6862,9 @@ static void check_for_memory(pg_data_t *pgdat, int nid)
 		if (populated_zone(zone)) {
 			//<<<2018.06.01 Yongseob
 			//2018.06.05 14:22
-			node_set_state(nid, N_HIGH_MEMORY);
+//			node_set_state(nid, N_HIGH_MEMORY);
 			//2018.06.05 boot stop
-			//node_set_state(nid, N_PRAM);
+			node_set_state(nid, N_PRAM);
 			//>>>
 			if (N_NORMAL_MEMORY != N_HIGH_MEMORY &&
 					zone_type <= ZONE_NORMAL)
