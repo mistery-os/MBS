@@ -345,6 +345,12 @@ enum zone_type {
 	 * performed on pages in ZONE_NORMAL if the DMA devices support
 	 * transfers to all addressable memory.
 	 */
+	//<<<2018.02.14 Yongseob
+	//2018.06.01 from after ZONE_DEVICE to here because check_for_memory
+	//2018.06.02 rollback to here
+	//2018.06.05 from after ZONE_DEVICE to before ZONE_NORMAL
+	ZONE_PRAM,
+	//>>>
 	ZONE_NORMAL,
 #ifdef CONFIG_HIGHMEM
 	/*
@@ -361,11 +367,6 @@ enum zone_type {
 #ifdef CONFIG_ZONE_DEVICE
 	ZONE_DEVICE,
 #endif
-	//<<<2018.02.14 Yongseob
-	//2018.06.01 from after ZONE_DEVICE to here because check_for_memory
-	//2018.06.02 rollback to here
-	ZONE_PRAM,
-	//>>>
 	__MAX_NR_ZONES
 };
 

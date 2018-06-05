@@ -382,16 +382,17 @@ static inline void __nodes_fold(nodemask_t *dstp, const nodemask_t *origp,
 enum node_states {
 	N_POSSIBLE,		/* The node could become online at some point */
 	N_ONLINE,		/* The node is online */
+	//<<<2018.02.14 Yongseob 
+	//   2018.05.30 change the order from after to before N_MEMORY
+	//   2018.06.05 from behind N_MEMORY  to afore N_NORMAL_MEMORY
+	N_PRAM,			/* The node has one or more pram */
+	//>>>
 	N_NORMAL_MEMORY,	/* The node has regular memory */
 #ifdef CONFIG_HIGHMEM
 	N_HIGH_MEMORY,		/* The node has regular or high memory */
 #else
 	N_HIGH_MEMORY = N_NORMAL_MEMORY,
 #endif
-	//<<<2018.02.14 Yongseob 
-	//   2018.05.30 change the order from after to before N_MEMORY
-	N_PRAM,			/* The node has one or more pram */
-	//>>>
 	N_MEMORY,		/* The node has memory(regular, high, movable) */
 	N_CPU,		/* The node has one or more cpus */
 	NR_NODE_STATES

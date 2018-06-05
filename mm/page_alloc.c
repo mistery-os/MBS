@@ -6708,7 +6708,7 @@ static void check_for_memory(pg_data_t *pgdat, int nid)
 		return;
 
 	for (zone_type = 0; zone_type <= ZONE_MOVABLE - 1; zone_type++) {
-	//for (zone_type = 0; zone_type <= ZONE_PRAM - 1; zone_type++) {
+	//for (zone_type = 0; zone_type <= __MAX_NR_ZONES - 1; zone_type++) {
 		struct zone *zone = &pgdat->node_zones[zone_type];
 		if (populated_zone(zone)) {
 			//<<<2018.06.01 Yongseob
