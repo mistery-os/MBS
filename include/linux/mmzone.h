@@ -850,6 +850,7 @@ unsigned long __init node_memmap_size_bytes(int, unsigned long, unsigned long);
 
 /*
  * zone_idx() returns 0 for the ZONE_DMA zone, 1 for the ZONE_NORMAL zone, etc.
+ * 3 for the ZONE_PRAM
  */
 #define zone_idx(zone)		((zone) - (zone)->zone_pgdat->node_zones)
 
@@ -1293,6 +1294,7 @@ static inline int pfn_present(unsigned long pfn)
 #endif
 
 #define early_pfn_valid(pfn)	pfn_valid(pfn)
+				/* arch/x86/include/asm/page_64.h */
 void sparse_init(void);
 #else
 #define sparse_init()	do {} while (0)

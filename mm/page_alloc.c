@@ -1310,6 +1310,19 @@ int __meminit early_pfn_to_nid(unsigned long pfn)
 #endif
 
 #ifdef CONFIG_NODES_SPAN_OTHER_NODES
+//<<<2018.06.05 Yongseob
+static inline bool __meminit __maybe_unused
+meminit_pfn_in_nid_pram(unsigned long pfn, int node,
+		   struct mminit_pfnnid_cache *state)
+{
+	int nid;
+
+	nid = __early_pfn_to_nid_pram(pfn, state); /* mm/page_alloc.c */
+	if (nid >= 0 && nid != node)
+		return false;
+	return true;
+}
+//>>>
 static inline bool __meminit __maybe_unused
 meminit_pfn_in_nid(unsigned long pfn, int node,
 		   struct mminit_pfnnid_cache *state)
@@ -1323,6 +1336,14 @@ meminit_pfn_in_nid(unsigned long pfn, int node,
 }
 
 /* Only safe to use early in boot when initialisation is single-threaded */
+//<<<2018.06.05 Yongseob
+static inline bool __meminit early_pfn_in_nid_pram(unsigned long pfn, int node)
+{
+	return meminit_pfn_in_nid_pram(pfn, node, &early_pfnnid_cache);
+}
+
+
+//>>>
 static inline bool __meminit early_pfn_in_nid(unsigned long pfn, int node)
 {
 	return meminit_pfn_in_nid(pfn, node, &early_pfnnid_cache);
@@ -5295,6 +5316,108 @@ void __ref build_all_zonelists(pg_data_t *pgdat)
  * up by free_all_bootmem() once the early boot process is
  * done. Non-atomic initialization, single-pass.
  */
+//<<<2018.06.05 Yongseob
+void __meminit memmap_init_zone_pram(unsigned long size, int nid, unsigned long zone,
+		unsigned long start_pfn, enum memmap_context context)
+{
+	struct vmem_altmap *altmap = to_vmem_altmap(__pfn_to_phys(start_pfn));
+					/* return NULL at NO CONFIG_DEVICE */
+	unsigned long end_pfn = start_pfn + size;
+	pg_data_t *pgdat = NODE_DATA(nid);
+	unsigned long pfn;
+	unsigned long pfn_memory, pfn_pram;
+	unsigned long nr_initialised = 0;
+#ifdef CONFIG_HAVE_MEMBLOCK_NODE_MAP
+	struct memblock_region *r = NULL, *tmp;
+#endif
+
+	if (highest_memmap_pfn < end_pfn - 1)
+		highest_memmap_pfn = end_pfn - 1;
+
+	/*
+	 * Honor reservation requested by the driver for this ZONE_DEVICE
+	 * memory
+	 */
+	if (altmap && start_pfn == altmap->base_pfn)
+		start_pfn += altmap->reserve;
+
+	for (pfn = start_pfn; pfn < end_pfn; pfn++) {
+		/*
+		 * There can be holes in boot-time mem_map[]s handed to this
+		 * function.  They do not exist on hotplugged memory.
+		 */
+		if (context != MEMMAP_EARLY)
+			goto not_early;
+
+		if (!early_pfn_valid(pfn)) {
+#ifdef CONFIG_HAVE_MEMBLOCK_NODE_MAP
+			/*
+			 * Skip to the pfn preceding the next valid one (or
+			 * end_pfn), such that we hit a valid pfn (or end_pfn)
+			 * on our next iteration of the loop.
+			 */
+#if 0
+			pfn_memory = memblock_next_valid_pfn(pfn, end_pfn) - 1;
+			pfn_pram = memblock_next_valid_pfn_pram(pfn, end_pfn) - 1;
+			pfn = ( pfn_memory > pfn_pram ? pfn_memory : pfn_pram);
+#endif
+
+			pfn = memblock_next_valid_pfn_pram(pfn, end_pfn) - 1;
+#endif
+			continue;
+		}
+		if (!early_pfn_in_nid_pram(pfn, nid))
+			continue;
+		if (!update_defer_init(pgdat, pfn, end_pfn, &nr_initialised))
+			break;
+
+#ifdef CONFIG_HAVE_MEMBLOCK_NODE_MAP
+		/*
+		 * Check given memblock attribute by firmware which can affect
+		 * kernel memory layout.  If zone==ZONE_MOVABLE but memory is
+		 * mirrored, it's an overlapped memmap init. skip it.
+		 */
+		if (mirrored_kernelcore && zone == ZONE_MOVABLE) {
+			if (!r || pfn >= memblock_region_memory_end_pfn(r)) {
+				for_each_memblock(memory, tmp)
+					if (pfn < memblock_region_memory_end_pfn(tmp))
+						break;
+				r = tmp;
+			}
+			if (pfn >= memblock_region_memory_base_pfn(r) &&
+					memblock_is_mirror(r)) {
+				/* already initialized as NORMAL */
+				pfn = memblock_region_memory_end_pfn(r);
+				continue;
+			}
+		}
+#endif
+
+not_early:
+		/*
+		 * Mark the block movable so that blocks are reserved for
+		 * movable at startup. This will force kernel allocations
+		 * to reserve their blocks rather than leaking throughout
+		 * the address space during boot when many long-lived
+		 * kernel allocations are made.
+		 *
+		 * bitmap is created for zone's valid pfn range. but memmap
+		 * can be created for invalid pages (for alignment)
+		 * check here not to call set_pageblock_migratetype() against
+		 * pfn out of zone.
+		 */
+		if (!(pfn & (pageblock_nr_pages - 1))) {
+			struct page *page = pfn_to_page(pfn);
+
+			__init_single_page(page, pfn, zone, nid);
+			set_pageblock_migratetype(page, MIGRATE_MOVABLE);
+			cond_resched();
+		} else {
+			__init_single_pfn(pfn, zone, nid);
+		}
+	}
+}
+//>>>
 void __meminit memmap_init_zone(unsigned long size, int nid, unsigned long zone,
 		unsigned long start_pfn, enum memmap_context context)
 {
@@ -5339,6 +5462,7 @@ void __meminit memmap_init_zone(unsigned long size, int nid, unsigned long zone,
 			pfn_pram = memblock_next_valid_pfn_pram(pfn, end_pfn) - 1;
 			pfn = ( pfn_memory > pfn_pram ? pfn_memory : pfn_pram);
 #endif
+
 			pfn = memblock_next_valid_pfn(pfn, end_pfn) - 1;
 #endif
 			continue;
@@ -5407,6 +5531,8 @@ static void __meminit zone_init_free_lists(struct zone *zone)
 #ifndef __HAVE_ARCH_MEMMAP_INIT
 #define memmap_init(size, nid, zone, start_pfn) \
 	memmap_init_zone((size), (nid), (zone), (start_pfn), MEMMAP_EARLY)
+#define memmap_init_pram(size, nid, zone, start_pfn) \
+	memmap_init_zone_pram((size), (nid), (zone), (start_pfn), MEMMAP_EARLY)
 #endif
 
 static int zone_batchsize(struct zone *zone)
@@ -5595,9 +5721,9 @@ void __meminit init_currently_empty_zone(struct zone *zone,
 	zone->zone_start_pfn = zone_start_pfn;
 
 	mminit_dprintk(MMINIT_TRACE, "memmap_init",
-			"Initialising map node %d zone %lu pfns %lu -> %lu\n",
+			"Initialising map node %d zone %lu ( %s ) pfns %lu -> %lu\n",
 			pgdat->node_id,
-			(unsigned long)zone_idx(zone),
+			(unsigned long)zone_idx(zone), zone->name
 			zone_start_pfn, (zone_start_pfn + size));
 
 	zone_init_free_lists(zone);
@@ -5610,6 +5736,26 @@ void __meminit init_currently_empty_zone(struct zone *zone,
 /*
  * Required by SPARSEMEM. Given a PFN, return what node the PFN is on.
  */
+//<<<2018.06.05 Yongseob
+int __meminit __early_pfn_to_nid_pram(unsigned long pfn,
+		struct mminit_pfnnid_cache *state)
+{
+	unsigned long start_pfn, end_pfn;
+	int nid;
+
+	if (state->last_start <= pfn && pfn < state->last_end)
+		return state->last_nid;
+
+	nid = memblock_search_pfn_nid_pram(pfn, &start_pfn, &end_pfn);
+	if (nid != -1 ) {
+		state->last_start = start_pfn;
+		state->last_end = end_pfn;
+		state->last_nid = nid;
+	}
+
+	return nid;
+}
+//>>>
 int __meminit __early_pfn_to_nid(unsigned long pfn,
 		struct mminit_pfnnid_cache *state)
 {
@@ -6249,7 +6395,10 @@ static void __paginginit free_area_init_core(struct pglist_data *pgdat)
 		set_pageblock_order(); /* CONFIG_HUGETLB_PAGE_SIZE_VARIABLE */
 		setup_usemap(pgdat, zone, zone_start_pfn, size);/* do nothing in CONFIG_SPARSEMEM */
 		init_currently_empty_zone(zone, zone_start_pfn, size);
-		memmap_init(size, nid, j, zone_start_pfn);
+		if ( j != ZONE_PRAM )
+			memmap_init(size, nid, j, zone_start_pfn);
+		else
+			memmap_init_pram(size, nid, j, zone_start_pfn);
 	}
 }
 

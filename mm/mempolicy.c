@@ -110,7 +110,7 @@
 
 static struct kmem_cache *policy_cache;
 //<<<2018.05.23 Yongseob
-static struct kmem_cache *policy_cache_PRAM;
+static struct kmem_cache *policy_cache_pram;
 //>>>
 static struct kmem_cache *sn_cache;
 
@@ -2634,7 +2634,7 @@ void __init numa_policy_init(void)
 					 0, SLAB_PANIC, NULL);
 
 	//<<<2018.05.31 Yongseob
-	policy_cache_PRAM = kmem_cache_create("pram_policy",
+	policy_cache_pram = kmem_cache_create("pram_policy",
 					 sizeof(struct mempolicy),
 					 0, SLAB_PANIC, NULL);
 	//>>>
