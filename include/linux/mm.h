@@ -2012,11 +2012,18 @@ static inline int __early_pfn_to_nid(unsigned long pfn,
 {
 	return 0;
 }
+static inline int __early_pfn_to_nid_pram(unsigned long pfn,
+					struct mminit_pfnnid_cache *state)
+{
+	return 0;
+}
 #else
 /* please see mm/page_alloc.c */
 extern int __meminit early_pfn_to_nid(unsigned long pfn);
 /* there is a per-arch backend function. */
 extern int __meminit __early_pfn_to_nid(unsigned long pfn,
+					struct mminit_pfnnid_cache *state);
+extern int __meminit __early_pfn_to_nid_pram(unsigned long pfn,
 					struct mminit_pfnnid_cache *state);
 #endif
 
