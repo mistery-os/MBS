@@ -294,7 +294,7 @@ static struct mempolicy *mpol_new(unsigned short mode, unsigned short flags,
 	return policy;
 }
 //<<<2018.05.23 Yongseob
-static struct mempolicy *mpol_new_PRAM(unsigned short mode, unsigned short flags,
+static struct mempolicy *mpol_new_pram(unsigned short mode, unsigned short flags,
 				  nodemask_t *nodes)
 {
 	struct mempolicy *policy;
@@ -328,7 +328,7 @@ static struct mempolicy *mpol_new_PRAM(unsigned short mode, unsigned short flags
 		mode = MPOL_PREFERRED;
 	} else if (nodes_empty(*nodes))
 		return ERR_PTR(-EINVAL);
-	policy = kmem_cache_alloc(policy_cache_PRAM, GFP_KERNEL);
+	policy = kmem_cache_alloc(policy_cache_pram, GFP_KERNEL);
 	if (!policy)
 		return ERR_PTR(-ENOMEM);
 	atomic_set(&policy->refcnt, 1);
@@ -2935,7 +2935,7 @@ int mpol_parse_PRAM(char *str, struct mempolicy **mpol)
 			goto out;
 	}
 
-	new = mpol_new_PRAM(mode, mode_flags, &nodes);
+	new = mpol_new_pram(mode, mode_flags, &nodes);
 	if (IS_ERR(new))
 		goto out;
 
