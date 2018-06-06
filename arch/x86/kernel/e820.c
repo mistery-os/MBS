@@ -1044,7 +1044,7 @@ static const char *__init e820_type_to_string(struct e820_entry *entry)
 	case E820_TYPE_ACPI:		return "ACPI Tables";
 	case E820_TYPE_NVS:		return "ACPI Non-volatile Storage";
 	case E820_TYPE_UNUSABLE:	return "Unusable memory";
-	case E820_TYPE_PRAM:		return "Persistent Memory (legacy)";
+	case E820_TYPE_PRAM:		return "Memory Bus-connected Storage"; //"Persistent Memory (legacy)";
 	case E820_TYPE_PMEM:		return "Persistent Memory";
 	case E820_TYPE_RESERVED:	return "Reserved";
 	default:			return "Unknown E820 type";
@@ -1059,7 +1059,7 @@ static unsigned long __init e820_type_to_iomem_type(struct e820_entry *entry)
 	case E820_TYPE_ACPI:		/* Fall-through: */
 	case E820_TYPE_NVS:		/* Fall-through: */
 	case E820_TYPE_UNUSABLE:	/* Fall-through: */
-	case E820_TYPE_PRAM:		/* Fall-through: */
+	case E820_TYPE_PRAM:		return IORESOURCE_MEMORY_BUS_STORAGE /* Fall-through: */
 	case E820_TYPE_PMEM:		/* Fall-through: */
 	case E820_TYPE_RESERVED:	/* Fall-through: */
 	default:			return IORESOURCE_MEM;
@@ -1072,7 +1072,7 @@ static unsigned long __init e820_type_to_iores_desc(struct e820_entry *entry)
 	case E820_TYPE_ACPI:		return IORES_DESC_ACPI_TABLES;
 	case E820_TYPE_NVS:		return IORES_DESC_ACPI_NV_STORAGE;
 	case E820_TYPE_PMEM:		return IORES_DESC_PERSISTENT_MEMORY;
-	case E820_TYPE_PRAM:		return IORES_DESC_PERSISTENT_MEMORY_LEGACY;
+	case E820_TYPE_PRAM:		return IORES_DESC_MEMORY_BUS_STORAGE;
 	case E820_TYPE_RESERVED_KERN:	/* Fall-through: */
 	case E820_TYPE_RAM:		/* Fall-through: */
 	case E820_TYPE_UNUSABLE:	/* Fall-through: */
@@ -1109,7 +1109,6 @@ static bool __init do_mark_busy(enum e820_type type, struct resource *res)
 	//<<<2018.06.05 Yongseob
 	switch (type) {
 	case E820_TYPE_RESERVED:
-	case E820_TYPE_PMEM:
 		return false;
 	case E820_TYPE_RESERVED_KERN:
 	case E820_TYPE_RAM:
@@ -1117,6 +1116,7 @@ static bool __init do_mark_busy(enum e820_type type, struct resource *res)
 	case E820_TYPE_NVS:
 	case E820_TYPE_UNUSABLE:
 	case E820_TYPE_PRAM:
+	case E820_TYPE_PMEM:
 	default:
 		return true;
 	}
