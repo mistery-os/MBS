@@ -760,12 +760,6 @@ void __init paging_init(void)
 #endif
 	// I don't know exactly what below means...
 	node_clear_state(0, N_MEMORY);
-	//<<<2018.06.05
-#if 0
-	if (N_PRAM != N_NORMAL_MEMORY)
-		node_clear_state(0, N_NORMAL_MEMORY);
-#endif
-	//>>>2018.06.05
 	//>>>
 
 	zone_sizes_init();

@@ -5379,7 +5379,7 @@ void __meminit memmap_init_zone_pram(unsigned long size, int nid, unsigned long 
 		 */
 		if (mirrored_kernelcore && zone == ZONE_MOVABLE) {
 			if (!r || pfn >= memblock_region_memory_end_pfn(r)) {
-				for_each_memblock(memory, tmp)
+				for_each_memblock(pram, tmp)
 					if (pfn < memblock_region_memory_end_pfn(tmp))
 						break;
 				r = tmp;
@@ -5457,11 +5457,6 @@ void __meminit memmap_init_zone(unsigned long size, int nid, unsigned long zone,
 			 * end_pfn), such that we hit a valid pfn (or end_pfn)
 			 * on our next iteration of the loop.
 			 */
-#if 0
-			pfn_memory = memblock_next_valid_pfn(pfn, end_pfn) - 1;
-			pfn_pram = memblock_next_valid_pfn_pram(pfn, end_pfn) - 1;
-			pfn = ( pfn_memory > pfn_pram ? pfn_memory : pfn_pram);
-#endif
 
 			pfn = memblock_next_valid_pfn(pfn, end_pfn) - 1;
 #endif
@@ -6862,9 +6857,9 @@ static void check_for_memory(pg_data_t *pgdat, int nid)
 		if (populated_zone(zone)) {
 			//<<<2018.06.01 Yongseob
 			//2018.06.05 14:22
-//			node_set_state(nid, N_HIGH_MEMORY);
+			node_set_state(nid, N_HIGH_MEMORY);
 			//2018.06.05 boot stop
-			node_set_state(nid, N_PRAM);
+			//node_set_state(nid, N_PRAM);
 			//>>>
 			if (N_NORMAL_MEMORY != N_HIGH_MEMORY &&
 					zone_type <= ZONE_NORMAL)
