@@ -55,9 +55,13 @@ static int e820_pmem_probe(struct platform_device *pdev)
 
 	for (p = iomem_resource.child; p ; p = p->sibling) {
 		struct nd_region_desc ndr_desc;
-
+		//<<<2018.06.07 Yongseob
+#if 0
 		if (p->desc != IORES_DESC_PERSISTENT_MEMORY_LEGACY)
-			continue;
+#endif
+			if (p->desc != IORES_DESC_PERSISTENT_MEMORY)
+				continue;
+		//>>>
 
 		memset(&ndr_desc, 0, sizeof(ndr_desc));
 		ndr_desc.res = p;
@@ -70,7 +74,7 @@ static int e820_pmem_probe(struct platform_device *pdev)
 
 	return 0;
 
- err:
+err:
 	nvdimm_bus_unregister(nvdimm_bus);
 	dev_err(dev, "failed to register legacy persistent memory ranges\n");
 	return -ENXIO;

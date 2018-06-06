@@ -17,8 +17,14 @@ static __init int register_e820_pmem(void)
 	struct platform_device *pdev;
 	int rc;
 
+	//<<<2018.06.07 Yongseob
+#if 0
 	rc = walk_iomem_res_desc(IORES_DESC_PERSISTENT_MEMORY_LEGACY,
 				 IORESOURCE_MEM, 0, -1, NULL, found);
+#endif
+	rc = walk_iomem_res_desc(IORES_DESC_PERSISTENT_MEMORY,
+				 IORESOURCE_MEM, 0, -1, NULL, found);
+	//>>>
 	if (rc <= 0)
 		return 0;
 

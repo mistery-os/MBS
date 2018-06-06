@@ -1059,7 +1059,7 @@ static unsigned long __init e820_type_to_iomem_type(struct e820_entry *entry)
 	case E820_TYPE_ACPI:		/* Fall-through: */
 	case E820_TYPE_NVS:		/* Fall-through: */
 	case E820_TYPE_UNUSABLE:	/* Fall-through: */
-	case E820_TYPE_PRAM:		return IORESOURCE_MEMORY_BUS_STORAGE /* Fall-through: */
+	case E820_TYPE_PRAM:		return IORESOURCE_MEMORY_BUS_STORAGE; /* Fall-through: */
 	case E820_TYPE_PMEM:		/* Fall-through: */
 	case E820_TYPE_RESERVED:	/* Fall-through: */
 	default:			return IORESOURCE_MEM;
