@@ -256,8 +256,11 @@ void reset_node_managed_pages(pg_data_t *pgdat)
 
 	for ( j=0; j<MAX_NR_ZONES; j++){
 		struct zone *z = pgdat->node_zones + j ;
-		if (j != ZONE_PRAM)
+		if (j != ZONE_PRAM){
 			z->managed_pages = 0;
+		}else{
+		pr_info("z->managed_pages = %lu \n", z->managed_pages);
+		}
 	}
 	//>>>
 }
