@@ -161,10 +161,27 @@ static int reset_managed_pages_done __initdata;
 
 void reset_node_managed_pages(pg_data_t *pgdat)
 {
+	//<<<2018.06.07 Yongseob
+#if 0
 	struct zone *z;
 
 	for (z = pgdat->node_zones; z < pgdat->node_zones + MAX_NR_ZONES; z++)
 		z->managed_pages = 0;
+
+#endif
+	enum zone_type j;
+
+	for ( j=0; j<MAX_NR_ZONES; j++){
+		struct zone *z = pgdat->node_zones + j ;
+		if (j != ZONE_PRAM){
+			z->managed_pages = 0;
+			pr_info("z->managed_pages = %lu( %s ) \n", z->managed_pages,z->name);
+		}else{
+			pr_info("ELSE z->managed_pages = %lu( %s ) \n", z->managed_pages,z->name);
+		}
+	}
+	//>>>
+
 }
 
 void __init reset_all_zones_managed_pages(void)
