@@ -153,7 +153,11 @@ static unsigned long __init free_low_memory_core_early(void)
 	for_each_free_mem_range(i, NUMA_NO_NODE, MEMBLOCK_NONE, &start, &end,
 				NULL)
 		count += __free_memory_core(start, end);
-
+//<<<2018.06.07 Yongseob
+	for_each_free_pram_range(i, NUMA_NO_NODE, MEMBLOCK_NONE, &start, &end,
+				NULL)
+		count += __free_memory_core(start, end);
+//>>>
 	return count;
 }
 
@@ -175,9 +179,9 @@ void reset_node_managed_pages(pg_data_t *pgdat)
 		struct zone *z = pgdat->node_zones + j ;
 		if (j != ZONE_PRAM){
 			z->managed_pages = 0;
-			pr_info("z->managed_pages = %lu( %s ) \n", z->managed_pages,z->name);
+			pr_dbg("z->managed_pages = %lu( %s ) \n", z->managed_pages,z->name);
 		}else{
-			pr_info("ELSE z->managed_pages = %lu( %s ) \n", z->managed_pages,z->name);
+			pr_dbg("ELSE z->managed_pages = %lu( %s ) \n", z->managed_pages,z->name);
 		}
 	}
 	//>>>

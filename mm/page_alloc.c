@@ -1244,6 +1244,7 @@ void __meminit reserve_bootmem_region(phys_addr_t start, phys_addr_t end)
 			struct page *page = pfn_to_page(start_pfn);
 
 			init_reserved_page(start_pfn);
+				/* CONFIG_DEFERRED_STRUCT_PAGE_INIT */
 
 			/* Avoid false-positive PageTail() */
 			INIT_LIST_HEAD(&page->lru);

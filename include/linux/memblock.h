@@ -245,6 +245,10 @@ unsigned long memblock_next_valid_pfn_pram(unsigned long pfn, unsigned long max_
 	for_each_mem_range(i, &memblock.memory, &memblock.reserved,	\
 			   nid, flags, p_start, p_end, p_nid)
 
+#define for_each_free_pram_range(i, nid, flags, p_start, p_end, p_nid)	\
+	for_each_mem_range(i, &memblock.pram, &memblock.reserved,	\
+			   nid, flags, p_start, p_end, p_nid)
+
 /**
  * for_each_free_mem_range_reverse - rev-iterate through free memblock areas
  * @i: u64 used as loop variable
