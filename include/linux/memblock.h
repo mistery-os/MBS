@@ -244,11 +244,17 @@ unsigned long memblock_next_valid_pfn_pram(unsigned long pfn, unsigned long max_
 #define for_each_free_mem_range(i, nid, flags, p_start, p_end, p_nid)	\
 	for_each_mem_range(i, &memblock.memory, &memblock.reserved,	\
 			   nid, flags, p_start, p_end, p_nid)
-
+//<<<2018.06.07 Yongseob T1
+#if 0
 #define for_each_free_pram_range(i, nid, flags, p_start, p_end, p_nid)	\
 	for_each_mem_range(i, &memblock.pram, &memblock.reserved,	\
 			   nid, flags, p_start, p_end, p_nid)
-
+#endif
+//   2018.06.07 Trial 2
+#define for_each_free_pram_range(i, nid, flags, p_start, p_end, p_nid)	\
+	for_each_mem_range(i, &memblock.pram, NULL,\
+			   nid, flags, p_start, p_end, p_nid)
+//>>>
 /**
  * for_each_free_mem_range_reverse - rev-iterate through free memblock areas
  * @i: u64 used as loop variable
@@ -413,8 +419,8 @@ static inline unsigned long memblock_region_reserved_end_pfn(const struct memblo
 	return PFN_UP(reg->base + reg->size);
 }
 
-#define for_each_memblock(memblock_type, region)					\
-	for (region = memblock.memblock_type.regions;					\
+#define for_each_memblock(memblock_type, region) \
+	for (region = memblock.memblock_type.regions;	\
 	     region < (memblock.memblock_type.regions + memblock.memblock_type.cnt);	\
 	     region++)
 

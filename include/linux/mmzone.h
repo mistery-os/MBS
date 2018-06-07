@@ -1275,6 +1275,12 @@ static inline int pfn_valid(unsigned long pfn)
 		return 0;
 	return valid_section(__nr_to_section(pfn_to_section_nr(pfn)));
 }
+static inline int pfn_valid_pram(unsigned long pfn)
+{
+	if (pfn_to_section_nr(pfn) >= NR_MEM_SECTIONS)
+		return 0;
+	return valid_section(__nr_to_section(pfn_to_section_nr(pfn)));
+}
 #endif
 
 static inline int pfn_present(unsigned long pfn)
@@ -1300,7 +1306,8 @@ static inline int pfn_present(unsigned long pfn)
 #endif
 
 #define early_pfn_valid(pfn)	pfn_valid(pfn)
-/* arch/x86/include/asm/page_64.h */
+#define early_pfn_valid_pram(pfn)	pfn_valid_pram(pfn)
+				/* include/linux/mmzone.h  */
 void sparse_init(void);
 #else
 #define sparse_init()	do {} while (0)

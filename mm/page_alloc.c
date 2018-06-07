@@ -5360,12 +5360,6 @@ void __meminit memmap_init_zone_pram(unsigned long size, int nid, unsigned long 
 			 * end_pfn), such that we hit a valid pfn (or end_pfn)
 			 * on our next iteration of the loop.
 			 */
-#if 0
-			pfn_memory = memblock_next_valid_pfn(pfn, end_pfn) - 1;
-			pfn_pram = memblock_next_valid_pfn_pram(pfn, end_pfn) - 1;
-			pfn = ( pfn_memory > pfn_pram ? pfn_memory : pfn_pram);
-#endif
-
 			pfn = memblock_next_valid_pfn_pram(pfn, end_pfn) - 1;
 #endif
 			continue;
@@ -5705,8 +5699,8 @@ static __meminit void zone_pcp_init(struct zone *zone)
 
 	if (populated_zone(zone))
 		printk(KERN_DEBUG "  %s zone: %lu pages, LIFO batch:%u\n",
-				zone->name, zone->present_pages,
-				zone_batchsize(zone));
+		zone->name, zone->present_pages,
+		zone_batchsize(zone));
 }
 
 void __meminit init_currently_empty_zone(struct zone *zone,
@@ -5720,9 +5714,9 @@ void __meminit init_currently_empty_zone(struct zone *zone,
 	zone->zone_start_pfn = zone_start_pfn;
 
 	mminit_dprintk(MMINIT_TRACE, "memmap_init",
-			"Initialising map node %d zone %lu ( %s ) pfns %lu -> %lu\n",
-			pgdat->node_id,
-			(unsigned long)zone_idx(zone), zone->name,
+		"Initialising map node %d zone %lu ( %s ) pfns %lu -> %lu\n",
+		pgdat->node_id,
+		(unsigned long)zone_idx(zone), zone->name,
 			zone_start_pfn, (zone_start_pfn + size));
 
 	zone_init_free_lists(zone);
@@ -6352,11 +6346,11 @@ static void __paginginit free_area_init_core(struct pglist_data *pgdat)
 				freesize -= memmap_pages;
 				if (memmap_pages)
 					printk(KERN_DEBUG
-							"  %s zone: %lu pages used for memmap\n",
-							zone_names[j], memmap_pages);
+			"  %s zone: %lu pages used for memmap\n",
+			zone_names[j], memmap_pages);
 			} else
-				pr_warn("  %s zone: %lu pages exceeds freesize %lu\n",
-						zone_names[j], memmap_pages, freesize);
+			pr_warn("  %s zone: %lu pages exceeds freesize %lu\n",
+			zone_names[j], memmap_pages, freesize);
 		}
 
 		/* Account for reserved pages */
