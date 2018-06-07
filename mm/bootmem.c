@@ -245,10 +245,21 @@ static int reset_managed_pages_done __initdata;
 
 void reset_node_managed_pages(pg_data_t *pgdat)
 {
-	struct zone *z;
 
+	//<<<2018.06.07 Yongseob
+#if 0
+	struct zone *z;
 	for (z = pgdat->node_zones; z < pgdat->node_zones + MAX_NR_ZONES; z++)
 		z->managed_pages = 0;
+#endif
+	enum zone_type j;
+
+	for ( j=0; j<MAX_NR_ZONES; j++){
+		struct zone *z = pgdat->node_zones + j ;
+		if (j != ZONE_PRAM)
+			z->managed_pages = 0;
+	}
+	//>>>
 }
 
 void __init reset_all_zones_managed_pages(void)
@@ -285,13 +296,13 @@ unsigned long __init free_all_bootmem(void)
 }
 
 static void __init __free(bootmem_data_t *bdata,
-			unsigned long sidx, unsigned long eidx)
+		unsigned long sidx, unsigned long eidx)
 {
 	unsigned long idx;
 
 	bdebug("nid=%td start=%lx end=%lx\n", bdata - bootmem_node_data,
-		sidx + bdata->node_min_pfn,
-		eidx + bdata->node_min_pfn);
+			sidx + bdata->node_min_pfn,
+			eidx + bdata->node_min_pfn);
 
 	if (WARN_ON(bdata->node_bootmem_map == NULL))
 		return;
@@ -305,16 +316,16 @@ static void __init __free(bootmem_data_t *bdata,
 }
 
 static int __init __reserve(bootmem_data_t *bdata, unsigned long sidx,
-			unsigned long eidx, int flags)
+		unsigned long eidx, int flags)
 {
 	unsigned long idx;
 	int exclusive = flags & BOOTMEM_EXCLUSIVE;
 
 	bdebug("nid=%td start=%lx end=%lx flags=%x\n",
-		bdata - bootmem_node_data,
-		sidx + bdata->node_min_pfn,
-		eidx + bdata->node_min_pfn,
-		flags);
+			bdata - bootmem_node_data,
+			sidx + bdata->node_min_pfn,
+			eidx + bdata->node_min_pfn,
+			flags);
 
 	if (WARN_ON(bdata->node_bootmem_map == NULL))
 		return 0;
@@ -326,19 +337,19 @@ static int __init __reserve(bootmem_data_t *bdata, unsigned long sidx,
 				return -EBUSY;
 			}
 			bdebug("silent double reserve of PFN %lx\n",
-				idx + bdata->node_min_pfn);
+					idx + bdata->node_min_pfn);
 		}
 	return 0;
 }
 
 static int __init mark_bootmem_node(bootmem_data_t *bdata,
-				unsigned long start, unsigned long end,
-				int reserve, int flags)
+		unsigned long start, unsigned long end,
+		int reserve, int flags)
 {
 	unsigned long sidx, eidx;
 
 	bdebug("nid=%td start=%lx end=%lx reserve=%d flags=%x\n",
-		bdata - bootmem_node_data, start, end, reserve, flags);
+			bdata - bootmem_node_data, start, end, reserve, flags);
 
 	BUG_ON(start < bdata->node_min_pfn);
 	BUG_ON(end > bdata->node_low_pfn);
@@ -354,7 +365,7 @@ static int __init mark_bootmem_node(bootmem_data_t *bdata,
 }
 
 static int __init mark_bootmem(unsigned long start, unsigned long end,
-				int reserve, int flags)
+		int reserve, int flags)
 {
 	unsigned long pos;
 	bootmem_data_t *bdata;
@@ -365,7 +376,7 @@ static int __init mark_bootmem(unsigned long start, unsigned long end,
 		unsigned long max;
 
 		if (pos < bdata->node_min_pfn ||
-		    pos >= bdata->node_low_pfn) {
+				pos >= bdata->node_low_pfn) {
 			BUG_ON(pos != start);
 			continue;
 		}
@@ -396,7 +407,7 @@ static int __init mark_bootmem(unsigned long start, unsigned long end,
  * The range must reside completely on the specified node.
  */
 void __init free_bootmem_node(pg_data_t *pgdat, unsigned long physaddr,
-			      unsigned long size)
+		unsigned long size)
 {
 	unsigned long start, end;
 
@@ -441,7 +452,7 @@ void __init free_bootmem(unsigned long physaddr, unsigned long size)
  * The range must reside completely on the specified node.
  */
 int __init reserve_bootmem_node(pg_data_t *pgdat, unsigned long physaddr,
-				 unsigned long size, int flags)
+		unsigned long size, int flags)
 {
 	unsigned long start, end;
 
@@ -462,7 +473,7 @@ int __init reserve_bootmem_node(pg_data_t *pgdat, unsigned long physaddr,
  * The range must be contiguous but may span node boundaries.
  */
 int __init reserve_bootmem(unsigned long addr, unsigned long size,
-			    int flags)
+		int flags)
 {
 	unsigned long start, end;
 
@@ -473,7 +484,7 @@ int __init reserve_bootmem(unsigned long addr, unsigned long size,
 }
 
 static unsigned long __init align_idx(struct bootmem_data *bdata,
-				      unsigned long idx, unsigned long step)
+		unsigned long idx, unsigned long step)
 {
 	unsigned long base = bdata->node_min_pfn;
 
@@ -486,7 +497,7 @@ static unsigned long __init align_idx(struct bootmem_data *bdata,
 }
 
 static unsigned long __init align_off(struct bootmem_data *bdata,
-				      unsigned long off, unsigned long align)
+		unsigned long off, unsigned long align)
 {
 	unsigned long base = PFN_PHYS(bdata->node_min_pfn);
 
@@ -496,15 +507,15 @@ static unsigned long __init align_off(struct bootmem_data *bdata,
 }
 
 static void * __init alloc_bootmem_bdata(struct bootmem_data *bdata,
-					unsigned long size, unsigned long align,
-					unsigned long goal, unsigned long limit)
+		unsigned long size, unsigned long align,
+		unsigned long goal, unsigned long limit)
 {
 	unsigned long fallback = 0;
 	unsigned long min, max, start, sidx, midx, step;
 
 	bdebug("nid=%td size=%lx [%lu pages] align=%lx goal=%lx limit=%lx\n",
-		bdata - bootmem_node_data, size, PAGE_ALIGN(size) >> PAGE_SHIFT,
-		align, goal, limit);
+			bdata - bootmem_node_data, size, PAGE_ALIGN(size) >> PAGE_SHIFT,
+			align, goal, limit);
 
 	BUG_ON(!size);
 	BUG_ON(align & (align - 1));
@@ -579,7 +590,7 @@ find_block:
 		 * Reserve the area now:
 		 */
 		if (__reserve(bdata, PFN_DOWN(start_off) + merge,
-				PFN_UP(end_off), BOOTMEM_EXCLUSIVE))
+					PFN_UP(end_off), BOOTMEM_EXCLUSIVE))
 			BUG();
 
 		region = phys_to_virt(PFN_PHYS(bdata->node_min_pfn) +
@@ -603,9 +614,9 @@ find_block:
 }
 
 static void * __init alloc_bootmem_core(unsigned long size,
-					unsigned long align,
-					unsigned long goal,
-					unsigned long limit)
+		unsigned long align,
+		unsigned long goal,
+		unsigned long limit)
 {
 	bootmem_data_t *bdata;
 	void *region;
@@ -628,9 +639,9 @@ static void * __init alloc_bootmem_core(unsigned long size,
 }
 
 static void * __init ___alloc_bootmem_nopanic(unsigned long size,
-					      unsigned long align,
-					      unsigned long goal,
-					      unsigned long limit)
+		unsigned long align,
+		unsigned long goal,
+		unsigned long limit)
 {
 	void *ptr;
 
@@ -660,7 +671,7 @@ restart:
  * Returns NULL on failure.
  */
 void * __init __alloc_bootmem_nopanic(unsigned long size, unsigned long align,
-					unsigned long goal)
+		unsigned long goal)
 {
 	unsigned long limit = 0;
 
@@ -668,7 +679,7 @@ void * __init __alloc_bootmem_nopanic(unsigned long size, unsigned long align,
 }
 
 static void * __init ___alloc_bootmem(unsigned long size, unsigned long align,
-					unsigned long goal, unsigned long limit)
+		unsigned long goal, unsigned long limit)
 {
 	void *mem = ___alloc_bootmem_nopanic(size, align, goal, limit);
 
@@ -696,7 +707,7 @@ static void * __init ___alloc_bootmem(unsigned long size, unsigned long align,
  * The function panics if the request can not be satisfied.
  */
 void * __init __alloc_bootmem(unsigned long size, unsigned long align,
-			      unsigned long goal)
+		unsigned long goal)
 {
 	unsigned long limit = 0;
 
@@ -704,8 +715,8 @@ void * __init __alloc_bootmem(unsigned long size, unsigned long align,
 }
 
 void * __init ___alloc_bootmem_node_nopanic(pg_data_t *pgdat,
-				unsigned long size, unsigned long align,
-				unsigned long goal, unsigned long limit)
+		unsigned long size, unsigned long align,
+		unsigned long goal, unsigned long limit)
 {
 	void *ptr;
 
@@ -734,14 +745,14 @@ again:
 }
 
 void * __init __alloc_bootmem_node_nopanic(pg_data_t *pgdat, unsigned long size,
-				   unsigned long align, unsigned long goal)
+		unsigned long align, unsigned long goal)
 {
 	return ___alloc_bootmem_node_nopanic(pgdat, size, align, goal, 0);
 }
 
 void * __init ___alloc_bootmem_node(pg_data_t *pgdat, unsigned long size,
-				    unsigned long align, unsigned long goal,
-				    unsigned long limit)
+		unsigned long align, unsigned long goal,
+		unsigned long limit)
 {
 	void *ptr;
 
@@ -770,7 +781,7 @@ void * __init ___alloc_bootmem_node(pg_data_t *pgdat, unsigned long size,
  * The function panics if the request can not be satisfied.
  */
 void * __init __alloc_bootmem_node(pg_data_t *pgdat, unsigned long size,
-				   unsigned long align, unsigned long goal)
+		unsigned long align, unsigned long goal)
 {
 	if (WARN_ON_ONCE(slab_is_available()))
 		return kzalloc_node(size, GFP_NOWAIT, pgdat->node_id);
@@ -779,7 +790,7 @@ void * __init __alloc_bootmem_node(pg_data_t *pgdat, unsigned long size,
 }
 
 void * __init __alloc_bootmem_node_high(pg_data_t *pgdat, unsigned long size,
-				   unsigned long align, unsigned long goal)
+		unsigned long align, unsigned long goal)
 {
 #ifdef MAX_DMA32_PFN
 	unsigned long end_pfn;
@@ -791,13 +802,13 @@ void * __init __alloc_bootmem_node_high(pg_data_t *pgdat, unsigned long size,
 	end_pfn = pgdat_end_pfn(pgdat);
 
 	if (end_pfn > MAX_DMA32_PFN + (128 >> (20 - PAGE_SHIFT)) &&
-	    (goal >> PAGE_SHIFT) < MAX_DMA32_PFN) {
+			(goal >> PAGE_SHIFT) < MAX_DMA32_PFN) {
 		void *ptr;
 		unsigned long new_goal;
 
 		new_goal = MAX_DMA32_PFN << PAGE_SHIFT;
 		ptr = alloc_bootmem_bdata(pgdat->bdata, size, align,
-						 new_goal, 0);
+				new_goal, 0);
 		if (ptr)
 			return ptr;
 	}
@@ -821,17 +832,17 @@ void * __init __alloc_bootmem_node_high(pg_data_t *pgdat, unsigned long size,
  * The function panics if the request can not be satisfied.
  */
 void * __init __alloc_bootmem_low(unsigned long size, unsigned long align,
-				  unsigned long goal)
+		unsigned long goal)
 {
 	return ___alloc_bootmem(size, align, goal, ARCH_LOW_ADDRESS_LIMIT);
 }
 
 void * __init __alloc_bootmem_low_nopanic(unsigned long size,
-					  unsigned long align,
-					  unsigned long goal)
+		unsigned long align,
+		unsigned long goal)
 {
 	return ___alloc_bootmem_nopanic(size, align, goal,
-					ARCH_LOW_ADDRESS_LIMIT);
+			ARCH_LOW_ADDRESS_LIMIT);
 }
 
 /**
@@ -850,11 +861,11 @@ void * __init __alloc_bootmem_low_nopanic(unsigned long size,
  * The function panics if the request can not be satisfied.
  */
 void * __init __alloc_bootmem_low_node(pg_data_t *pgdat, unsigned long size,
-				       unsigned long align, unsigned long goal)
+		unsigned long align, unsigned long goal)
 {
 	if (WARN_ON_ONCE(slab_is_available()))
 		return kzalloc_node(size, GFP_NOWAIT, pgdat->node_id);
 
 	return ___alloc_bootmem_node(pgdat, size, align,
-				     goal, ARCH_LOW_ADDRESS_LIMIT);
+			goal, ARCH_LOW_ADDRESS_LIMIT);
 }

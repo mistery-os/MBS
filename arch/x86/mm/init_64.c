@@ -1188,7 +1188,7 @@ void __init mem_init(void)
 	register_page_bootmem_info();
 
 	/* this will put all memory onto the freelists */
-	free_all_bootmem();
+	free_all_bootmem(); /* mm/bootmem.c */
 	after_bootmem = 1;
 
 	/* Register memory areas for /proc/kcore */
