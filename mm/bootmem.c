@@ -258,8 +258,9 @@ void reset_node_managed_pages(pg_data_t *pgdat)
 		struct zone *z = pgdat->node_zones + j ;
 		if (j != ZONE_PRAM){
 			z->managed_pages = 0;
+			pr_info("z->managed_pages = %lu( %s ) \n", z->managed_pages,z->name);
 		}else{
-		pr_info("z->managed_pages = %lu \n", z->managed_pages);
+			pr_info("ELSE z->managed_pages = %lu( %s ) \n", z->managed_pages,z->name);
 		}
 	}
 	//>>>
