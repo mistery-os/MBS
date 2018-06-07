@@ -136,7 +136,7 @@ static struct mempolicy default_policy_pram = {
 };
 //>>>
 //<<<2018.05.31 Yongseob
-static struct mempolicy preferred_node_policy_PRAM[MAX_NUMNODES];
+static struct mempolicy preferred_node_policy_pram[MAX_NUMNODES];
 //>>>
 struct mempolicy *get_task_policy(struct task_struct *p)
 {
@@ -2650,7 +2650,7 @@ void __init numa_policy_init(void)
 			.v = { .preferred_node = nid, },
 		};
 		//<<<2018.05.31 Yongseob
-		preferred_node_policy_PRAM[nid] = (struct mempolicy) {
+		preferred_node_policy_pram[nid] = (struct mempolicy) {
 			.refcnt = ATOMIC_INIT(1),
 				.mode = MPOL_INTERLEAVE,
 				.flags = MPOL_F_MOF | MPOL_F_MORON,
