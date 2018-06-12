@@ -1114,6 +1114,7 @@ static inline unsigned long early_pfn_to_nid(unsigned long pfn)
 #define PFN_SECTION_SHIFT	(SECTION_SIZE_BITS - PAGE_SHIFT)
 
 #define NR_MEM_SECTIONS		(1UL << SECTIONS_SHIFT)
+#define NR_PRAM_SECTIONS	(1UL << SECTIONS_SHIFT)
 
 #define PAGES_PER_SECTION       (1UL << PFN_SECTION_SHIFT)
 #define PAGE_SECTION_MASK	(~(PAGES_PER_SECTION-1))
@@ -1277,7 +1278,7 @@ static inline int pfn_valid(unsigned long pfn)
 }
 static inline int pfn_valid_pram(unsigned long pfn)
 {
-	if (pfn_to_section_nr(pfn) >= NR_MEM_SECTIONS)
+	if (pfn_to_section_nr(pfn) >= NR_PRAM_SECTIONS)
 		return 0;
 	return valid_section(__nr_to_section(pfn_to_section_nr(pfn)));
 }
@@ -1324,6 +1325,10 @@ struct mminit_pfnnid_cache {
 	unsigned long last_end;
 	int last_nid;
 };
+
+#ifndef early_pfn_valid_pram
+#define early_pfn_valid_pram(pfn)	(1)
+#endif
 
 #ifndef early_pfn_valid
 #define early_pfn_valid(pfn)	(1)

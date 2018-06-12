@@ -5329,7 +5329,6 @@ void __meminit memmap_init_zone_pram(unsigned long size, int nid, unsigned long 
 	unsigned long end_pfn = start_pfn + size;
 	pg_data_t *pgdat = NODE_DATA(nid);
 	unsigned long pfn;
-	unsigned long pfn_memory, pfn_pram;
 	unsigned long nr_initialised = 0;
 #ifdef CONFIG_HAVE_MEMBLOCK_NODE_MAP
 	struct memblock_region *r = NULL, *tmp;
@@ -5353,7 +5352,7 @@ void __meminit memmap_init_zone_pram(unsigned long size, int nid, unsigned long 
 		if (context != MEMMAP_EARLY)
 			goto not_early;
 
-		if (!early_pfn_valid(pfn)) {
+		if (!early_pfn_valid_pram(pfn)) {
 #ifdef CONFIG_HAVE_MEMBLOCK_NODE_MAP
 			/*
 			 * Skip to the pfn preceding the next valid one (or
@@ -5420,11 +5419,10 @@ void __meminit memmap_init_zone(unsigned long size, int nid, unsigned long zone,
 		unsigned long start_pfn, enum memmap_context context)
 {
 	struct vmem_altmap *altmap = to_vmem_altmap(__pfn_to_phys(start_pfn));
-					/* return NULL at NO CONFIG_DEVICE */
+					/* return NULL if not  CONFIG_DEVICE */
 	unsigned long end_pfn = start_pfn + size;
 	pg_data_t *pgdat = NODE_DATA(nid);
 	unsigned long pfn;
-	unsigned long pfn_memory, pfn_pram;
 	unsigned long nr_initialised = 0;
 #ifdef CONFIG_HAVE_MEMBLOCK_NODE_MAP
 	struct memblock_region *r = NULL, *tmp;
@@ -6386,7 +6384,8 @@ static void __paginginit free_area_init_core(struct pglist_data *pgdat)
 			continue;
 
 		set_pageblock_order(); /* CONFIG_HUGETLB_PAGE_SIZE_VARIABLE */
-		setup_usemap(pgdat, zone, zone_start_pfn, size);/* do nothing in CONFIG_SPARSEMEM */
+		setup_usemap(pgdat, zone, zone_start_pfn, size);
+		                          /* do nothing if CONFIG_SPARSEMEM */
 		init_currently_empty_zone(zone, zone_start_pfn, size);
 		if ( j != ZONE_PRAM )
 			memmap_init(size, nid, j, zone_start_pfn);
@@ -6855,9 +6854,11 @@ static void check_for_memory(pg_data_t *pgdat, int nid)
 		if (populated_zone(zone)) {
 			//<<<2018.06.01 Yongseob
 			//2018.06.05 14:22
-			node_set_state(nid, N_HIGH_MEMORY);
+			//2018.07.12 18:51 comment
+			//node_set_state(nid, N_HIGH_MEMORY);
 			//2018.06.05 boot stop
-			//node_set_state(nid, N_PRAM);
+			//2018.06.12 18:51 comment out
+			node_set_state(nid, N_PRAM);
 			//>>>
 			if (N_NORMAL_MEMORY != N_HIGH_MEMORY &&
 					zone_type <= ZONE_NORMAL)
