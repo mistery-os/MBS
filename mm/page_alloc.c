@@ -6856,9 +6856,10 @@ static void check_for_memory(pg_data_t *pgdat, int nid)
 			//2018.06.05 14:22
 			//2018.07.12 18:51 comment
 			//node_set_state(nid, N_HIGH_MEMORY);
+			node_set_state(nid, N_MEMORY);
 			//2018.06.05 boot stop
-			//2018.06.12 18:51 comment out
-			node_set_state(nid, N_PRAM);
+			//2018.06.12 18:51 comment out--boot stop
+			//node_set_state(nid, N_PRAM);
 			//>>>
 			if (N_NORMAL_MEMORY != N_HIGH_MEMORY &&
 					zone_type <= ZONE_NORMAL)
