@@ -453,7 +453,7 @@ static inline bool gfpflags_allow_blocking(const gfp_t gfp_flags)
 	| 1 << (___GFP_DMA32 | ___GFP_HIGHMEM)				      \
 	| 1 << (___GFP_PRAM | ___GFP_DMA32 | ___GFP_HIGHMEM)		      \
 	| 1 << (___GFP_MOVABLE | ___GFP_HIGHMEM | ___GFP_PRAM)		      \
-	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_PRAM		      \
+	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_PRAM)		      \
 	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_HIGHMEM)		      \
 	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_PRAM | ___GFP_HIGHMEM)  \
 )
