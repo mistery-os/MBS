@@ -4163,6 +4163,8 @@ static inline bool prepare_alloc_pages(gfp_t gfp_mask, unsigned int order,
 		unsigned int *alloc_flags)
 {
 	ac->high_zoneidx = gfp_zone(gfp_mask);
+	if (ac->high_zoneidx == ZONE_PRAM)
+		pr_debug("ZONE_PRAM requested\n");
 	ac->zonelist = node_zonelist(preferred_nid, gfp_mask);
 	ac->nodemask = nodemask;
 	ac->migratetype = gfpflags_to_migratetype(gfp_mask);
@@ -4235,10 +4237,10 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
 	page = get_page_from_freelist(alloc_mask, order, alloc_flags, &ac);
 	if (likely(page))
 		//<<<2018.06.14 Yongseob
-	{
-		pr_debug("get_page_from_freelsit ac->zone_type=%d\n",ac.high_zoneidx);
+	//{
+	//	pr_debug("get_page_from_freelsit ac->zone_type=%d\n",ac.high_zoneidx);
 		goto out;
-	}
+	//}
 	//>>>
 
 	/*
