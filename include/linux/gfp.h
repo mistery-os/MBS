@@ -419,12 +419,12 @@ static inline bool gfpflags_allow_blocking(const gfp_t gfp_flags)
 #endif
 #define GFP_ZONE_TABLE ( \
 	(ZONE_NORMAL << 0 * GFP_ZONES_SHIFT)				       \
-	| (OPT_ZONE_DMA << ___GFP_DMA * GFP_ZONES_SHIFT)		       \
 	| (OPT_ZONE_PRAM << ___GFP_PRAM * GFP_ZONES_SHIFT)	       \
+	| (OPT_ZONE_HIGHMEM << ___GFP_HIGHMEM * GFP_ZONES_SHIFT)		       \
 	| (OPT_ZONE_DMA32 << ___GFP_DMA32 * GFP_ZONES_SHIFT)		       \
 	| (ZONE_NORMAL << ___GFP_MOVABLE * GFP_ZONES_SHIFT)		       \
-	| (OPT_ZONE_DMA << (___GFP_MOVABLE | ___GFP_DMA) * GFP_ZONES_SHIFT)    \
-	| (ZONE_MOVABLE << (___GFP_MOVABLE | ___GFP_PRAM) * GFP_ZONES_SHIFT)\
+	| (OPT_ZONE_PRAM << (___GFP_MOVABLE | ___GFP_PRAM) * GFP_ZONES_SHIFT)    \
+	| (ZONE_MOVABLE << (___GFP_MOVABLE | ___GFP_HIGHMEM) * GFP_ZONES_SHIFT)\
 	| (OPT_ZONE_DMA32 << (___GFP_MOVABLE | ___GFP_DMA32) * GFP_ZONES_SHIFT)\
 )
 //>>>
@@ -448,14 +448,14 @@ static inline bool gfpflags_allow_blocking(const gfp_t gfp_flags)
 )
 #endif
 #define GFP_ZONE_BAD ( \
-	1 << (___GFP_DMA | ___GFP_PRAM)				      \
-	| 1 << (___GFP_DMA | ___GFP_DMA32)				      \
-	| 1 << (___GFP_DMA32 | ___GFP_PRAM)				      \
-	| 1 << (___GFP_DMA | ___GFP_DMA32 | ___GFP_PRAM)		      \
-	| 1 << (___GFP_MOVABLE | ___GFP_PRAM | ___GFP_DMA)		      \
-	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_DMA)		      \
-	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_PRAM)		      \
-	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_DMA | ___GFP_PRAM)  \
+	1 << (___GFP_PRAM | ___GFP_HIGHMEM)				      \
+	| 1 << (___GFP_PRAM | ___GFP_DMA32)				      \
+	| 1 << (___GFP_DMA32 | ___GFP_HIGHMEM)				      \
+	| 1 << (___GFP_PRAM | ___GFP_DMA32 | ___GFP_HIGHMEM)		      \
+	| 1 << (___GFP_MOVABLE | ___GFP_HIGHMEM | ___GFP_PRAM)		      \
+	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_PRAM		      \
+	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_HIGHMEM)		      \
+	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_PRAM | ___GFP_HIGHMEM)  \
 )
 //>>>
 static inline enum zone_type gfp_zone(gfp_t flags)
