@@ -1601,7 +1601,8 @@ free_range:
 
 	pgdat_init_report_one_done();
 	return 0;
-}static int __init deferred_init_memmap(void *data)
+}
+static int __init deferred_init_memmap(void *data)
 {
 	pg_data_t *pgdat = data;
 	int nid = pgdat->node_id;
