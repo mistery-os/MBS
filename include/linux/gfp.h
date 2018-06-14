@@ -435,16 +435,6 @@ static inline bool gfpflags_allow_blocking(const gfp_t gfp_flags)
  * allowed.
  */
 //<<<2018.05.30 Yongseob
-#define GFP_ZONE_BAD ( \
-	1 << (___GFP_DMA )				      \
-	| 1 << (___GFP_DMA | ___GFP_DMA32)				      \
-	| 1 << (___GFP_DMA32 )				      \
-	| 1 << (___GFP_DMA | ___GFP_DMA32 )		      \
-	| 1 << (___GFP_MOVABLE | ___GFP_DMA)		      \
-	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_DMA)		      \
-	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 )		      \
-	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_DMA )  \
-)
 #if 0
 #define GFP_ZONE_BAD ( \
 	1 << (___GFP_DMA | ___GFP_HIGHMEM)				      \
@@ -467,6 +457,16 @@ static inline bool gfpflags_allow_blocking(const gfp_t gfp_flags)
 	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_DMA | ___GFP_PRAM)  \
 )
 #endif
+#define GFP_ZONE_BAD ( \
+	1 << (___GFP_DMA )				      \
+	| 1 << (___GFP_DMA | ___GFP_DMA32)				      \
+	| 1 << (___GFP_DMA32 )				      \
+	| 1 << (___GFP_DMA | ___GFP_DMA32 )		      \
+	| 1 << (___GFP_MOVABLE | ___GFP_DMA)		      \
+	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_DMA)		      \
+	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 )		      \
+	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_DMA )  \
+)
 //>>>
 static inline enum zone_type gfp_zone(gfp_t flags)
 {
