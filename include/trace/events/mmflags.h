@@ -26,6 +26,8 @@
 	{(unsigned long)GFP_NOIO,		"GFP_NOIO"},		\
 	{(unsigned long)GFP_NOWAIT,		"GFP_NOWAIT"},		\
 	{(unsigned long)GFP_DMA,		"GFP_DMA"},		\
+	{(unsigned long)GFP_PRAM,		"GFP_PRAM"},		\
+	{(unsigned long)__GFP_PRAM,		"__GFP_PRAM"},	\
 	{(unsigned long)__GFP_HIGHMEM,		"__GFP_HIGHMEM"},	\
 	{(unsigned long)GFP_DMA32,		"GFP_DMA32"},		\
 	{(unsigned long)__GFP_HIGH,		"__GFP_HIGH"},		\
@@ -230,6 +232,7 @@ IF_HAVE_VM_SOFTDIRTY(VM_SOFTDIRTY,	"softdirty"	)		\
 	IFDEF_ZONE_DMA(		EM (ZONE_DMA,	 "DMA"))	\
 	IFDEF_ZONE_DMA32(	EM (ZONE_DMA32,	 "DMA32"))	\
 				EM (ZONE_NORMAL, "Normal")	\
+				EM (ZONE_PRAM, "PStorage")	\
 	IFDEF_ZONE_HIGHMEM(	EM (ZONE_HIGHMEM,"HighMem"))	\
 				EMe(ZONE_MOVABLE,"Movable")
 

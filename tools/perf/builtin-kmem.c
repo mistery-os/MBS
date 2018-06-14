@@ -635,6 +635,8 @@ static const struct {
 	{ "GFP_NOIO",			"NI" },
 	{ "GFP_NOWAIT",			"NW" },
 	{ "GFP_DMA",			"D" },
+	{ "GFP_PRAM",			"PR" },
+	{ "__GFP_PRAM",		"PM" },
 	{ "__GFP_HIGHMEM",		"HM" },
 	{ "GFP_DMA32",			"D32" },
 	{ "__GFP_HIGH",			"H" },

@@ -4234,7 +4234,12 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
 	/* First allocation attempt */
 	page = get_page_from_freelist(alloc_mask, order, alloc_flags, &ac);
 	if (likely(page))
+		//<<<2018.06.14 Yongseob
+	{
+		pr_debug("get_page_from_freelsit ac->zone_type=%d\n",ac->high_zoneidx);
 		goto out;
+	}
+	//>>>
 
 	/*
 	 * Apply scoped allocation constraints. This is mainly about GFP_NOFS
