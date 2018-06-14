@@ -16,11 +16,12 @@ struct vm_area_struct;
  */
 
 /* Plain integer GFP bitmasks. Do not use this directly. */
-#define ___GFP_DMA		0x01u
 //<<<2018.02.14 Yongseob
-#define ___GFP_PRAM		0x02u
-#define ___GFP_HIGHMEM		0x2000000u
-//#define ___GFP_HIGHMEM		0x02u
+#define ___GFP_PRAM		0x01u
+#define ___GFP_DMA		0x2000000u
+//#define ___GFP_DMA		0x01u
+#define ___GFP_HIGHMEM		0x02u
+//#define ___GFP_PRAM		0x02u
 //>>>
 #define ___GFP_DMA32		0x04u
 #define ___GFP_MOVABLE		0x08u
