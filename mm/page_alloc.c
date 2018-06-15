@@ -1602,6 +1602,7 @@ free_range:
 	pgdat_init_report_one_done();
 	return 0;
 }
+
 static int __init deferred_init_memmap(void *data)
 {
 	pg_data_t *pgdat = data;
@@ -1738,9 +1739,6 @@ void __init page_alloc_init_late(void)
 	for_each_node_state(nid, N_MEMORY) {
 		kthread_run(deferred_init_memmap, NODE_DATA(nid), "pgdatinit%d", nid);
 	}
-	for_each_node_state(nid, N_MEMORY) {
-		kthread_run(deferred_init_memmap_pram, NODE_DATA(nid), "pgdatinit%d", nid);
-	}
 
 	/* Block until all are initialised */
 	wait_for_completion(&pgdat_init_all_done_comp);
@@ -1748,6 +1746,11 @@ void __init page_alloc_init_late(void)
 	/* Reinit limits that are based on free pages after the kernel is up */
 	files_maxfiles_init();
 #endif
+	int nid;
+	for_each_node_state(nid, N_MEMORY) {
+		kthread_run(deferred_init_memmap_pram, NODE_DATA(nid), "pgdatinit%d", nid);
+	}
+	wait_for_completion(&pgdat_init_all_done_comp);
 #ifdef CONFIG_ARCH_DISCARD_MEMBLOCK
 	/* Discard memblock private memory */
 	memblock_discard();
