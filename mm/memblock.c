@@ -162,7 +162,7 @@ __memblock_find_range_top_down(phys_addr_t start, phys_addr_t end,
 {
 	phys_addr_t this_start, this_end, cand;
 	u64 i;
-
+pr_info("__memblock_find_range_top_down \n");
 	for_each_free_mem_range_reverse(i, nid, flags, &this_start, &this_end,
 					NULL) {
 		this_start = clamp(this_start, start, end);
@@ -222,6 +222,7 @@ phys_addr_t __init_memblock memblock_find_in_range_node(phys_addr_t size,
 	 */
 	if (memblock_bottom_up() && end > kernel_end) {
 		pr_info("memblock_find_in_range_node :memblock_bottom_up \n");
+		                     /* not showing */
 		phys_addr_t bottom_up_start;
 
 		/* make sure we will allocate above the kernel */
