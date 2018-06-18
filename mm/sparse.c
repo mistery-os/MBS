@@ -605,6 +605,7 @@ void __init sparse_init(void)
 	size2 = sizeof(struct page *) * NR_MEM_SECTIONS;
 	pr_info(">>>>> size2= %llu bytes\n", (u64)size2);
 	map_map = memblock_virt_alloc(size2, 0);
+	                              /* include/linux/bootmem.h:179 */
 	if (!map_map)
 		panic("can not allocate map_map\n");
 	alloc_usemap_and_memmap(sparse_early_mem_maps_alloc_node,
@@ -631,6 +632,7 @@ void __init sparse_init(void)
 	vmemmap_populate_print_last();
 
 #ifdef CONFIG_SPARSEMEM_ALLOC_MEM_MAP_TOGETHER
+	pr_info(">>CONFIG_SPARSEMEM_ALLOC_MEM_MAP_TOGETHER<< size2= %llu bytes\n", (u64)size2);
 	memblock_free_early(__pa(map_map), size2);
 #endif
 	memblock_free_early(__pa(usemap_map), size);
