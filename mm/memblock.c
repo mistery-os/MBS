@@ -221,6 +221,7 @@ phys_addr_t __init_memblock memblock_find_in_range_node(phys_addr_t size,
 	 * is set and @end is above the kernel image.
 	 */
 	if (memblock_bottom_up() && end > kernel_end) {
+		pr_info("memblock_find_in_range_node :memblock_bottom_up \n");
 		phys_addr_t bottom_up_start;
 
 		/* make sure we will allocate above the kernel */

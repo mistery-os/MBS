@@ -634,6 +634,7 @@ void __init sparse_init(void)
 #ifdef CONFIG_SPARSEMEM_ALLOC_MEM_MAP_TOGETHER
 	pr_info(">>CONFIG_SPARSEMEM_ALLOC_MEM_MAP_TOGETHER<< size2= %llu bytes\n", (u64)size2);
 	memblock_free_early(__pa(map_map), size2);
+	                         /*include/linux/bootmem.h:236 */
 #endif
 	memblock_free_early(__pa(usemap_map), size);
 }
