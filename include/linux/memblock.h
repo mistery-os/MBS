@@ -272,6 +272,12 @@ unsigned long memblock_next_valid_pfn_pram(unsigned long pfn, unsigned long max_
 	for_each_mem_range_rev(i, &memblock.memory, &memblock.reserved,	\
 			       nid, flags, p_start, p_end, p_nid)
 
+#define for_each_free_pram_range_reverse(i, nid, flags, p_start, p_end,	\
+					p_nid)				\
+	for_each_mem_range_rev(i, &memblock.pram, &memblock.reserved,	\
+			       nid, flags, p_start, p_end, p_nid)
+
+
 static inline void memblock_set_region_flags(struct memblock_region *r,
 					     unsigned long flags)
 {
