@@ -311,6 +311,8 @@ void __init sparse_mem_maps_populate_node(struct page **map_map,
 
 	if (vmemmap_buf_start) {
 		/* need to free left buf */
+		pr_info(">>>vmemmap_buf_start= %#016llx  vmemmap_buf= %016llx vmemmap_buf_end= %016llx\n",
+			(u64)vmemmap_buf_start, (u64)vmemmap_buf, (u64)vmemmap_buf_end);
 		memblock_free_early(__pa(vmemmap_buf),
 				    vmemmap_buf_end - vmemmap_buf);
 		vmemmap_buf = NULL;

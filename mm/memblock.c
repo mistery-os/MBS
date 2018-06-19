@@ -1502,7 +1502,6 @@ void * __init memblock_virt_alloc_try_nid(
 			(u64)max_addr, (void *)_RET_IP_);
 	ptr = memblock_virt_alloc_internal(size, align,
 			min_addr, max_addr, nid);
-pr_info(">>>after memblock_virt_alloc_internal<<<mm/memblock.c\n");
 	if (ptr)
 		return ptr;
 
@@ -1525,7 +1524,7 @@ void __init __memblock_free_early(phys_addr_t base, phys_addr_t size)
 	memblock_dbg("%s: [%#016llx-%#016llx] %pF\n",
 			__func__, (u64)base, (u64)base + size - 1,
 			(void *)_RET_IP_);
-	pr_info(">>>>GOTCHA\n");
+//	pr_info(">>>>GOTCHA\n");
 	kmemleak_free_part_phys(base, size);
 	memblock_remove_range(&memblock.reserved, base, size);
 }
