@@ -484,6 +484,15 @@ void __init sparse_mem_maps_populate_node(struct page **map_map,
 #endif /* !CONFIG_SPARSEMEM_VMEMMAP */
 
 #ifdef CONFIG_SPARSEMEM_ALLOC_MEM_MAP_TOGETHER
+static void __init sparse_early_mem_maps_alloc_node_pram(void *data,
+				 unsigned long pnum_begin,
+				 unsigned long pnum_end,
+				 unsigned long map_count, int nodeid)
+{
+	struct page **map_map = (struct page **)data;
+	sparse_mem_maps_populate_node_pram(map_map, pnum_begin, pnum_end,
+					 map_count, nodeid);
+}
 static void __init sparse_early_mem_maps_alloc_node(void *data,
 				 unsigned long pnum_begin,
 				 unsigned long pnum_end,
@@ -519,6 +528,46 @@ void __weak __meminit vmemmap_populate_print_last(void)
  *  alloc_usemap_and_memmap - memory alloction for pageblock flags and vmemmap
  *  @map: usemap_map for pageblock flags or mmap_map for vmemmap
  */
+static void __init alloc_usemap_and_memmap_pram(void (*alloc_func)
+					(void *, unsigned long, unsigned long,
+					unsigned long, int), void *data)
+{
+	unsigned long pnum;
+	unsigned long map_count;
+	int nodeid_begin = 0;
+	unsigned long pnum_begin = 0;
+
+	for_each_present_section_nr(0, pnum) {
+		struct mem_section *ms;
+
+		ms = __nr_to_section(pnum);
+		nodeid_begin = sparse_early_nid(ms);
+		pnum_begin = pnum;
+		break;
+	}
+	map_count = 1;
+	for_each_present_section_nr(pnum_begin + 1, pnum) {
+		struct mem_section *ms;
+		int nodeid;
+
+		ms = __nr_to_section(pnum);
+		nodeid = sparse_early_nid(ms);
+		if (nodeid == nodeid_begin) {
+			map_count++;
+			continue;
+		}
+		/* ok, we need to take cake of from pnum_begin to pnum - 1*/
+		alloc_func(data, pnum_begin, pnum,
+						map_count, nodeid_begin);
+		/* new start, update count etc*/
+		nodeid_begin = nodeid;
+		pnum_begin = pnum;
+		map_count = 1;
+	}
+	/* ok, last chunk */
+	alloc_func(data, pnum_begin, NR_MEM_SECTIONS,
+						map_count, nodeid_begin);
+}
 static void __init alloc_usemap_and_memmap(void (*alloc_func)
 					(void *, unsigned long, unsigned long,
 					unsigned long, int), void *data)
@@ -606,7 +655,8 @@ void __init sparse_init(void)
 	                              /* include/linux/bootmem.h:179 */
 	if (!map_map)
 		panic("can not allocate map_map\n");
-	alloc_usemap_and_memmap(sparse_early_mem_maps_alloc_node,
+	//alloc_usemap_and_memmap(sparse_early_mem_maps_alloc_node,
+	alloc_usemap_and_memmap_pram(sparse_early_mem_maps_alloc_node_pram,
 							(void *)map_map);
 #endif
 
