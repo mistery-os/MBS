@@ -162,7 +162,7 @@ __memblock_find_range_top_down(phys_addr_t start, phys_addr_t end,
 {
 	phys_addr_t this_start, this_end, cand;
 	u64 i;
-pr_debug("__memblock_find_range_top_down \n");
+pr_info("__memblock_find_range_top_down \n");
 	for_each_free_mem_range_reverse(i, nid, flags, &this_start, &this_end,
 					NULL) {
 		this_start = clamp(this_start, start, end);
@@ -1496,12 +1496,13 @@ void * __init memblock_virt_alloc_try_nid(
 		int nid)
 {
 	void *ptr;
-pr_info(">>>memblock_virt_alloc_try_nid<<<mm/memblock.c\n");
+
 	memblock_dbg("%s: %llu bytes align=0x%llx nid=%d from=0x%llx max_addr=0x%llx %pF\n",
 			__func__, (u64)size, (u64)align, nid, (u64)min_addr,
 			(u64)max_addr, (void *)_RET_IP_);
 	ptr = memblock_virt_alloc_internal(size, align,
 			min_addr, max_addr, nid);
+pr_info(">>>after memblock_virt_alloc_internal<<<mm/memblock.c\n");
 	if (ptr)
 		return ptr;
 
