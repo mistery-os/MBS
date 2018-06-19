@@ -270,10 +270,9 @@ phys_addr_t __init_memblock memblock_find_in_range_node_pram(phys_addr_t size,
 		WARN_ONCE(1, "memblock: bottom-up allocation failed, memory hotunplug may be affected\n");
 	}
 
-	return __memblock_find_range_top_down(start, end, size, align, nid,
+	return __memblock_find_range_top_down_pram(start, end, size, align, nid,
 			flags);
 }
-
 
 phys_addr_t __init_memblock memblock_find_in_range_node(phys_addr_t size,
 		phys_addr_t align, phys_addr_t start,
