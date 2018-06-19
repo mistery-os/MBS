@@ -313,6 +313,7 @@ static inline void * __init memblock_virt_alloc_node_nopanic(
 static inline void * __init memblock_virt_alloc_try_nid(phys_addr_t size,
 	phys_addr_t align, phys_addr_t min_addr, phys_addr_t max_addr, int nid)
 {
+pr_info(">>>memblock_virt_alloc_try_nid<<<\n");
 	return __alloc_bootmem_node_high(NODE_DATA(nid), size, align,
 					  min_addr);
 }
