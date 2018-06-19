@@ -173,6 +173,8 @@ void *memblock_virt_alloc_try_nid_nopanic(phys_addr_t size,
 		phys_addr_t max_addr, int nid);
 void *memblock_virt_alloc_try_nid(phys_addr_t size, phys_addr_t align,
 		phys_addr_t min_addr, phys_addr_t max_addr, int nid);
+void *memblock_virt_alloc_try_nid_pram(phys_addr_t size, phys_addr_t align,
+		phys_addr_t min_addr, phys_addr_t max_addr, int nid);
 void __memblock_free_early(phys_addr_t base, phys_addr_t size);
 void __memblock_free_late(phys_addr_t base, phys_addr_t size);
 
