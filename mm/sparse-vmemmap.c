@@ -273,7 +273,6 @@ struct page * __meminit sparse_mem_map_populate(unsigned long pnum, int nid)
 	if (vmemmap_populate(start, end, nid))
 		return NULL;
 
-	pr_info(">>>>> PRAM sparse_mem_map_populate\n");
 	return map;
 }
 
@@ -310,6 +309,8 @@ void __init sparse_mem_maps_populate_node(struct page **map_map,
 
 	if (vmemmap_buf_start) {
 		/* need to free left buf */
+	pr_info(">>>>> PRAMsparse_mem_maps_populate_node\n");
+	pr_info("vmemmap_buf_end - vmemmap_buf = #%016llx\n",vmemmap_buf_end - vmemmap_buf);
 		memblock_free_early(__pa(vmemmap_buf),
 				    vmemmap_buf_end - vmemmap_buf);
 		vmemmap_buf = NULL;
