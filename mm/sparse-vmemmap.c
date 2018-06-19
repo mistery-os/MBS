@@ -310,7 +310,7 @@ void __init sparse_mem_maps_populate_node(struct page **map_map,
 
 	if (vmemmap_buf_start) {
 		/* need to free left buf */
-	pr_info("sparse_mem_maps_populate_node : __pa(vmemmap_buf)= %#016llx",__pa(vmemmap_buf);
+	pr_info("sparse_mem_maps_populate_node : __pa(vmemmap_buf)= %#016llx",__pa(vmemmap_buf));
 	pr_info(", vmemmap_buf_end=%#016llx",vmemmap_buf_end);
 	pr_info(", vmemmap_buf= %#016llx",vmemmap_buf);
 	pr_info(", vmemmap_buf_end - vmemmap_buf= %#016llx",vmemmap_buf_end - vmemmap_buf);
