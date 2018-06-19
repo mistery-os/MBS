@@ -273,6 +273,7 @@ struct page * __meminit sparse_mem_map_populate(unsigned long pnum, int nid)
 	if (vmemmap_populate(start, end, nid))
 		return NULL;
 
+	pr_info(">>>>> PRAM sparse_mem_map_populate\n");
 	return map;
 }
 
