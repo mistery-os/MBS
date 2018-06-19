@@ -289,8 +289,12 @@ void __init sparse_mem_maps_populate_node(struct page **map_map,
 	vmemmap_buf_start = __earlyonly_bootmem_alloc(nodeid, size * map_count,
 			 PMD_SIZE, __pa(MAX_DMA_ADDRESS));
 	if (vmemmap_buf_start) {
+	pr_info(", vmemmap_buf_start=%#016llx",vmemmap_buf_start);
+	pr_info(", size=%#016llx",size)
+	pr_info(", map_count=%#016llx",map_count);
 		vmemmap_buf = vmemmap_buf_start;
 		vmemmap_buf_end = vmemmap_buf_start + size * map_count;
+	pr_info(", vmemmap_buf_end=%#016llx",vmemmap_buf_end);
 	}
 
 	for (pnum = pnum_begin; pnum < pnum_end; pnum++) {
