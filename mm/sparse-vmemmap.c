@@ -291,9 +291,6 @@ void __init sparse_mem_maps_populate_node(struct page **map_map,
 	if (vmemmap_buf_start) {
 		vmemmap_buf = vmemmap_buf_start;
 		vmemmap_buf_end = vmemmap_buf_start + size * map_count;
-	pr_info("sparse_mem_maps_populate_node: size=%#016llx",size);
-	pr_info(", vmemmap_buf_start= %#016llx",vmemmap_buf_start);
-	pr_info(", map_count= %#016llx\n",map_count);
 	}
 
 	for (pnum = pnum_begin; pnum < pnum_end; pnum++) {
@@ -313,6 +310,10 @@ void __init sparse_mem_maps_populate_node(struct page **map_map,
 
 	if (vmemmap_buf_start) {
 		/* need to free left buf */
+	pr_info("sparse_mem_maps_populate_node : __pa(vmemmap_buf)= %#016llx",__pa(vmemmap_buf);
+	pr_info(", vmemmap_buf_end=%#016llx",vmemmap_buf_end);
+	pr_info(", vmemmap_buf= %#016llx",vmemmap_buf);
+	pr_info(", vmemmap_buf_end - vmemmap_buf= %#016llx",vmemmap_buf_end - vmemmap_buf);
 		memblock_free_early(__pa(vmemmap_buf),
 				    vmemmap_buf_end - vmemmap_buf);
 		vmemmap_buf = NULL;
