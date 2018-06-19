@@ -36,7 +36,15 @@
  * or to back the page tables that are used to create the mapping.
  * Uses the main allocators if they are available, else bootmem.
  */
-
+static void * __ref __earlyonly_bootmem_alloc_pram(int node,
+				unsigned long size,
+				unsigned long align,
+				unsigned long goal)
+{
+	pr_info("__earlyonly_bootmem_alloc : size=%#016llx\n",size);
+	return memblock_virt_alloc_try_nid_pram(size, align, goal,
+					    BOOTMEM_ALLOC_ACCESSIBLE, node);
+}
 static void * __ref __earlyonly_bootmem_alloc(int node,
 				unsigned long size,
 				unsigned long align,
@@ -286,15 +294,13 @@ void __init sparse_mem_maps_populate_node(struct page **map_map,
 	unsigned long size = sizeof(struct page) * PAGES_PER_SECTION;
 	void *vmemmap_buf_start;
 	size = ALIGN(size, PMD_SIZE);
-	vmemmap_buf_start = __earlyonly_bootmem_alloc(nodeid, size * map_count,
+	//<<<2018.06.19 Yongseob
+	//vmemmap_buf_start = __earlyonly_bootmem_alloc(nodeid, size * map_count,
+	vmemmap_buf_start = __earlyonly_bootmem_alloc_pram(nodeid, size * map_count,
 			 PMD_SIZE, __pa(MAX_DMA_ADDRESS));
 	if (vmemmap_buf_start) {
-	pr_info(", vmemmap_buf_start=%#016llx",vmemmap_buf_start);
-	pr_info(", size=%#016llx",size);
-	pr_info(", map_count=%#016llx",map_count);
 		vmemmap_buf = vmemmap_buf_start;
 		vmemmap_buf_end = vmemmap_buf_start + size * map_count;
-	pr_info(", vmemmap_buf_end=%#016llx",vmemmap_buf_end);
 	}
 
 	for (pnum = pnum_begin; pnum < pnum_end; pnum++) {
@@ -314,10 +320,6 @@ void __init sparse_mem_maps_populate_node(struct page **map_map,
 
 	if (vmemmap_buf_start) {
 		/* need to free left buf */
-	pr_info("sparse_mem_maps_populate_node : __pa(vmemmap_buf)= %#016llx",__pa(vmemmap_buf));
-	pr_info(", vmemmap_buf_end=%#016llx",vmemmap_buf_end);
-	pr_info(", vmemmap_buf= %#016llx",vmemmap_buf);
-	pr_info(", vmemmap_buf_end - vmemmap_buf= %#016llx",vmemmap_buf_end - vmemmap_buf);
 		memblock_free_early(__pa(vmemmap_buf),
 				    vmemmap_buf_end - vmemmap_buf);
 		vmemmap_buf = NULL;

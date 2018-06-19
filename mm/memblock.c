@@ -178,6 +178,30 @@ __memblock_find_range_top_down_pram(phys_addr_t start, phys_addr_t end,
 	return 0;
 }
 static phys_addr_t __init_memblock
+__memblock_find_range_top_down_pram(phys_addr_t start, phys_addr_t end,
+			       phys_addr_t size, phys_addr_t align, int nid,
+			       ulong flags)
+{
+	phys_addr_t this_start, this_end, cand;
+	u64 i;
+
+	for_each_free_pram_range_reverse(i, nid, flags, &this_start, &this_end,
+					NULL) {
+		this_start = clamp(this_start, start, end);
+		this_end = clamp(this_end, start, end);
+
+		if (this_end < size)
+			continue;
+
+		cand = round_down(this_end - size, align);
+		if (cand >= this_start)
+		{
+			return cand;
+		}
+	}
+	return 0;
+}
+static phys_addr_t __init_memblock
 __memblock_find_range_top_down(phys_addr_t start, phys_addr_t end,
 			       phys_addr_t size, phys_addr_t align, int nid,
 			       ulong flags)
@@ -224,6 +248,56 @@ __memblock_find_range_top_down(phys_addr_t start, phys_addr_t end,
  * RETURNS:
  * Found address on success, 0 on failure.
  */
+phys_addr_t __init_memblock memblock_find_in_range_node_pram(phys_addr_t size,
+		phys_addr_t align, phys_addr_t start,
+		phys_addr_t end, int nid, ulong flags)
+{
+	phys_addr_t kernel_end, ret;
+
+	/* pump up @end */
+	if (end == MEMBLOCK_ALLOC_ACCESSIBLE)
+		end = memblock.current_limit;
+
+	/* avoid allocating the first page */
+	start = max_t(phys_addr_t, start, PAGE_SIZE);
+	end = max(start, end);
+	kernel_end = __pa_symbol(_end);
+
+	/*
+	 * try bottom-up allocation only when bottom-up mode
+	 * is set and @end is above the kernel image.
+	 */
+	if (memblock_bottom_up() && end > kernel_end) {
+		/* not showing */
+		phys_addr_t bottom_up_start;
+
+		/* make sure we will allocate above the kernel */
+		bottom_up_start = max(start, kernel_end);
+
+		/* ok, try bottom-up allocation first */
+		ret = __memblock_find_range_bottom_up(bottom_up_start, end,
+				size, align, nid, flags);
+		if (ret)
+			return ret;
+
+		/*
+		 * we always limit bottom-up allocation above the kernel,
+		 * but top-down allocation doesn't have the limit, so
+		 * retrying top-down allocation may succeed when bottom-up
+		 * allocation failed.
+		 *
+		 * bottom-up allocation is expected to be fail very rarely,
+		 * so we use WARN_ONCE() here to see the stack trace if
+		 * fail happens.
+		 */
+		WARN_ONCE(1, "memblock: bottom-up allocation failed, memory hotunplug may be affected\n");
+	}
+
+	return __memblock_find_range_top_down(start, end, size, align, nid,
+			flags);
+}
+
+
 phys_addr_t __init_memblock memblock_find_in_range_node(phys_addr_t size,
 		phys_addr_t align, phys_addr_t start,
 		phys_addr_t end, int nid, ulong flags)
@@ -1399,6 +1473,72 @@ phys_addr_t __init memblock_alloc_try_nid(phys_addr_t size, phys_addr_t align, i
  * RETURNS:
  * Virtual address of allocated memory block on success, NULL on failure.
  */
+static void * __init memblock_virt_alloc_internal_pram(
+		phys_addr_t size, phys_addr_t align,
+		phys_addr_t min_addr, phys_addr_t max_addr,
+		int nid)
+{
+	phys_addr_t alloc;
+	void *ptr;
+	ulong flags = choose_memblock_flags();
+
+	if (WARN_ONCE(nid == MAX_NUMNODES, "Usage of MAX_NUMNODES is deprecated. Use NUMA_NO_NODE instead\n"))
+		nid = NUMA_NO_NODE;
+
+	/*
+	 * Detect any accidental use of these APIs after slab is ready, as at
+	 * this moment memblock may be deinitialized already and its
+	 * internal data may be destroyed (after execution of free_all_bootmem)
+	 */
+	if (WARN_ON_ONCE(slab_is_available()))
+		return kzalloc_node(size, GFP_NOWAIT, nid);
+
+	if (!align)
+		align = SMP_CACHE_BYTES;
+
+	if (max_addr > memblock.current_limit)
+		max_addr = memblock.current_limit;
+again:
+	alloc = memblock_find_in_range_node_pram(size, align, min_addr, max_addr,
+			nid, flags);
+	if (alloc && !memblock_reserve(alloc, size))
+		goto done;
+
+	if (nid != NUMA_NO_NODE) {
+		alloc = memblock_find_in_range_node_pram(size, align, min_addr,
+				max_addr, NUMA_NO_NODE,
+				flags);
+		if (alloc && !memblock_reserve(alloc, size))
+			goto done;
+	}
+
+	if (min_addr) {
+		min_addr = 0;
+		goto again;
+	}
+
+	if (flags & MEMBLOCK_MIRROR) {
+		flags &= ~MEMBLOCK_MIRROR;
+		pr_warn("Could not allocate %pap bytes of mirrored memory\n",
+				&size);
+		goto again;
+	}
+
+	return NULL;
+done:
+	ptr = phys_to_virt(alloc);
+	memset(ptr, 0, size);
+
+	/*
+	 * The min_count is set to 0 so that bootmem allocated blocks
+	 * are never reported as leaks. This is because many of these blocks
+	 * are only referred via the physical address which is not
+	 * looked up by kmemleak.
+	 */
+	kmemleak_alloc(ptr, size, 0, 0);
+
+	return ptr;
+}
 static void * __init memblock_virt_alloc_internal(
 		phys_addr_t size, phys_addr_t align,
 		phys_addr_t min_addr, phys_addr_t max_addr,
@@ -1513,6 +1653,28 @@ void * __init memblock_virt_alloc_try_nid_nopanic(
  * RETURNS:
  * Virtual address of allocated memory block on success, NULL on failure.
  */
+void * __init memblock_virt_alloc_try_nid_pram(
+		phys_addr_t size, phys_addr_t align,
+		phys_addr_t min_addr, phys_addr_t max_addr,
+		int nid)
+{
+	void *ptr;
+
+	memblock_dbg("%s: %llu bytes align=0x%llx nid=%d from=0x%llx max_addr=0x%llx %pF\n",
+			__func__, (u64)size, (u64)align, nid, (u64)min_addr,
+			(u64)max_addr, (void *)_RET_IP_);
+	ptr = memblock_virt_alloc_internal_pram(size, align,
+			min_addr, max_addr, nid);
+	if (ptr)
+		return ptr;
+
+	panic("%s: Failed to allocate %llu bytes align=0x%llx nid=%d from=0x%llx max_addr=0x%llx\n",
+			__func__, (u64)size, (u64)align, nid, (u64)min_addr,
+			(u64)max_addr);
+	return NULL;
+}
+
+
 void * __init memblock_virt_alloc_try_nid(
 		phys_addr_t size, phys_addr_t align,
 		phys_addr_t min_addr, phys_addr_t max_addr,
