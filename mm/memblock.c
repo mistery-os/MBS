@@ -1496,6 +1496,7 @@ void * __init memblock_virt_alloc_try_nid(
 		int nid)
 {
 	void *ptr;
+pr_info(">>>memblock_virt_alloc_try_nid<<<mm/memblock.c\n");
 	memblock_dbg("%s: %llu bytes align=0x%llx nid=%d from=0x%llx max_addr=0x%llx %pF\n",
 			__func__, (u64)size, (u64)align, nid, (u64)min_addr,
 			(u64)max_addr, (void *)_RET_IP_);
