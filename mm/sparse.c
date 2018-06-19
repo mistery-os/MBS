@@ -655,8 +655,8 @@ void __init sparse_init(void)
 	                              /* include/linux/bootmem.h:179 */
 	if (!map_map)
 		panic("can not allocate map_map\n");
-	//alloc_usemap_and_memmap(sparse_early_mem_maps_alloc_node,
-	alloc_usemap_and_memmap_pram(sparse_early_mem_maps_alloc_node_pram,
+	//alloc_usemap_and_memmap_pram(sparse_early_mem_maps_alloc_node_pram,
+	alloc_usemap_and_memmap(sparse_early_mem_maps_alloc_node,
 							(void *)map_map);
 #endif
 
