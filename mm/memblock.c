@@ -196,7 +196,6 @@ __memblock_find_range_top_down(phys_addr_t start, phys_addr_t end,
 		cand = round_down(this_end - size, align);
 		if (cand >= this_start)
 		{
-			pr_info("return __memblock_find_range_top_down\n");
 			return cand;
 		}
 	}
@@ -245,7 +244,6 @@ phys_addr_t __init_memblock memblock_find_in_range_node(phys_addr_t size,
 	 * is set and @end is above the kernel image.
 	 */
 	if (memblock_bottom_up() && end > kernel_end) {
-		pr_info("memblock_find_in_range_node :memblock_bottom_up \n");
 		/* not showing */
 		phys_addr_t bottom_up_start;
 
