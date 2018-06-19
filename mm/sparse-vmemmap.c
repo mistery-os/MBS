@@ -284,11 +284,15 @@ void __init sparse_mem_maps_populate_node(struct page **map_map,
 	unsigned long pnum;
 	unsigned long size = sizeof(struct page) * PAGES_PER_SECTION;
 	void *vmemmap_buf_start;
-
+pr_info(">>>sparse_mem_maps_populate_node size(1)=%016lx\, map_count=%016lxn",
+		size, map_count);
 	size = ALIGN(size, PMD_SIZE);
+pr_info(">>>sparse_mem_maps_populate_node size(2)=%016lx\, map_count=%016lxn",
+		size, map_count);
 	vmemmap_buf_start = __earlyonly_bootmem_alloc(nodeid, size * map_count,
 			 PMD_SIZE, __pa(MAX_DMA_ADDRESS));
-
+pr_info(">>>sparse_mem_maps_populate_node size(3)=%016lx\, map_count=%016lxn",
+		size, map_count);
 	if (vmemmap_buf_start) {
 		vmemmap_buf = vmemmap_buf_start;
 		vmemmap_buf_end = vmemmap_buf_start + size * map_count;
@@ -311,8 +315,6 @@ void __init sparse_mem_maps_populate_node(struct page **map_map,
 
 	if (vmemmap_buf_start) {
 		/* need to free left buf */
-		pr_info(">>>vmemmap_buf_start= %#016llx  vmemmap_buf= %016llx vmemmap_buf_end= %016llx\n",
-			(u64)vmemmap_buf_start, (u64)vmemmap_buf, (u64)vmemmap_buf_end);
 		memblock_free_early(__pa(vmemmap_buf),
 				    vmemmap_buf_end - vmemmap_buf);
 		vmemmap_buf = NULL;
