@@ -1487,7 +1487,6 @@ static int __init deferred_init_memmap(void *data)
 	unsigned long start = jiffies;
 	unsigned long nr_pages = 0;
 	unsigned long walk_start, walk_end;
-	unsigned long walk_start_pram, walk_end_pram;
 	int i, zid;
 	struct zone *zone;
 	unsigned long first_init_pfn = pgdat->first_deferred_pfn;
@@ -1598,7 +1597,7 @@ free_range:
 	pr_info("node %d initialised, %lu pages in %ums\n", nid, nr_pages,
 					jiffies_to_msecs(jiffies - start));
 
-	pgdat_init_report_one_done();
+//	pgdat_init_report_one_done();
 	return 0;
 }
 static int __init deferred_init_memmap_pram(void *data)
@@ -1665,7 +1664,7 @@ static int __init deferred_init_memmap_pram(void *data)
 				}
 			}
 
-			if (!meminit_pfn_in_nid(pfn, nid, &nid_init_state)) {
+			if (!meminit_pfn_in_nid_pram(pfn, nid, &nid_init_state)) {
 				page = NULL;
 				goto free_range;
 			}
@@ -1740,7 +1739,7 @@ void __init page_alloc_init_late(void)
 	}
 
 	for_each_node_state(nid, N_MEMORY) {
-		kthread_run(deferred_init_memmap_pram, NODE_DATA(nid), "pgdatinit%d", nid);
+		kthread_run(deferred_init_memmap_pram, NODE_DATA(nid), "pgdatpraminit%d", nid);
 	}
 	/* Block until all are initialised */
 	wait_for_completion(&pgdat_init_all_done_comp);
