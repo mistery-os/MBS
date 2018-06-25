@@ -3186,7 +3186,7 @@ ssize_t generic_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
 		ret = __generic_file_write_iter(iocb, from);
 	inode_unlock(inode);
 
-	if( !(file->f_mapping->flag & __GFP_PRAM) )
+	if( !(file->f_mapping->flags & __GFP_PRAM) )
 	if (ret > 0)
 		ret = generic_write_sync(iocb, ret);
 	return ret;
