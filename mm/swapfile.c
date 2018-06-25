@@ -3423,6 +3423,12 @@ bad_file:
  * Help swapoff by noting that swap entry belongs to shmem/tmpfs
  * (in which case its reference count is never incremented).
  */
+void swap_mbs_alloc(swp_entry_t entry)
+{
+	__swap_duplicate(entry, SWAP_MAP_MBS);
+}
+EXPORT_SYMBOL_GPL(swap_mbs_alloc);
+
 void swap_shmem_alloc(swp_entry_t entry)
 {
 	__swap_duplicate(entry, SWAP_MAP_SHMEM);

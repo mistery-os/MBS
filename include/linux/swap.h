@@ -184,6 +184,7 @@ enum {
 #define SWAP_CONT_MAX	0x7f	/* Max count, in each swap_map continuation */
 #define COUNT_CONTINUED	0x80	/* See swap_map continuation for full count */
 #define SWAP_MAP_SHMEM	0xbf	/* Owned by shmem/tmpfs, in first swap_map */
+#define SWAP_MAP_MBS	0xcf	/* Owned by mbsfs, in first swap_map */
 
 /*
  * We use this to track usage of a cluster. A cluster is a block of swap disk
