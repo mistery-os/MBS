@@ -549,6 +549,7 @@ static inline struct page *alloc_pages_node(int nid, gfp_t gfp_mask,
 
 #ifdef CONFIG_NUMA
 extern struct page *alloc_pages_current(gfp_t gfp_mask, unsigned order);
+extern struct page *alloc_prams_current(gfp_t gfp_mask, unsigned order);
 static inline struct page *
 alloc_prams(gfp_t gfp_mask, unsigned int order)
 {
