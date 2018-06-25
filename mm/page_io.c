@@ -260,6 +260,7 @@ int swap_writepage(struct page *page, struct writeback_control *wbc)
 out:
 	return ret;
 }
+EXPORT_SYMBOL_GPL(swap_writepage);
 
 static sector_t swap_page_sector(struct page *page)
 {
