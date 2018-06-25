@@ -1486,6 +1486,10 @@ no_page:
 		if (fgp_flags & FGP_ACCESSED)
 			__SetPageReferenced(page);
 
+		if (mapping->flags & __GFP_PRAM)
+			err = add_to_page_cache_locked(page, mapping, offset,
+					gfp_mask);
+		else
 		err = add_to_page_cache_lru(page, mapping, offset,
 				gfp_mask & GFP_RECLAIM_MASK);
 		if (unlikely(err)) {
@@ -3061,6 +3065,7 @@ again:
 		pos += copied;
 		written += copied;
 
+		if ( !(mapping->flags & __GFP_PRAM) )
 		balance_dirty_pages_ratelimited(mapping);
 	} while (iov_iter_count(i));
 
@@ -3181,6 +3186,7 @@ ssize_t generic_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
 		ret = __generic_file_write_iter(iocb, from);
 	inode_unlock(inode);
 
+	if( !(file->f_mapping->flag & __GFP_PRAM) )
 	if (ret > 0)
 		ret = generic_write_sync(iocb, ret);
 	return ret;

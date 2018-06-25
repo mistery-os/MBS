@@ -1111,12 +1111,12 @@ static bool __init do_mark_busy(enum e820_type type, struct resource *res)
 	case E820_TYPE_RESERVED:
 	case E820_TYPE_PMEM:
 		return false;
+	case E820_TYPE_PRAM:
 	case E820_TYPE_RESERVED_KERN:
 	case E820_TYPE_RAM:
 	case E820_TYPE_ACPI:
 	case E820_TYPE_NVS:
 	case E820_TYPE_UNUSABLE:
-	case E820_TYPE_PRAM:
 	default:
 		return true;
 	}
@@ -1308,11 +1308,6 @@ void __init e820__memblock_setup(void)
 		if (end != (resource_size_t)end)
 			continue;
 	       	//<<<2018.02.13 Yongseob
-#if 0
-		if (entry->type != E820_TYPE_RAM && entry->type != E820_TYPE_RESERVED_KERN)
-			continue;
-		memblock_add(entry->addr, entry->size);
-#endif
 		if (entry->type != E820_TYPE_RAM && entry->type != E820_TYPE_RESERVED_KERN && entry->type != E820_TYPE_PRAM)
 			continue;
 		if  (entry->type != E820_TYPE_PRAM )

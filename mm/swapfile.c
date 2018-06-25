@@ -60,6 +60,7 @@ atomic_long_t nr_swap_pages;
 EXPORT_SYMBOL_GPL(nr_swap_pages);
 /* protected with swap_lock. reading in vm_swap_full() doesn't need lock */
 long total_swap_pages;
+EXPORT_SYMBOL_GPL(total_swap_pages);
 static int least_priority = -1;
 
 static const char Bad_file[] = "Bad swap file entry ";
@@ -1180,6 +1181,7 @@ void swap_free(swp_entry_t entry)
 			free_swap_slot(entry);
 	}
 }
+EXPORT_SYMBOL_GPL(swap_free);
 
 /*
  * Called after dropping swapcache to decrease refcnt to swap entries.
@@ -1268,6 +1270,7 @@ void put_swap_page(struct page *page, swp_entry_t entry)
 	else
 		swapcache_free_cluster(entry);
 }
+EXPORT_SYMBOL_GPL(put_swap_page);
 
 static int swp_entry_cmp(const void *ent1, const void *ent2)
 {
@@ -1327,6 +1330,7 @@ int page_swapcount(struct page *page)
 	}
 	return count;
 }
+EXPORT_SYMBOL_GPL(page_swapcount);
 
 static int swap_swapcount(struct swap_info_struct *si, swp_entry_t entry)
 {
@@ -1659,6 +1663,7 @@ int free_swap_and_cache(swp_entry_t entry)
 	}
 	return p != NULL;
 }
+EXPORT_SYMBOL_GPL(free_swap_and_cache);
 
 #ifdef CONFIG_HIBERNATION
 /*
@@ -3422,6 +3427,7 @@ void swap_shmem_alloc(swp_entry_t entry)
 {
 	__swap_duplicate(entry, SWAP_MAP_SHMEM);
 }
+EXPORT_SYMBOL_GPL(swap_shmem_alloc);
 
 /*
  * Increase reference count of swap entry by 1.

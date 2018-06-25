@@ -191,6 +191,7 @@ int truncate_inode_page(struct address_space *mapping, struct page *page)
 	}
 	return truncate_complete_page(mapping, page);
 }
+EXPORT_SYMBOL(truncate_inode_page);
 
 /*
  * Used to get rid of pages on hardware memory corruption.

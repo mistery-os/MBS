@@ -504,6 +504,7 @@ void prep_transhuge_page(struct page *page)
 	INIT_LIST_HEAD(page_deferred_list(page));
 	set_compound_page_dtor(page, TRANSHUGE_PAGE_DTOR);
 }
+EXPORT_SYMBOL_GPL(prep_transhuge_page);
 
 unsigned long __thp_get_unmapped_area(struct file *filp, unsigned long len,
 		loff_t off, unsigned long flags, unsigned long size)
@@ -2677,6 +2678,7 @@ out:
 	count_vm_event(!ret ? THP_SPLIT_PAGE : THP_SPLIT_PAGE_FAILED);
 	return ret;
 }
+EXPORT_SYMBOL(split_huge_page_to_list);
 
 void free_transhuge_page(struct page *page)
 {

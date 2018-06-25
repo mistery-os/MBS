@@ -1192,7 +1192,7 @@ void __init setup_arch(char **cmdline_p)
 	trim_platform_memory_ranges();
 	trim_low_memory_range();
 
-	init_mem_mapping();
+	init_mem_mapping(); /* arch/x86/mm/init.c */
 
 	idt_setup_early_pf();
 

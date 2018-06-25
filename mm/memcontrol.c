@@ -5826,6 +5826,7 @@ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage)
 	memcg_check_events(memcg, newpage);
 	local_irq_restore(flags);
 }
+EXPORT_SYMBOL_GPL(mem_cgroup_migrate);
 
 DEFINE_STATIC_KEY_FALSE(memcg_sockets_enabled_key);
 EXPORT_SYMBOL(memcg_sockets_enabled_key);
@@ -6112,6 +6113,7 @@ int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry)
 
 	return 0;
 }
+EXPORT_SYMBOL_GPL(mem_cgroup_try_charge_swap);
 
 /**
  * mem_cgroup_uncharge_swap - uncharge swap space

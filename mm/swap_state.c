@@ -168,6 +168,7 @@ int add_to_swap_cache(struct page *page, swp_entry_t entry, gfp_t gfp_mask)
 	}
 	return error;
 }
+EXPORT_SYMBOL_GPL(add_to_swap_cache);
 
 /*
  * This must be called only on pages that have
@@ -279,6 +280,7 @@ void delete_from_swap_cache(struct page *page)
 	put_swap_page(page, entry);
 	page_ref_sub(page, hpage_nr_pages(page));
 }
+EXPORT_SYMBOL_GPL(delete_from_swap_cache);
 
 /* 
  * If we are the only user, then try to free up the swap cache. 
@@ -600,6 +602,7 @@ struct page *swapin_readahead(swp_entry_t entry, gfp_t gfp_mask,
 skip:
 	return read_swap_cache_async(entry, gfp_mask, vma, addr, do_poll);
 }
+EXPORT_SYMBOL_GPL(swapin_readahead);
 
 int init_swap_address_space(unsigned int type, unsigned long nr_pages)
 {

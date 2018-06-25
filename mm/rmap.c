@@ -1201,6 +1201,7 @@ void page_add_file_rmap(struct page *page, bool compound)
 out:
 	unlock_page_memcg(page);
 }
+EXPORT_SYMBOL_GPL(page_add_file_rmap);
 
 static void page_remove_file_rmap(struct page *page, bool compound)
 {

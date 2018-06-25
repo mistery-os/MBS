@@ -1,4 +1,7 @@
 /*
+ * MBS policy for MBS cluster
+ * Copyright 2018 Yongseob Lee
+ *
  * Simple NUMA memory policy for the Linux kernel.
  *
  * Copyright 2003,2004 Andi Kleen, SuSE Labs.
@@ -125,8 +128,6 @@ static struct mempolicy default_policy = {
 	.mode = MPOL_PREFERRED,
 	.flags = MPOL_F_LOCAL,
 };
-
-static struct mempolicy preferred_node_policy[MAX_NUMNODES];
 //<<<2018.06.04 Yongseob
 enum zone_type policy_zone_pram = 0;
 static struct mempolicy default_policy_pram = {
@@ -135,9 +136,28 @@ static struct mempolicy default_policy_pram = {
 	.flags = MPOL_F_LOCAL,
 };
 //>>>
+static struct mempolicy preferred_node_policy[MAX_NUMNODES];
 //<<<2018.05.31 Yongseob
 static struct mempolicy preferred_node_policy_pram[MAX_NUMNODES];
 //>>>
+struct mempolicy *get_pram_policy(struct task_struct *p)
+{
+	struct mempolicy *pol = p->mempolicy;
+	int node;
+
+	if (pol)
+		return pol;
+
+	node = numa_node_id();
+	if (node != NUMA_NO_NODE) {
+		pol = &preferred_node_policy_pram[node];
+		/* preferred_node_policy_pram is not initialised early in boot */
+		if (pol->mode)
+			return pol;
+	}
+
+	return &default_policy_pram;
+}
 struct mempolicy *get_task_policy(struct task_struct *p)
 {
 	struct mempolicy *pol = p->mempolicy;
@@ -2083,6 +2103,27 @@ EXPORT_SYMBOL_GPL(alloc_pages_vma);
  *	interrupt context and apply the current process NUMA policy.
  *	Returns NULL when no page can be allocated.
  */
+struct page *alloc_prams_current(gfp_t gfp, unsigned order)
+{
+	struct mempolicy *pol = &default_policy_pram;
+	struct page *page;
+
+	if (!in_interrupt() && !(gfp & __GFP_THISNODE))
+		pol = get_pram_policy(current);
+
+	/*
+	 * No reference counting needed for current->mempolicy
+	 * nor system default_policy
+	 */
+	if (pol->mode == MPOL_INTERLEAVE)
+		page = alloc_page_interleave(gfp, order, interleave_nodes(pol));
+	else
+		page = __alloc_pages_nodemask(gfp, order,
+				policy_node(gfp, pol, numa_node_id()),
+				policy_nodemask(gfp, pol));
+
+	return page;
+}
 struct page *alloc_pages_current(gfp_t gfp, unsigned order)
 {
 	struct mempolicy *pol = &default_policy;

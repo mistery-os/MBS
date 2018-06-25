@@ -349,5 +349,5 @@ repeat:
 
 	return entry;
 }
-
+EXPORT_SYMBOL_GPL(get_swap_page);
 #endif /* CONFIG_SWAP */

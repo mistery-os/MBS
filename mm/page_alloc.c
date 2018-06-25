@@ -232,7 +232,7 @@ static char * const zone_names[MAX_NR_ZONES] = {
 #ifdef CONFIG_HIGHMEM
 	 "HighMem",
 #endif
-	 "PStorage",
+	 "MBS",
 	 "Movable",
 #ifdef CONFIG_ZONE_DEVICE
 	 "Device",
@@ -6595,7 +6595,6 @@ void __paginginit free_area_init_node(int nid, unsigned long *zones_size,
 	pr_info("Initpram setup node %d [mem %#018Lx-%#018Lx]\n", nid,
 			(u64)start_pfn_pram << PAGE_SHIFT,
 			end_pfn_pram ? ((u64)end_pfn_pram << PAGE_SHIFT) - 1 : 0);
-	//end_pfn ? ((u64)end_pfn_pram << PAGE_SHIFT) - 1 : 0);
 	//>>>
 #else
 	start_pfn = node_start_pfn;
