@@ -2124,6 +2124,8 @@ struct page *alloc_prams_current(gfp_t gfp, unsigned order)
 
 	return page;
 }
+
+EXPORT_SYMBOL(alloc_prams_current);
 struct page *alloc_pages_current(gfp_t gfp, unsigned order)
 {
 	struct mempolicy *pol = &default_policy;
