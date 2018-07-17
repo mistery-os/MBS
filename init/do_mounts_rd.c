@@ -23,8 +23,16 @@
 #include "../fs/squashfs/squashfs_fs.h"
 
 #include <linux/decompress/generic.h>
+#if 0
+int __initdata pram_prompt = 1;/* 1 = prompt for RAM disk, 0 = don't prompt */
 
-
+static int __init prompt_pramdisk(char *str)
+{
+	pram_prompt = simple_strtol(str,NULL,0) & 1;
+	return 1;
+}
+__setup("prompt_pramdisk=", prompt_pramdisk);
+#endif
 int __initdata rd_prompt = 1;/* 1 = prompt for RAM disk, 0 = don't prompt */
 
 static int __init prompt_ramdisk(char *str)
@@ -33,7 +41,16 @@ static int __init prompt_ramdisk(char *str)
 	return 1;
 }
 __setup("prompt_ramdisk=", prompt_ramdisk);
+#if 0
+int __initdata pram_image_start;		/* starting block # of image */
 
+static int __init pramdisk_start_setup(char *str)
+{
+	pram_image_start = simple_strtol(str,NULL,0);
+	return 1;
+}
+__setup("pramdisk_start=", pramdisk_start_setup);
+#endif
 int __initdata rd_image_start;		/* starting block # of image */
 
 static int __init ramdisk_start_setup(char *str)

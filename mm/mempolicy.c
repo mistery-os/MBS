@@ -2124,7 +2124,6 @@ struct page *alloc_prams_current(gfp_t gfp, unsigned order)
 
 	return page;
 }
-
 EXPORT_SYMBOL(alloc_prams_current);
 struct page *alloc_pages_current(gfp_t gfp, unsigned order)
 {
@@ -2890,7 +2889,7 @@ out:
 EXPORT_SYMBOL_GPL(mpol_parse_str);
 //>>>
 //<<<2018.05.23 Yongseob
-int mpol_parse_PRAM(char *str, struct mempolicy **mpol)
+int mpol_parse_pram(char *str, struct mempolicy **mpol)
 {
 	struct mempolicy *new = NULL;
 	unsigned short mode;
@@ -3011,7 +3010,7 @@ out:
 		*mpol = new;
 	return err;
 }
-EXPORT_SYMBOL_GPL(mpol_parse_PRAM);
+EXPORT_SYMBOL_GPL(mpol_parse_pram);
 //>>>
 
 #endif /* CONFIG_TMPFS */

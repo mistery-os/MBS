@@ -372,7 +372,7 @@ enum zone_type {
 	ZONE_PRAM,
 	//>>>
 	ZONE_MOVABLE,
-	#ifdef CONFIG_ZONE_DEVICE
+#ifdef CONFIG_ZONE_DEVICE
 	ZONE_DEVICE,
 #endif
 	__MAX_NR_ZONES

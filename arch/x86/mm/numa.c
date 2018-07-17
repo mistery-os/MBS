@@ -22,7 +22,7 @@
 int numa_off;
 nodemask_t numa_nodes_parsed __initdata;
 //<<<2018.03.05 Yongseob
-nodemask_t numa_nodes_parsed_pram __initdata;
+//nodemask_t numa_nodes_parsed_pram __initdata;
 //>>>
 struct pglist_data *node_data[MAX_NUMNODES] __read_mostly;
 EXPORT_SYMBOL(node_data);
@@ -694,6 +694,7 @@ static int __init numa_init(int (*init_func)(void))
 	return 0;
 }
 //<<<2018.03.05 Yongseob
+#if 0
 static int __init numa_init_pram(int (*init_func)(void))
 {
 	int i;
@@ -750,6 +751,7 @@ static int __init numa_init_pram(int (*init_func)(void))
 
 	return 0;
 }
+#endif
 //>>>
 /**
  * dummy_numa_init - Fallback dummy NUMA init
@@ -796,6 +798,7 @@ void __init x86_numa_init(void)
 	numa_init(dummy_numa_init);
 }
 //<<<2018.03.05 Yongseob
+#if 0
 void __init x86_numa_init_pram(void)
 {
 	if (!numa_off) {
@@ -811,6 +814,7 @@ void __init x86_numa_init_pram(void)
 return;
 //	numa_init(dummy_numa_init);
 }
+#endif
 //>>>
 
 static void __init init_memory_less_node(int nid)

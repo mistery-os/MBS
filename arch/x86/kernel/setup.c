@@ -926,13 +926,11 @@ void __init setup_arch(char **cmdline_p)
 #endif
 //<<<2018.02.13 Yongseob
 #if 0
-#ifdef CONFIG_BLK_DEV_PRAM
-	prd_image_start = boot_params.hdr.pram_size & PRAMDISK_IMAGE_START_MASK;
-	prd_prompt = ((boot_params.hdr.pram_size & PRAMDISK_PROMPT_FLAG) != 0);
-	prd_doload = ((boot_params.hdr.pram_size & PRAMDISK_LOAD_FLAG) != 0);
+	pram_image_start = boot_params.hdr.pram_size & PRAMDISK_IMAGE_START_MASK;
+	pram_prompt = ((boot_params.hdr.pram_size & PRAMDISK_PROMPT_FLAG) != 0);
+	pram_doload = ((boot_params.hdr.pram_size & PRAMDISK_LOAD_FLAG) != 0);
 #endif
-#endif
-//>>>
+	//>>>
 
 #ifdef CONFIG_EFI
 	if (!strncmp((char *)&boot_params.efi_info.efi_loader_signature,
@@ -1134,6 +1132,7 @@ void __init setup_arch(char **cmdline_p)
 		max_low_pfn_pram = max_pfn_pram;
 		//>>>
 	}
+	high_memory =(max_pfn > max_pfn_pram ? (void *)__va(max_pfn * PAGE_SIZE - 1) + 1 : (void *)__va(max_pfn_pram * PAGE_SIZE - 1) + 1) ;
 	high_memory = (void *)__va(max_pfn * PAGE_SIZE - 1) + 1;
 #endif
 

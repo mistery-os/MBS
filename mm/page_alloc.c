@@ -5452,8 +5452,6 @@ void __ref build_all_zonelists(pg_data_t *pgdat)
 void __meminit memmap_init_zone_pram(unsigned long size, int nid, unsigned long zone,
 		unsigned long start_pfn, enum memmap_context context)
 {
-	struct vmem_altmap *altmap = to_vmem_altmap(__pfn_to_phys(start_pfn));
-					/* return NULL at NO CONFIG_DEVICE */
 	unsigned long end_pfn = start_pfn + size;
 	pg_data_t *pgdat = NODE_DATA(nid);
 	unsigned long pfn;
@@ -5469,9 +5467,6 @@ void __meminit memmap_init_zone_pram(unsigned long size, int nid, unsigned long 
 	 * Honor reservation requested by the driver for this ZONE_DEVICE
 	 * memory
 	 */
-	if (altmap && start_pfn == altmap->base_pfn)
-		start_pfn += altmap->reserve;
-
 	for (pfn = start_pfn; pfn < end_pfn; pfn++) {
 		/*
 		 * There can be holes in boot-time mem_map[]s handed to this
@@ -6515,10 +6510,10 @@ static void __paginginit free_area_init_core(struct pglist_data *pgdat)
 		setup_usemap(pgdat, zone, zone_start_pfn, size);
 		                          /* do nothing if CONFIG_SPARSEMEM */
 		init_currently_empty_zone(zone, zone_start_pfn, size);
-		if ( j != ZONE_PRAM )
+//		if ( j != ZONE_PRAM )
 			memmap_init(size, nid, j, zone_start_pfn);
-		else
-			memmap_init_pram(size, nid, j, zone_start_pfn);
+//		else
+//			memmap_init_pram(size, nid, j, zone_start_pfn);
 	}
 }
 
