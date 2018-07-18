@@ -34,7 +34,7 @@ extern unsigned long __phys_addr_symbol(unsigned long);
 
 #ifdef CONFIG_FLATMEM
 #define pfn_valid(pfn)          ((pfn) < max_pfn)
-#define pfn_valid_pram(pfn)          ((pfn) < max_pfn_pram)
+//#define pfn_valid_pram(pfn)          ((pfn) < max_pfn_pram)
 #endif
 
 void clear_page_orig(void *page);

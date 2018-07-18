@@ -758,11 +758,7 @@ void __init paging_init(void)
 	node_clear_state(0, N_MEMORY);
 	if (N_MEMORY != N_NORMAL_MEMORY)
 		node_clear_state(0, N_NORMAL_MEMORY);
-//#if 0
-	// I don't know exactly what below means...
-	node_clear_state(0, N_MEMORY);
-	//>>>
-//#endif
+
 	zone_sizes_init();
 }
 

@@ -1597,7 +1597,7 @@ free_range:
 	pr_info("node %d initialised, %lu pages in %ums\n", nid, nr_pages,
 					jiffies_to_msecs(jiffies - start));
 
-//	pgdat_init_report_one_done();
+	pgdat_init_report_one_done();
 	return 0;
 }
 static int __init deferred_init_memmap_pram(void *data)
@@ -6970,8 +6970,8 @@ static void check_for_memory(pg_data_t *pgdat, int nid)
 	if (N_MEMORY == N_NORMAL_MEMORY)
 		return;
 
-	//for (zone_type = 0; zone_type <= ZONE_MOVABLE - 1; zone_type++) {
-	for (zone_type = 0; zone_type <= __MAX_NR_ZONES - 1; zone_type++) {
+	for (zone_type = 0; zone_type <= ZONE_MOVABLE - 1; zone_type++) {
+	//for (zone_type = 0; zone_type <= __MAX_NR_ZONES - 1; zone_type++) {
 		struct zone *zone = &pgdat->node_zones[zone_type];
 		if (populated_zone(zone)) {
 			//<<<2018.06.01 Yongseob
