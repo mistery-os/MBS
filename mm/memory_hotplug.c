@@ -584,6 +584,8 @@ int __remove_pages(struct zone *zone, unsigned long phys_start_pfn,
 		altmap = to_vmem_altmap((unsigned long) page);
 		if (altmap)
 			map_offset = vmem_altmap_offset(altmap);
+	} else if (is_pram_zone(zone)) {
+
 	} else {
 		resource_size_t start, size;
 

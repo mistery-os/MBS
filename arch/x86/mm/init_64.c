@@ -759,7 +759,7 @@ void __init paging_init(void)
 	if (N_MEMORY != N_NORMAL_MEMORY)
 		node_clear_state(0, N_NORMAL_MEMORY);
 
-	zone_sizes_init();
+	zone_sizes_init(); // initializes the pgdat_t instances of all nodes
 }
 
 /*

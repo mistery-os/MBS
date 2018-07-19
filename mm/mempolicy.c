@@ -2694,8 +2694,8 @@ void __init numa_policy_init(void)
 		//<<<2018.05.31 Yongseob
 		preferred_node_policy_pram[nid] = (struct mempolicy) {
 			.refcnt = ATOMIC_INIT(1),
-				.mode = MPOL_INTERLEAVE,
-				.flags = MPOL_F_MOF | MPOL_F_MORON,
+			.mode = MPOL_INTERLEAVE,
+			.flags = MPOL_F_MOF | MPOL_F_MORON,
 		};
 		//>>>
 	}

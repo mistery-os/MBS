@@ -805,7 +805,10 @@ static inline bool is_dev_zone(const struct zone *zone)
 	return false;
 }
 #endif
-
+static inline bool is_pram_zone(const struct zone *zone)
+{
+	return zone_id(zone) == ZONE_PRAM;
+}
 #include <linux/memory_hotplug.h>
 
 void build_all_zonelists(pg_data_t *pgdat);
@@ -1114,7 +1117,7 @@ static inline unsigned long early_pfn_to_nid(unsigned long pfn)
 #define PFN_SECTION_SHIFT	(SECTION_SIZE_BITS - PAGE_SHIFT)
 
 #define NR_MEM_SECTIONS		(1UL << SECTIONS_SHIFT)
-#define NR_PRAM_SECTIONS	(1UL << SECTIONS_SHIFT)
+//#define NR_PRAM_SECTIONS	(1UL << SECTIONS_SHIFT)
 
 #define PAGES_PER_SECTION       (1UL << PFN_SECTION_SHIFT)
 #define PAGE_SECTION_MASK	(~(PAGES_PER_SECTION-1))
