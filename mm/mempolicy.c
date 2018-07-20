@@ -2904,7 +2904,8 @@ int mpol_parse_pram(char *str, struct mempolicy **mpol)
 		*nodelist++ = '\0';
 		if (nodelist_parse(nodelist, nodes))
 			goto out;
-		if (!nodes_subset(nodes, node_states[N_PRAM]))
+		//if (!nodes_subset(nodes, node_states[N_PRAM]))
+		if (!nodes_subset(nodes, node_states[N_MEMORY]))
 			goto out;
 	} else
 		nodes_clear(nodes);
@@ -2938,7 +2939,8 @@ int mpol_parse_pram(char *str, struct mempolicy **mpol)
 			 * Default to online nodes with memory if no nodelist
 			 */
 			if (!nodelist)
-				nodes = node_states[N_PRAM];
+				nodes = node_states[N_MEMORY];
+				//nodes = node_states[N_PRAM];
 			break;
 		case MPOL_LOCAL:
 			/*

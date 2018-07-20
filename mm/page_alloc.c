@@ -6525,6 +6525,7 @@ static void __ref alloc_node_mem_map(struct pglist_data *pgdat)
 		return;
 
 #ifdef CONFIG_FLAT_NODE_MEM_MAP
+	pr_info("ALLOC_NODE_MEM_MAP HERE");
 	start = pgdat->node_start_pfn & ~(MAX_ORDER_NR_PAGES - 1);
 	offset = pgdat->node_start_pfn - start;
 	/* ia64 gets its own node_mem_map, before this, without bootmem */
@@ -6602,7 +6603,7 @@ void __paginginit free_area_init_node(int nid, unsigned long *zones_size,
 			zones_size, zholes_size);
 	//>>>
 
-	alloc_node_mem_map(pgdat); /* CONFIG_FLAT_NODE_MEM_MAP */
+	alloc_node_mem_map(pgdat); /*initializing page structure */ 
 #ifdef CONFIG_FLAT_NODE_MEM_MAP
 	printk(KERN_DEBUG "free_area_init_node: node %d, pgdat %08lx, node_mem_map %08lx\n",
 			nid, (unsigned long)pgdat,

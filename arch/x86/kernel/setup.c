@@ -234,9 +234,11 @@ unsigned long saved_video_mode;
 #define RAMDISK_PROMPT_FLAG		0x8000
 #define RAMDISK_LOAD_FLAG		0x4000
 //<<<2018.02.13 Yongseob
+#if 0
 #define PRAMDISK_IMAGE_START_MASK	0x08FF
 #define PRAMDISK_PROMPT_FLAG		0x9000
 #define PRAMDISK_LOAD_FLAG		0x5000
+#endif
 //>>>
 
 static char __initdata command_line[COMMAND_LINE_SIZE];
