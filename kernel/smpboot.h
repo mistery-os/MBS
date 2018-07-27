@@ -9,9 +9,11 @@ struct task_struct *idle_thread_get(unsigned int cpu);
 void idle_thread_set_boot_cpu(void);
 void idle_threads_init(void);
 #else
+#	if 0 //ifndef YONGSEOB-MBS
 static inline struct task_struct *idle_thread_get(unsigned int cpu) { return NULL; }
 static inline void idle_thread_set_boot_cpu(void) { }
 static inline void idle_threads_init(void) { }
+#	endif
 #endif
 
 int smpboot_create_threads(unsigned int cpu);

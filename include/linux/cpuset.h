@@ -161,7 +161,7 @@ static inline void set_mems_allowed(nodemask_t nodemask)
 }
 
 #else /* !CONFIG_CPUSETS */
-
+#	if 0 //ifndef YONGSEOB-MBS
 static inline bool cpusets_enabled(void) { return false; }
 
 static inline int cpuset_init(void) { return 0; }
@@ -274,7 +274,7 @@ static inline bool read_mems_allowed_retry(unsigned int seq)
 {
 	return false;
 }
-
+#	endif
 #endif /* !CONFIG_CPUSETS */
 
 #endif /* _LINUX_CPUSET_H */

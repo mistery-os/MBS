@@ -403,6 +403,7 @@ extern void key_fsgid_changed(struct task_struct *tsk);
 extern void key_init(void);
 
 #else /* CONFIG_KEYS */
+#	if 0 //ifndef YONGSEOB-MBS
 
 #define key_validate(k)			0
 #define key_serial(k)			0
@@ -418,6 +419,7 @@ extern void key_init(void);
 #define key_fsgid_changed(t)		do { } while(0)
 #define key_init()			do { } while(0)
 
+#	endif
 #endif /* CONFIG_KEYS */
 #endif /* __KERNEL__ */
 #endif /* _LINUX_KEY_H */

@@ -125,7 +125,9 @@ extern void *__alloc_bootmem_low_node(pg_data_t *pgdat,
 /* We are using top down, so it is safe to use 0 here */
 #define BOOTMEM_LOW_LIMIT 0
 #else
+#	if 0 //ifndef YONGSEOB-MBS
 #define BOOTMEM_LOW_LIMIT __pa(MAX_DMA_ADDRESS)
+#	endif
 #endif
 
 #ifndef ARCH_LOW_ADDRESS_LIMIT
@@ -255,6 +257,7 @@ static inline void __init memblock_free_late(
 }
 
 #else
+#	if 0 //ifndef YONGSEOB-MBS
 
 #define BOOTMEM_ALLOC_ACCESSIBLE	0
 
@@ -345,10 +348,13 @@ static inline void __init memblock_free_late(
 {
 	free_bootmem_late(base, size);
 }
+#	endif
 #endif /* defined(CONFIG_HAVE_MEMBLOCK) && defined(CONFIG_NO_BOOTMEM) */
 
 #ifdef CONFIG_HAVE_ARCH_ALLOC_REMAP
+#	if 0 //ifndef YONGSEOB-MBS
 extern void *alloc_remap(int nid, unsigned long size);
+#	endif
 #else
 static inline void *alloc_remap(int nid, unsigned long size)
 {
@@ -378,7 +384,9 @@ extern void *alloc_large_system_hash(const char *tablename,
 #define HASHDIST_DEFAULT IS_ENABLED(CONFIG_64BIT)
 extern int hashdist;		/* Distribute hashes across NUMA nodes? */
 #else
+#	if 0 //ifndef YONGSEOB-MBS
 #define hashdist (0)
+#	endif
 #endif
 
 

@@ -1098,7 +1098,7 @@ void __init setup_arch(char **cmdline_p)
 	}
 	max_possible_pfn = max_pfn;
        	//<<<2018.02.13 Yongseob
-	max_possible_pfn_pram =max_pfn_pram;
+	max_possible_pfn_pram = max_pfn_pram;
 	//>>>
 
 
@@ -1134,8 +1134,8 @@ void __init setup_arch(char **cmdline_p)
 		max_low_pfn_pram = max_pfn_pram;
 		//>>>
 	}
-//	high_memory =(max_pfn > max_pfn_pram ? (void *)__va(max_pfn * PAGE_SIZE - 1) + 1 : (void *)__va(max_pfn_pram * PAGE_SIZE - 1) + 1) ;
-	high_memory = (void *)__va(max_pfn * PAGE_SIZE - 1) + 1;
+	high_memory =(max_pfn > max_pfn_pram ? (void *)__va(max_pfn * PAGE_SIZE - 1) + 1 : (void *)__va(max_pfn_pram * PAGE_SIZE - 1) + 1) ;
+//	high_memory = (void *)__va(max_pfn * PAGE_SIZE - 1) + 1;
 	pr_info("high_memory= %ld\n",(unsigned long)high_memory);
 #endif
 
@@ -1277,6 +1277,7 @@ void __init setup_arch(char **cmdline_p)
 	kasan_init();
 
 #ifdef CONFIG_X86_32
+#	if 0 //ifndef YONGSEOB-MBS
 	/* sync back kernel address range */
 	clone_pgd_range(initial_page_table + KERNEL_PGD_BOUNDARY,
 			swapper_pg_dir     + KERNEL_PGD_BOUNDARY,
@@ -1289,6 +1290,7 @@ void __init setup_arch(char **cmdline_p)
 	clone_pgd_range(initial_page_table,
 			swapper_pg_dir     + KERNEL_PGD_BOUNDARY,
 			min(KERNEL_PGD_PTRS, KERNEL_PGD_BOUNDARY));
+#	endif
 #endif
 
 	tboot_probe();

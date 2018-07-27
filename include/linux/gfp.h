@@ -463,7 +463,7 @@ static inline enum zone_type gfp_zone(gfp_t flags)
 	int bit = (__force int) (flags & GFP_ZONEMASK);
 
 	//<<<2018.02.14 Yongseob
-	//if (flags & GFP_PRAM)
+	//if (flags & __GFP_PRAM)
 	//	return ZONE_PRAM;
 	//>>>
 	//GFP_ZONE_TABLE maybe works good for ZONE_PRAM

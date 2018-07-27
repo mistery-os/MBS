@@ -4113,7 +4113,7 @@ bool shmem_huge_enabled(struct vm_area_struct *vma)
 #endif /* CONFIG_TRANSPARENT_HUGE_PAGECACHE */
 
 #else /* !CONFIG_SHMEM */
-
+#	if 0 //ifndef YONGSEOB-MBS
 /*
  * tiny-shmem: simple shmemfs and tmpfs using ramfs code
  *
@@ -4174,7 +4174,7 @@ EXPORT_SYMBOL_GPL(shmem_truncate_range);
 #define shmem_get_inode(sb, dir, mode, dev, flags)	ramfs_get_inode(sb, dir, mode, dev)
 #define shmem_acct_size(flags, size)		0
 #define shmem_unacct_size(flags, size)		do {} while (0)
-
+#	endif
 #endif /* CONFIG_SHMEM */
 
 /* common code */

@@ -2685,6 +2685,7 @@ void __init setup_per_cpu_areas(void)
 #endif	/* CONFIG_HAVE_SETUP_PER_CPU_AREA */
 
 #else	/* CONFIG_SMP */
+#	if 0 //ifndef YONGSEOB-MBS
 
 /*
  * UP percpu area setup.
@@ -2721,6 +2722,7 @@ void __init setup_per_cpu_areas(void)
 		panic("Failed to initialize percpu areas.");
 }
 
+#	endif
 #endif	/* CONFIG_SMP */
 
 /*

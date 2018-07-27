@@ -1091,6 +1091,7 @@ void __init create_kmalloc_caches(unsigned long flags)
 	slab_state = UP;
 
 #ifdef CONFIG_ZONE_DMA
+#	if 0 //ifndef YONGSEOB-MBS
 	for (i = 0; i <= KMALLOC_SHIFT_HIGH; i++) {
 		struct kmem_cache *s = kmalloc_caches[i];
 
@@ -1104,6 +1105,7 @@ void __init create_kmalloc_caches(unsigned long flags)
 				size, SLAB_CACHE_DMA | flags);
 		}
 	}
+#	endif
 #endif
 }
 #endif /* !CONFIG_SLOB */

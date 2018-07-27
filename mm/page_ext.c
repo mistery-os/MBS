@@ -111,6 +111,7 @@ static inline struct page_ext *get_entry(void *base, unsigned long index)
 }
 
 #if !defined(CONFIG_SPARSEMEM)
+#	if 0 //ifndef YONGSEOB-MBS
 
 
 void __meminit pgdat_page_ext_init(struct pglist_data *pgdat)
@@ -191,6 +192,7 @@ fail:
 	panic("Out of memory");
 }
 
+#	endif
 #else /* CONFIG_FLAT_NODE_MEM_MAP */
 
 struct page_ext *lookup_page_ext(struct page *page)
@@ -377,6 +379,7 @@ void __init page_ext_init(void)
 		return;
 
 	for_each_node_state(nid, N_MEMORY) {
+		pr_debug("DO NOT ENTER MBS--page_ext_init");
 		unsigned long start_pfn, end_pfn;
 
 		start_pfn = node_start_pfn(nid);

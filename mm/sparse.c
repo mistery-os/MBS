@@ -25,12 +25,15 @@
 #ifdef CONFIG_SPARSEMEM_EXTREME
 struct mem_section **mem_section;
 #else
+#	if 0 //ifndef YONGSEOB-MBS
 struct mem_section mem_section[NR_SECTION_ROOTS][SECTIONS_PER_ROOT]
 	____cacheline_internodealigned_in_smp;
+#	endif
 #endif
 EXPORT_SYMBOL(mem_section);
 
 #ifdef NODE_NOT_IN_PAGE_FLAGS
+#	if 0 //ifndef YONGSEOB-MBS
 /*
  * If we did not store the node number in the page then we have to
  * do a lookup in the section_to_node_table in order to find which
@@ -52,6 +55,7 @@ static void set_section_nid(unsigned long section_nr, int nid)
 {
 	section_to_node_table[section_nr] = nid;
 }
+#	endif
 #else /* !NODE_NOT_IN_PAGE_FLAGS */
 static inline void set_section_nid(unsigned long section_nr, int nid)
 {
@@ -90,10 +94,12 @@ static int __meminit sparse_index_init(unsigned long section_nr, int nid)
 	return 0;
 }
 #else /* !SPARSEMEM_EXTREME */
+#	if 0 //ifndef YONGSEOB-MBS
 static inline int sparse_index_init(unsigned long section_nr, int nid)
 {
 	return 0;
 }
+#	endif
 #endif
 
 #ifdef CONFIG_SPARSEMEM_EXTREME
@@ -116,10 +122,12 @@ int __section_nr(struct mem_section* ms)
 	return (root_nr * SECTIONS_PER_ROOT) + (ms - root);
 }
 #else
+#	if 0 //ifndef YONGSEOB-MBS
 int __section_nr(struct mem_section* ms)
 {
 	return (int)(ms - mem_section[0]);
 }
+#	endif
 #endif
 
 /*
@@ -224,7 +232,7 @@ void __init memory_present(int nid, unsigned long start, unsigned long end)
 		struct mem_section *ms;
 
 		sparse_index_init(section, nid);
-		set_section_nid(section, nid);
+		set_section_nid(section, nid); /* Do NOTHING -MBS */
 
 		ms = __nr_to_section(section);
 		if (!ms->section_mem_map) {
@@ -378,6 +386,7 @@ static void __init check_usemap_section_nr(int nid, unsigned long *usemap)
 		usemap_snr, pgdat_snr, nid);
 }
 #else
+#	if 0 //ifndef YONGSEOB-MBS
 static unsigned long * __init
 sparse_early_usemaps_alloc_pgdat_section(struct pglist_data *pgdat,
 					 unsigned long size)
@@ -388,6 +397,7 @@ sparse_early_usemaps_alloc_pgdat_section(struct pglist_data *pgdat,
 static void __init check_usemap_section_nr(int nid, unsigned long *usemap)
 {
 }
+#	endif
 #endif /* CONFIG_MEMORY_HOTREMOVE */
 
 static void __init sparse_early_usemaps_alloc_node(void *data,
@@ -417,6 +427,7 @@ static void __init sparse_early_usemaps_alloc_node(void *data,
 }
 
 #ifndef CONFIG_SPARSEMEM_VMEMMAP
+#	if 0 //ifndef YONGSEOB-MBS
 struct page __init *sparse_mem_map_populate(unsigned long pnum, int nid)
 {
 	struct page *map;
@@ -481,6 +492,7 @@ void __init sparse_mem_maps_populate_node(struct page **map_map,
 		ms->section_mem_map = 0;
 	}
 }
+#	endif
 #endif /* !CONFIG_SPARSEMEM_VMEMMAP */
 
 #ifdef CONFIG_SPARSEMEM_ALLOC_MEM_MAP_TOGETHER
@@ -503,6 +515,7 @@ static void __init sparse_early_mem_maps_alloc_node(void *data,
 					 map_count, nodeid);
 }
 #else
+#	if 0 //ifndef YONGSEOB-MBS
 static struct page __init *sparse_early_mem_map_alloc(unsigned long pnum)
 {
 	struct page *map;
@@ -518,6 +531,7 @@ static struct page __init *sparse_early_mem_map_alloc(unsigned long pnum)
 	ms->section_mem_map = 0;
 	return NULL;
 }
+#	endif
 #endif
 
 void __weak __meminit vmemmap_populate_print_last(void)
@@ -648,14 +662,12 @@ void __init sparse_init(void)
 		panic("can not allocate usemap_map\n");
 	alloc_usemap_and_memmap(sparse_early_usemaps_alloc_node,
 							(void *)usemap_map);
-
 #ifdef CONFIG_SPARSEMEM_ALLOC_MEM_MAP_TOGETHER
 	size2 = sizeof(struct page *) * NR_MEM_SECTIONS;
 	map_map = memblock_virt_alloc(size2, 0);
 	                              /* include/linux/bootmem.h:179 */
 	if (!map_map)
 		panic("can not allocate map_map\n");
-	//alloc_usemap_and_memmap_pram(sparse_early_mem_maps_alloc_node_pram,
 	alloc_usemap_and_memmap(sparse_early_mem_maps_alloc_node,
 							(void *)map_map);
 #endif
@@ -668,7 +680,9 @@ void __init sparse_init(void)
 #ifdef CONFIG_SPARSEMEM_ALLOC_MEM_MAP_TOGETHER
 		map = map_map[pnum];
 #else
+#if	0 //ifndef YONGSEOB-MBS
 		map = sparse_early_mem_map_alloc(pnum);
+#	endif
 #endif
 		if (!map)
 			continue;

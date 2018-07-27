@@ -147,6 +147,7 @@ extern raw_spinlock_t devtree_lock;
 #define OF_BAD_ADDR	((u64)-1)
 
 #ifdef CONFIG_OF
+#	if 0 //ifndef YONGSEOB-MBS
 void of_core_init(void);
 
 static inline bool is_of_node(const struct fwnode_handle *fwnode)
@@ -537,7 +538,7 @@ const __be32 *of_prop_next_u32(struct property *prop, const __be32 *cur,
 const char *of_prop_next_string(struct property *prop, const char *cur);
 
 bool of_console_check(struct device_node *dn, char *name, int index);
-
+#	endif
 #else /* CONFIG_OF */
 
 static inline void of_core_init(void)

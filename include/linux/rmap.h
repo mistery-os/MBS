@@ -276,6 +276,7 @@ void rmap_walk(struct page *page, struct rmap_walk_control *rwc);
 void rmap_walk_locked(struct page *page, struct rmap_walk_control *rwc);
 
 #else	/* !CONFIG_MMU */
+#	if 0 //ifndef YONGSEOB-MBS
 
 #define anon_vma_init()		do {} while (0)
 #define anon_vma_prepare(vma)	(0)
@@ -297,6 +298,7 @@ static inline int page_mkclean(struct page *page)
 }
 
 
+#	endif
 #endif	/* CONFIG_MMU */
 
 #endif	/* _LINUX_RMAP_H */

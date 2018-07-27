@@ -5720,7 +5720,9 @@ static void sched_init_smt(void)
 		static_branch_enable(&sched_smt_present);
 }
 #else
+#	if 0 //ifndef YONGSEOB-MBS
 static inline void sched_init_smt(void) { }
+#	endif
 #endif
 
 void __init sched_init_smp(void)
@@ -5765,10 +5767,12 @@ static int __init migration_init(void)
 early_initcall(migration_init);
 
 #else
+#	if 0 //ifndef YONGSEOB-MBS
 void __init sched_init_smp(void)
 {
 	sched_init_granularity();
 }
+#	endif
 #endif /* CONFIG_SMP */
 
 int in_sched_functions(unsigned long addr)

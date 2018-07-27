@@ -92,6 +92,7 @@ static inline int percpu_counter_initialized(struct percpu_counter *fbc)
 }
 
 #else /* !CONFIG_SMP */
+#	if 0 //YONGSEOB-MBS
 
 struct percpu_counter {
 	s64 count;
@@ -171,7 +172,7 @@ static inline int percpu_counter_initialized(struct percpu_counter *fbc)
 {
 	return 1;
 }
-
+#	endif
 #endif	/* CONFIG_SMP */
 
 static inline void percpu_counter_inc(struct percpu_counter *fbc)

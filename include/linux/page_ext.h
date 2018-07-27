@@ -15,7 +15,7 @@ struct page_ext_operations {
 };
 
 #ifdef CONFIG_PAGE_EXTENSION
-
+#	if 0 //ifndef YONGSEOB-MBS
 /*
  * page_ext->flags bits:
  *
@@ -63,6 +63,7 @@ static inline void page_ext_init(void)
 
 struct page_ext *lookup_page_ext(struct page *page);
 
+#	endif
 #else /* !CONFIG_PAGE_EXTENSION */
 struct page_ext;
 

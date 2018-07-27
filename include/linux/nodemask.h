@@ -457,7 +457,7 @@ static inline void node_set_offline(int nid)
 }
 
 #else
-
+#	if 0 //ifndef YONGSEOB-MBS
 static inline int node_state(int node, enum node_states state)
 {
 	return node == 0;
@@ -487,7 +487,7 @@ static inline int num_node_state(enum node_states state)
 
 #define node_set_online(node)	   node_set_state((node), N_ONLINE)
 #define node_set_offline(node)	   node_clear_state((node), N_ONLINE)
-
+#	endif
 #endif
 
 #if defined(CONFIG_NUMA) && (MAX_NUMNODES > 1)

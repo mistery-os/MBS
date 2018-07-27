@@ -22,8 +22,10 @@
 #ifndef __ASSEMBLY__
 
 #ifdef CONFIG_KASAN
+#	if 0 //ifndef YONGSEOB-MBS
 void __init kasan_early_init(void);
 void __init kasan_init(void);
+#	endif
 #else
 static inline void kasan_early_init(void) { }
 static inline void kasan_init(void) { }

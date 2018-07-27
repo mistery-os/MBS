@@ -664,7 +664,7 @@ asmlinkage __visible void __init start_kernel(void)
 		initrd_start = 0;
 	}
 #endif
-	page_ext_init();		/* mm/page_ext.c */
+	page_ext_init();		/* DO Nothing..mm/page_ext.c */
 	kmemleak_init();
 	debug_objects_mem_init();
 	setup_per_cpu_pageset();	/* mm/page_alloc.c */
