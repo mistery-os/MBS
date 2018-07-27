@@ -196,7 +196,6 @@ static void pgmap_pram_radix_release(struct resource *res)
 
 	synchronize_rcu();
 }
-#	endif
 struct dev_pagemap *find_dev_pagemap(resource_size_t phys)
 {
 	struct page_map *page_map;
@@ -206,7 +205,7 @@ struct dev_pagemap *find_dev_pagemap(resource_size_t phys)
 	page_map = radix_tree_lookup(&parmmap_radix, PHYS_PFN(phys));
 	return page_map ? &page_map->pgmap : NULL;
 }
-
+#	endif
 
 #ifdef CONFIG_ZONE_DEVICE
 static DEFINE_MUTEX(pgmap_lock);
