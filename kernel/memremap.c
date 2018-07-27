@@ -182,9 +182,9 @@ void devm_memunmap(struct device *dev, void *addr)
 }
 EXPORT_SYMBOL(devm_memunmap);
 // YONGSEOB-MBS
+static DEFINE_MUTEX(prammap_lock);
 static RADIX_TREE(prammap_radix, GFP_KERNEL);
-static DEFINE_MUTEX(parmmap_lock);
-static void pgmap_radix_release(struct resource *res)
+static void pgmap_pram_radix_release(struct resource *res)
 {
 	unsigned long pgoff, order;
 
