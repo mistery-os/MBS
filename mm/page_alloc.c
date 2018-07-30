@@ -4372,7 +4372,7 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
 	if (likely(page))
 		goto out;
 	
-	if ( ac->high_zoneidx == ZONE_PRAM)
+	if ( ac.high_zoneidx == ZONE_PRAM)
 		pr_info("ZONE_PRAM requested---not goto out\n");
 	/*
 	 * Apply scoped allocation constraints. This is mainly about GFP_NOFS
