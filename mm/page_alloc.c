@@ -4298,7 +4298,7 @@ static inline bool prepare_alloc_pages(gfp_t gfp_mask, unsigned int order,
 {
 	ac->high_zoneidx = gfp_zone(gfp_mask);
 	if ( ac->high_zoneidx == ZONE_PRAM)
-		pr_info("ZONE_PRAM requested\n");
+		pr_debug("ZONE_PRAM requested\n");//works fine pr_info
 	ac->zonelist = node_zonelist(preferred_nid, gfp_mask);
 	ac->nodemask = nodemask;
 	ac->migratetype = gfpflags_to_migratetype(gfp_mask);
@@ -4371,7 +4371,9 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
 	page = get_page_from_freelist(alloc_mask, order, alloc_flags, &ac);
 	if (likely(page))
 		goto out;
-
+	
+	if ( ac->high_zoneidx == ZONE_PRAM)
+		pr_info("ZONE_PRAM requested---not goto out\n");
 	/*
 	 * Apply scoped allocation constraints. This is mainly about GFP_NOFS
 	 * resp. GFP_NOIO which has to be inherited for all allocation requests
