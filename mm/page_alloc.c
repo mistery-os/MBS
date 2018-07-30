@@ -3025,6 +3025,7 @@ failed:
 }
 
 #ifdef CONFIG_FAIL_PAGE_ALLOC
+#	if 0 //ifndef YONGSEOB-MBS
 
 static struct {
 	struct fault_attr attr;
@@ -3093,6 +3094,7 @@ late_initcall(fail_page_alloc_debugfs);
 
 #endif /* CONFIG_FAULT_INJECTION_DEBUG_FS */
 
+#	endif
 #else /* CONFIG_FAIL_PAGE_ALLOC */
 
 static inline bool should_fail_alloc_page(gfp_t gfp_mask, unsigned int order)
@@ -4296,7 +4298,7 @@ static inline bool prepare_alloc_pages(gfp_t gfp_mask, unsigned int order,
 {
 	ac->high_zoneidx = gfp_zone(gfp_mask);
 	if ( ac->high_zoneidx == ZONE_PRAM)
-		pr_debug("ZONE_PRAM requested\n");
+		pr_info("ZONE_PRAM requested\n");
 	ac->zonelist = node_zonelist(preferred_nid, gfp_mask);
 	ac->nodemask = nodemask;
 	ac->migratetype = gfpflags_to_migratetype(gfp_mask);
@@ -4316,8 +4318,8 @@ static inline bool prepare_alloc_pages(gfp_t gfp_mask, unsigned int order,
 			*alloc_flags |= ALLOC_CPUSET;
 	}
 
-	fs_reclaim_acquire(gfp_mask);
-	fs_reclaim_release(gfp_mask);
+	fs_reclaim_acquire(gfp_mask);//do nothing without CONFIG_LOCKDEP
+	fs_reclaim_release(gfp_mask);//same as 
 
 	might_sleep_if(gfp_mask & __GFP_DIRECT_RECLAIM);
 
