@@ -23,6 +23,7 @@
 #  define MAX_PHYSMEM_BITS	36
 #	endif
 # else
+#	define YONGSEOB-MBS
 #	if 0 //ifndef YONGSEOB-MBS
 #  define SECTION_SIZE_BITS	26
 #  define MAX_PHYSADDR_BITS	32
