@@ -647,6 +647,7 @@ void __init init_mem_mapping(void)
 
 #ifdef CONFIG_X86_64
 	end = ( max_pfn > max_pfn_pram ? max_pfn << PAGE_SHIFT : max_pfn_pram << PAGE_SHIFT) ;
+	end = max_pfn << PAGE_SHIFT;
 #else
 	end = max_low_pfn << PAGE_SHIFT;
 #endif

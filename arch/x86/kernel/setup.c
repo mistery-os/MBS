@@ -408,12 +408,14 @@ static void __init reserve_initrd(void)
 }
 
 #else
+#	if 0 //ifndef YONGSEOB-MBS
 static void __init early_reserve_initrd(void)
 {
 }
 static void __init reserve_initrd(void)
 {
 }
+#	endif
 #endif /* CONFIG_BLK_DEV_INITRD */
 
 static void __init parse_setup_data(void)
@@ -868,6 +870,7 @@ void __init setup_arch(char **cmdline_p)
 	 */
 
 #ifdef CONFIG_X86_32
+#	if 0 //ifndef YONGSEOB-MBS
 	memcpy(&boot_cpu_data, &new_cpu_data, sizeof(new_cpu_data));
 
 	/*
@@ -889,6 +892,7 @@ void __init setup_arch(char **cmdline_p)
 	 * so proper operation is guaranteed.
 	 */
 	__flush_tlb_all();
+#	endif
 #else
 	printk(KERN_INFO "Command line: %s\n", boot_command_line);
 #endif
@@ -909,8 +913,10 @@ void __init setup_arch(char **cmdline_p)
 	screen_info = boot_params.screen_info;
 	edid_info = boot_params.edid_info;
 #ifdef CONFIG_X86_32
+#	if 0 //ifndef YONGSEOB-MBS
 	apm_info.bios = boot_params.apm_bios_info;
 	ist_info = boot_params.ist_info;
+#	endif
 #endif
 	saved_video_mode = boot_params.hdr.vid_mode;
 	bootloader_type = boot_params.hdr.type_of_loader;
@@ -1068,6 +1074,7 @@ void __init setup_arch(char **cmdline_p)
 	e820_add_kernel_range();
 	trim_bios_range();
 #ifdef CONFIG_X86_32
+#	if 0 //ifndef YONGSEOB-MBS
 	if (ppro_with_ram_bug()) {
 		e820__range_update(0x70000000ULL, 0x40000ULL, E820_TYPE_RAM,
 				  E820_TYPE_RESERVED);
@@ -1075,6 +1082,7 @@ void __init setup_arch(char **cmdline_p)
 		printk(KERN_INFO "fixed physical RAM map:\n");
 		e820__print_table("bad_ppro");
 	}
+#	endif
 #else
 	early_gart_iommu_check();
 #endif
@@ -1116,8 +1124,10 @@ void __init setup_arch(char **cmdline_p)
 	kernel_randomize_memory();
 
 #ifdef CONFIG_X86_32
+#	if 0 //ifndef YONGSEOB-MBS
 	/* max_low_pfn get updated here */
 	find_low_pfn_range();
+#	endif
 #else
 	check_x2apic();
 
@@ -1134,9 +1144,10 @@ void __init setup_arch(char **cmdline_p)
 		max_low_pfn_pram = max_pfn_pram;
 		//>>>
 	}
-	high_memory =(max_pfn > max_pfn_pram ? (void *)__va(max_pfn * PAGE_SIZE - 1) + 1 : (void *)__va(max_pfn_pram * PAGE_SIZE - 1) + 1) ;
-//	high_memory = (void *)__va(max_pfn * PAGE_SIZE - 1) + 1;
-	pr_info("high_memory= %ld\n",(unsigned long)high_memory);
+	//high_memory =(max_pfn >= max_pfn_pram ? (void *)__va(max_pfn * PAGE_SIZE - 1) + 1 : (void *)__va(max_pfn_pram * PAGE_SIZE - 1) + 1) ;
+	high_memory = (void *)__va(max_pfn * PAGE_SIZE - 1) + 1;
+	pr_info("high_memory(ld)= %ld\n",(unsigned long)high_memory);
+	pr_info("high_memory(lld)= %lld\n",(unsigned long long)high_memory);
 #endif
 
 	/*
@@ -1166,7 +1177,7 @@ void __init setup_arch(char **cmdline_p)
 	reserve_bios_regions();
 
 	if (efi_enabled(EFI_MEMMAP)) {
-		efi_fake_memmap();
+		efi_fake_memmap(); // with CONFIG_EFI_FAKE_MEMMAP
 		efi_find_mirror();
 		efi_esrt_init();
 

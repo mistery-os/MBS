@@ -60,10 +60,12 @@ static inline bool hypervisor_is_type(enum x86_hypervisor_type type)
 	return x86_hyper_type == type;
 }
 #else
+#	if 0 //ifndef YONGSEOB-MBS
 static inline void init_hypervisor_platform(void) { }
 static inline bool hypervisor_is_type(enum x86_hypervisor_type type)
 {
 	return type == X86_HYPER_NATIVE;
 }
+#	endif
 #endif /* CONFIG_HYPERVISOR_GUEST */
 #endif /* _ASM_X86_HYPERVISOR_H */

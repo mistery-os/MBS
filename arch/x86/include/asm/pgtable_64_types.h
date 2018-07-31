@@ -85,11 +85,13 @@ typedef struct { pteval_t pte; } pte_t;
 #define MAXMEM			_AC(__AC(1, UL) << MAX_PHYSMEM_BITS, UL)
 
 #ifdef CONFIG_X86_5LEVEL
+#	if 0 //ifndef YONGSEOB-MBS
 # define VMALLOC_SIZE_TB	_AC(12800, UL)
 # define __VMALLOC_BASE		_AC(0xffa0000000000000, UL)
 # define __VMEMMAP_BASE		_AC(0xffd4000000000000, UL)
 # define LDT_PGD_ENTRY		_AC(-112, UL)
 # define LDT_BASE_ADDR		(LDT_PGD_ENTRY << PGDIR_SHIFT)
+#	endif
 #else
 # define VMALLOC_SIZE_TB	_AC(32, UL)
 # define __VMALLOC_BASE		_AC(0xffffc90000000000, UL)
@@ -99,8 +101,10 @@ typedef struct { pteval_t pte; } pte_t;
 #endif
 
 #ifdef CONFIG_RANDOMIZE_MEMORY
+#	if 0 //ifndef YONGSEOB-MBS
 # define VMALLOC_START		vmalloc_base
 # define VMEMMAP_START		vmemmap_base
+#	endif
 #else
 # define VMALLOC_START		__VMALLOC_BASE
 # define VMEMMAP_START		__VMEMMAP_BASE

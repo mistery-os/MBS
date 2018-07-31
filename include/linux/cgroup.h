@@ -653,6 +653,7 @@ static inline union kernfs_node_id *cgroup_get_kernfs_id(struct cgroup *cgrp)
 void cgroup_path_from_kernfs_id(const union kernfs_node_id *id,
 					char *buf, size_t buflen);
 #else /* !CONFIG_CGROUPS */
+#	if 0 //ifndef YONGSEOB-MBS
 
 struct cgroup_subsys_state;
 struct cgroup;
@@ -687,6 +688,7 @@ static inline bool task_under_cgroup_hierarchy(struct task_struct *task,
 
 static inline void cgroup_path_from_kernfs_id(const union kernfs_node_id *id,
 	char *buf, size_t buflen) {}
+#	endif
 #endif /* !CONFIG_CGROUPS */
 
 /*

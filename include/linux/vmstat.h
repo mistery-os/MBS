@@ -281,6 +281,7 @@ int calculate_normal_threshold(struct zone *zone);
 void set_pgdat_percpu_threshold(pg_data_t *pgdat,
 				int (*calculate_pressure)(struct zone *));
 #else /* CONFIG_SMP */
+#	if 0 //ifndef YONGSEOB-MBS
 
 /*
  * We do not maintain differentials in a single processor configuration.
@@ -372,6 +373,7 @@ static inline void quiet_vmstat(void) { }
 
 static inline void drain_zonestat(struct zone *zone,
 			struct per_cpu_pageset *pset) { }
+#	endif
 #endif		/* CONFIG_SMP */
 
 static inline void __mod_zone_freepage_state(struct zone *zone, int nr_pages,

@@ -423,9 +423,9 @@ static inline bool gfpflags_allow_blocking(const gfp_t gfp_flags)
 	| (OPT_ZONE_DMA32 << ___GFP_DMA32 * GFP_ZONES_SHIFT)		       \
 	| (ZONE_NORMAL << ___GFP_MOVABLE * GFP_ZONES_SHIFT)		       \
 	| (OPT_ZONE_DMA << (___GFP_MOVABLE | ___GFP_DMA) * GFP_ZONES_SHIFT)    \
-	| (ZONE_MOVABLE << (___GFP_MOVABLE | ___GFP_PRAM) * GFP_ZONES_SHIFT)\
 	| (OPT_ZONE_DMA32 << (___GFP_MOVABLE | ___GFP_DMA32) * GFP_ZONES_SHIFT)\
 )
+//	| (ZONE_MOVABLE << (___GFP_MOVABLE | ___GFP_PRAM) * GFP_ZONES_SHIFT)\
 //>>>
 /*
  * GFP_ZONE_BAD is a bitmap for all combinations of __GFP_DMA, __GFP_DMA32
@@ -486,7 +486,9 @@ static inline int gfp_zonelist(gfp_t flags)
 	if (unlikely(flags & __GFP_THISNODE))
 		return ZONELIST_NOFALLBACK;
 #endif
+	if (gfp_zone(gfp_mask) != GFP_PRAM )
 	return ZONELIST_FALLBACK;
+		return ZONELIST_NOFALLBACK; //tricky???
 }
 
 /*
@@ -566,12 +568,14 @@ extern struct page *alloc_pages_vma(gfp_t gfp_mask, int order,
 #define alloc_hugepage_vma(gfp_mask, vma, addr, order)	\
 	alloc_pages_vma(gfp_mask, order, vma, addr, numa_node_id(), true)
 #else
+#	if 0 //ifndef YONGSEOB-MBS
 #define alloc_pages(gfp_mask, order) \
 		alloc_pages_node(numa_node_id(), gfp_mask, order)
 #define alloc_pages_vma(gfp_mask, order, vma, addr, node, false)\
 	alloc_pages(gfp_mask, order)
 #define alloc_hugepage_vma(gfp_mask, vma, addr, order)	\
 	alloc_pages(gfp_mask, order)
+#	endif
 #endif
 #define alloc_page(gfp_mask) alloc_pages(gfp_mask, 0)
 #define alloc_pram(gfp_mask) alloc_prams(gfp_mask, 0)

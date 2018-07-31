@@ -28,6 +28,7 @@ struct pglist_data *node_data[MAX_NUMNODES] __read_mostly;
 EXPORT_SYMBOL(node_data);
 
 static struct numa_meminfo numa_meminfo
+static struct numa_meminfo nusa_meminfo
 #ifndef CONFIG_MEMORY_HOTPLUG
 __initdata
 #endif
@@ -645,6 +646,7 @@ static int __init numa_init(int (*init_func)(void))
 	nodes_clear(node_possible_map);
 	nodes_clear(node_online_map);
 	memset(&numa_meminfo, 0, sizeof(numa_meminfo));
+	memset(&nusa_meminfo, 0, sizeof(nusa_meminfo));
 	WARN_ON(memblock_set_node(0, ULLONG_MAX, &memblock.memory,
 				  MAX_NUMNODES));
 	WARN_ON(memblock_set_node(0, ULLONG_MAX, &memblock.reserved,

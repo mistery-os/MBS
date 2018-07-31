@@ -3241,10 +3241,12 @@ static bool zone_allows_reclaim(struct zone *local_zone, struct zone *zone)
 				RECLAIM_DISTANCE;
 }
 #else	/* CONFIG_NUMA */
+#	if 0 //ifndef YONGSEOB-MBS
 static bool zone_allows_reclaim(struct zone *local_zone, struct zone *zone)
 {
 	return true;
 }
+#	endif
 #endif	/* CONFIG_NUMA */
 
 /*
@@ -4297,18 +4299,19 @@ static inline bool prepare_alloc_pages(gfp_t gfp_mask, unsigned int order,
 		unsigned int *alloc_flags)
 {
 	ac->high_zoneidx = gfp_zone(gfp_mask);
+#if 0
 	if ( ac->high_zoneidx == ZONE_PRAM)
 		pr_debug("ZONE_PRAM requested\n");//works fine pr_info
+#endif
 	ac->zonelist = node_zonelist(preferred_nid, gfp_mask);
 	ac->nodemask = nodemask;
 	ac->migratetype = gfpflags_to_migratetype(gfp_mask);
 	//<<<2018.05.30 Yongseob
-	// 2018.06.07 temporaly disabled
-#if 0
+#if 0   // 2018.06.07 temporaly disabled
+
 	if (ac->high_zoneidx == ZONE_PRAM ) //if ( gfp_mask & GFP_PRAM )
 		*alloc_flags |= ALLOC_NO_WATERMARKS;
-#endif
-	//>>>
+#endif  //>>>
 
 	if (cpusets_enabled()) {
 		*alloc_mask |= __GFP_HARDWALL;
@@ -4323,7 +4326,7 @@ static inline bool prepare_alloc_pages(gfp_t gfp_mask, unsigned int order,
 
 	might_sleep_if(gfp_mask & __GFP_DIRECT_RECLAIM);
 
-	if (should_fail_alloc_page(gfp_mask, order))
+	if (should_fail_alloc_page(gfp_mask, order))//do nothing w/o CONFIG_FAIL_PAGE_ALLOC
 		return false;
 
 	if (IS_ENABLED(CONFIG_CMA) && ac->migratetype == MIGRATE_MOVABLE)
@@ -4372,8 +4375,6 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
 	if (likely(page))
 		goto out;
 	
-	if ( ac.high_zoneidx == ZONE_PRAM)
-		pr_info("ZONE_PRAM requested---not goto out\n");
 	/*
 	 * Apply scoped allocation constraints. This is mainly about GFP_NOFS
 	 * resp. GFP_NOIO which has to be inherited for all allocation requests
@@ -6541,7 +6542,7 @@ static void __ref alloc_node_mem_map(struct pglist_data *pgdat)
 		return;
 
 #ifdef CONFIG_FLAT_NODE_MEM_MAP
-	pr_debug("NO enterence");
+	pr_info("DO_NOTHING: NO enterence");
 #	if 0 //ifndef YONGSEOB-MBS
 	start = pgdat->node_start_pfn & ~(MAX_ORDER_NR_PAGES - 1);
 	offset = pgdat->node_start_pfn - start;
@@ -6578,6 +6579,7 @@ static void __ref alloc_node_mem_map(struct pglist_data *pgdat)
 #endif
 #	endif
 #endif /* CONFIG_FLAT_NODE_MEM_MAP */
+	pr_info("DO NOTHING: alloc_node_mem_map\n");
 }
 
 void __paginginit free_area_init_node(int nid, unsigned long *zones_size,

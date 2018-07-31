@@ -96,6 +96,7 @@ static inline void set_cpu_numa_node(int cpu, int node)
 #endif
 
 #else	/* !CONFIG_USE_PERCPU_NUMA_NODE_ID */
+#	if 0 // ifndef YONGSEOB-MBS
 
 /* Returns the number of the current Node. */
 #ifndef numa_node_id
@@ -105,6 +106,7 @@ static inline int numa_node_id(void)
 }
 #endif
 
+#	endif
 #endif	/* [!]CONFIG_USE_PERCPU_NUMA_NODE_ID */
 
 #ifdef CONFIG_HAVE_MEMORYLESS_NODES

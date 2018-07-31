@@ -78,6 +78,7 @@ void mpx_notify_unmap(struct mm_struct *mm, struct vm_area_struct *vma,
 unsigned long mpx_unmapped_area_check(unsigned long addr, unsigned long len,
 		unsigned long flags);
 #else
+#	if 0 //ifndef YONGSEOB-MBS
 static inline siginfo_t *mpx_generate_siginfo(struct pt_regs *regs)
 {
 	return NULL;
@@ -104,6 +105,7 @@ static inline unsigned long mpx_unmapped_area_check(unsigned long addr,
 {
 	return addr;
 }
+#	endif
 #endif /* CONFIG_X86_INTEL_MPX */
 
 #endif /* _ASM_X86_MPX_H */

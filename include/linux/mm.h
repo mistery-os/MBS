@@ -1088,6 +1088,7 @@ static __always_inline void *lowmem_page_address(const struct page *page)
 #endif
 
 #if defined(WANT_PAGE_VIRTUAL)
+#	if 0
 static inline void *page_address(const struct page *page)
 {
 	return page->virtual;
@@ -1097,6 +1098,7 @@ static inline void set_page_address(struct page *page, void *address)
 	page->virtual = address;
 }
 #define page_address_init()  do { } while(0)
+#	endif
 #endif
 
 #if defined(HASHED_PAGE_VIRTUAL)
@@ -2421,9 +2423,11 @@ extern int apply_to_page_range(struct mm_struct *mm, unsigned long address,
 
 
 #ifdef CONFIG_PAGE_POISONING
+#	if 0 //ifndef YONGSEOB
 extern bool page_poisoning_enabled(void);
 extern void kernel_poison_pages(struct page *page, int numpages, int enable);
 extern bool page_is_poisoned(struct page *page);
+#	endif
 #else
 static inline bool page_poisoning_enabled(void) { return false; }
 static inline void kernel_poison_pages(struct page *page, int numpages,
@@ -2432,6 +2436,7 @@ static inline bool page_is_poisoned(struct page *page) { return false; }
 #endif
 
 #ifdef CONFIG_DEBUG_PAGEALLOC
+#	if 0 //ifndef YONGSEOB-MBS
 extern bool _debug_pagealloc_enabled;
 extern void __kernel_map_pages(struct page *page, int numpages, int enable);
 
@@ -2451,6 +2456,7 @@ kernel_map_pages(struct page *page, int numpages, int enable)
 #ifdef CONFIG_HIBERNATION
 extern bool kernel_page_present(struct page *page);
 #endif	/* CONFIG_HIBERNATION */
+#	endif
 #else	/* CONFIG_DEBUG_PAGEALLOC */
 static inline void
 kernel_map_pages(struct page *page, int numpages, int enable) {}

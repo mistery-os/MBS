@@ -729,17 +729,17 @@ kernel_physical_mapping_init(unsigned long paddr_start,
 }
 
 #ifndef CONFIG_NUMA
+#	if 0 //ifndef YONGSEOB-MBS
 void __init initmem_init(void)
 {
 	memblock_set_node(0, (phys_addr_t)ULLONG_MAX, &memblock.memory, 0);
 }
 //<<<2018.02.14 Yongseob
-#if 0
 void __init initpram_init(void)
 {
 	memblock_set_node(0, (phys_addr_t)ULLONG_MAX, &memblock.pram, 0);
 }
-#endif
+#	endif
 //>>>
 #endif
 
@@ -756,8 +756,10 @@ void __init paging_init(void)
 	 */
 	//<<<2018.05.17 Yongseob
 	node_clear_state(0, N_MEMORY);
+#	if 0 //ifndef YONGSEOB-MBS
 	if (N_MEMORY != N_NORMAL_MEMORY)
 		node_clear_state(0, N_NORMAL_MEMORY);
+#	endif
 
 	zone_sizes_init(); // initializes the pgdat_t instances of all nodes
 }

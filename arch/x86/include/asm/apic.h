@@ -244,12 +244,14 @@ static inline int x2apic_enabled(void)
 
 #define x2apic_supported()	(boot_cpu_has(X86_FEATURE_X2APIC))
 #else /* !CONFIG_X86_X2APIC */
+#	if 0 //ifndef YONGSEOB-MBS
 static inline void check_x2apic(void) { }
 static inline void x2apic_setup(void) { }
 static inline int x2apic_enabled(void) { return 0; }
 
 #define x2apic_mode		(0)
 #define	x2apic_supported()	(0)
+#	endif
 #endif /* !CONFIG_X86_X2APIC */
 
 struct irq_data;

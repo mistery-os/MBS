@@ -408,13 +408,13 @@ static struct page_address_slot *page_slot(const struct page *page)
  */
 void *page_address(const struct page *page)
 {
-	unsigned long flags;
-	void *ret;
-	struct page_address_slot *pas;
+//	unsigned long flags;
+//	void *ret;
+//	struct page_address_slot *pas;
 
 	if (!PageHighMem(page))
 		return lowmem_page_address(page);
-
+#	if 0 //ifndef YONGSEOB-MBS
 	pas = page_slot(page);
 	ret = NULL;
 	spin_lock_irqsave(&pas->lock, flags);
@@ -431,6 +431,7 @@ void *page_address(const struct page *page)
 done:
 	spin_unlock_irqrestore(&pas->lock, flags);
 	return ret;
+#	endif
 }
 
 EXPORT_SYMBOL(page_address);
