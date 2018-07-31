@@ -425,7 +425,7 @@ static inline bool gfpflags_allow_blocking(const gfp_t gfp_flags)
 	| (OPT_ZONE_DMA << (___GFP_MOVABLE | ___GFP_DMA) * GFP_ZONES_SHIFT)    \
 	| (OPT_ZONE_DMA32 << (___GFP_MOVABLE | ___GFP_DMA32) * GFP_ZONES_SHIFT)\
 )
-//	| (ZONE_MOVABLE << (___GFP_MOVABLE | ___GFP_PRAM) * GFP_ZONES_SHIFT)\
+/*	| (ZONE_MOVABLE << (___GFP_MOVABLE | ___GFP_PRAM) * GFP_ZONES_SHIFT)\ */
 //>>>
 /*
  * GFP_ZONE_BAD is a bitmap for all combinations of __GFP_DMA, __GFP_DMA32
