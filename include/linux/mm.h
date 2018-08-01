@@ -1102,9 +1102,11 @@ static inline void set_page_address(struct page *page, void *address)
 #endif
 
 #if defined(HASHED_PAGE_VIRTUAL)
+#	if 0 //ifndef YONGSEOB-MBS
 void *page_address(const struct page *page);
 void set_page_address(struct page *page, void *virtual);
 void page_address_init(void);
+#	endif
 #endif
 
 #if !defined(HASHED_PAGE_VIRTUAL) && !defined(WANT_PAGE_VIRTUAL)

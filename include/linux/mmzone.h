@@ -385,9 +385,6 @@ struct zone {
 
 	/* zone watermarks, access with *_wmark_pages(zone) macros */
 	unsigned long watermark[NR_WMARK];
-	//<<<2018.05.28 Yongseob
-	//unsigned long pramWmark[NR_pramWMARK];
-	//>>>
 
 	unsigned long nr_reserved_highatomic;
 
