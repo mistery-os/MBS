@@ -225,7 +225,7 @@ void __init memory_present(int nid, unsigned long start, unsigned long end)
 		mem_section = memblock_virt_alloc(size, align);
 	}
 #endif
-pr_info("SECTION_SIZE_BITS=%d\n");
+pr_info("SECTION_SIZE_BITS=%d\n",SECTION_SIZE_BITS);
 	start &= PAGE_SECTION_MASK;
 	mminit_validate_memmodel_limits(&start, &end);
 	for (pfn = start; pfn < end; pfn += PAGES_PER_SECTION) {
