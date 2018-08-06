@@ -1202,9 +1202,11 @@ void __init_memblock __next_pfn_range(int *idx, int nid,
 		unsigned long *out_start_pfn,
 		unsigned long *out_end_pfn, int *out_nid)
 {
-	struct memblock_type *type = &memblock.memory;
+	struct memblock_type *type; 
+	//struct memblock_type *type = &memblock.memory;
 	struct memblock_region *r;
-pram_repeat:
+
+	type=&memblock.memory;
 	while (++*idx < type->cnt) {
 		r = &type->regions[*idx];
 
@@ -1215,10 +1217,28 @@ pram_repeat:
 	}
 	if (*idx >= type->cnt) {
 		*idx = -1;
-		if (type != &memblock.pram){
-		type = &memblock.pram;
-		goto pram_repeat;
-		}
+		goto next_to_pram;
+	}
+
+	if (out_start_pfn)
+		*out_start_pfn = PFN_UP(r->base);
+	if (out_end_pfn)
+		*out_end_pfn = PFN_DOWN(r->base + r->size);
+	if (out_nid)
+		*out_nid = r->nid;
+	return;
+next_to_pram:
+	type=memblock.pram;
+	while (++*idx < type->cnt) {
+		r = &type->regions[*idx];
+
+		if (PFN_UP(r->base) >= PFN_DOWN(r->base + r->size))
+			continue;
+		if (nid == MAX_NUMNODES || nid == r->nid)
+			break;
+	}
+	if (*idx >= type->cnt) {
+		*idx = -1;
 		return;
 	}
 
@@ -1228,6 +1248,7 @@ pram_repeat:
 		*out_end_pfn = PFN_DOWN(r->base + r->size);
 	if (out_nid)
 		*out_nid = r->nid;
+	return;
 }
 
 /*
