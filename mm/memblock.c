@@ -1216,7 +1216,7 @@ pram_repeat:
 	if (*idx >= type->cnt) {
 		*idx = -1;
 		if (type != &memblock.pram){
-		*type = &memblock.pram;
+		type = &memblock.pram;
 		goto pram_repeat;
 		}
 		return;
