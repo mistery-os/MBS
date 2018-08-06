@@ -25,6 +25,7 @@ typedef struct { pteval_t pte; } pte_t;
 #define SHARED_KERNEL_PMD	0
 
 #ifdef CONFIG_X86_5LEVEL
+#	if 0 //ifndef YONGSEOB-MBS
 
 /*
  * PGDIR_SHIFT determines what a top-level page table entry can map
@@ -40,6 +41,7 @@ typedef struct { pteval_t pte; } pte_t;
 #define P4D_SIZE	(_AC(1, UL) << P4D_SHIFT)
 #define P4D_MASK	(~(P4D_SIZE - 1))
 
+#	endif
 #else /* CONFIG_X86_5LEVEL */
 
 /*

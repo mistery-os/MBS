@@ -530,7 +530,7 @@ asmlinkage __visible void __init start_kernel(void)
 	 * enable them.
 	 */
 	boot_cpu_init();
-	page_address_init();
+	page_address_init(); // do nothing MBS
 	pr_notice("%s", linux_banner);
 	setup_arch(&command_line);// arch/x86/kernel/setup.c
 	/*

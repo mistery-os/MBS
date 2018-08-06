@@ -83,11 +83,11 @@ static int __meminit sparse_index_init(unsigned long section_nr, int nid)
 	struct mem_section *section;
 
 	if (mem_section[root])
-		return -EEXIST;
+		return -EEXIST;  /*- File exists */
 
 	section = sparse_index_alloc(nid);
 	if (!section)
-		return -ENOMEM;
+		return -ENOMEM; /*- Out of memory */
 
 	mem_section[root] = section;
 
@@ -217,7 +217,7 @@ void __init memory_present(int nid, unsigned long start, unsigned long end)
 
 #ifdef CONFIG_SPARSEMEM_EXTREME
 	if (unlikely(!mem_section)) {
-		pr_info("memory_present-----");//for  test
+		//pr_info("memory_present-----");//for  test
 		unsigned long size, align;
 
 		size = sizeof(struct mem_section*) * NR_SECTION_ROOTS;
@@ -225,7 +225,7 @@ void __init memory_present(int nid, unsigned long start, unsigned long end)
 		mem_section = memblock_virt_alloc(size, align);
 	}
 #endif
-pr_info("SECTION_SIZE_BITS=%d\n",SECTION_SIZE_BITS);
+	//pr_info("SECTION_SIZE_BITS=%d\n",SECTION_SIZE_BITS);= 27
 	start &= PAGE_SECTION_MASK;
 	mminit_validate_memmodel_limits(&start, &end);
 	for (pfn = start; pfn < end; pfn += PAGES_PER_SECTION) {

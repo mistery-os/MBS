@@ -957,7 +957,7 @@ void __init setup_arch(char **cmdline_p)
 	x86_init.oem.arch_setup();
 
 	iomem_resource.end = (1ULL << boot_cpu_data.x86_phys_bits) - 1;
-	e820__memory_setup();
+	e820__memory_setup(); /* physical memory map */
 	parse_setup_data();
 
 	copy_edd();
@@ -1144,10 +1144,9 @@ void __init setup_arch(char **cmdline_p)
 		max_low_pfn_pram = max_pfn_pram;
 		//>>>
 	}
-	//high_memory =(max_pfn >= max_pfn_pram ? (void *)__va(max_pfn * PAGE_SIZE - 1) + 1 : (void *)__va(max_pfn_pram * PAGE_SIZE - 1) + 1) ;
-	high_memory = (void *)__va(max_pfn * PAGE_SIZE - 1) + 1;
+	high_memory =(max_pfn >= max_pfn_pram ? (void *)__va(max_pfn * PAGE_SIZE - 1) + 1 : (void *)__va(max_pfn_pram * PAGE_SIZE - 1) + 1) ;
+	//high_memory = (void *)__va(max_pfn * PAGE_SIZE - 1) + 1;
 	pr_info("high_memory(ld)= %ld\n",(unsigned long)high_memory);
-	pr_info("high_memory(lld)= %lld\n",(unsigned long long)high_memory);
 #endif
 
 	/*

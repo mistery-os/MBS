@@ -267,8 +267,8 @@ int min_free_kbytes = 1024;
 int user_min_free_kbytes = -1;
 int watermark_scale_factor = 10;
 
-static unsigned long __meminitdata nr_kernel_pages;
-static unsigned long __meminitdata nr_all_pages;
+static unsigned long __meminitdata nr_kernel_pages;// counts all identity mapped pages
+static unsigned long __meminitdata nr_all_pages; // includee high-memory
 static unsigned long __meminitdata dma_reserve;
 
 #ifdef CONFIG_HAVE_MEMBLOCK_NODE_MAP
@@ -624,6 +624,7 @@ void prep_compound_page(struct page *page, unsigned int order)
 }
 
 #ifdef CONFIG_DEBUG_PAGEALLOC
+#	if 0 //ifndef YONGSEOB-MBS
 unsigned int _debug_guardpage_minorder;
 bool _debug_pagealloc_enabled __read_mostly
 			= IS_ENABLED(CONFIG_DEBUG_PAGEALLOC_ENABLE_DEFAULT);
@@ -723,6 +724,7 @@ static inline void clear_page_guard(struct zone *zone, struct page *page,
 	if (!is_migrate_isolate(migratetype))
 		__mod_zone_freepage_state(zone, (1 << order), migratetype);
 }
+#	endif
 #else
 struct page_ext_operations debug_guardpage_ops;
 static inline bool set_page_guard(struct zone *zone, struct page *page,
@@ -5937,17 +5939,20 @@ void __init sparse_memory_present_with_active_regions(int nid)
 {
 	unsigned long start_pfn, end_pfn;
 	int i, this_nid;
+
+	for_each_pfn_range(i, nid, &start_pfn, &end_pfn, &this_nid)
+		memory_present(this_nid, start_pfn, end_pfn);
+#	if 0 //ifndef YONGSEOB-MBS
+	for_each_mem_pfn_range(i, nid, &start_pfn, &end_pfn, &this_nid)
+		memory_present(this_nid, start_pfn, end_pfn);
 	//<<<2018.02.14 Yongseob
 	unsigned long start_pfn_pram, end_pfn_pram;
 	int i_pram, this_nid_pram;
 	//>>>
-
-	for_each_mem_pfn_range(i, nid, &start_pfn, &end_pfn, &this_nid)
-		memory_present(this_nid, start_pfn, end_pfn);
-	//<<<2018.02.14 Yongseob
 	for_each_pram_pfn_range(i_pram, nid, &start_pfn_pram, &end_pfn_pram, &this_nid_pram)
 		memory_present(this_nid_pram, start_pfn_pram, end_pfn_pram);
 	//>>>
+#	endif
 }
 
 /**
@@ -6525,10 +6530,11 @@ static void __paginginit free_area_init_core(struct pglist_data *pgdat)
 		setup_usemap(pgdat, zone, zone_start_pfn, size);
 		                          /* do nothing if CONFIG_SPARSEMEM */
 		init_currently_empty_zone(zone, zone_start_pfn, size);
-//		if ( j != ZONE_PRAM )
+		if ( j != ZONE_PRAM )
 			memmap_init(size, nid, j, zone_start_pfn);
-//		else
-//			memmap_init_pram(size, nid, j, zone_start_pfn);
+			/*initialize the pages of the zone*/
+		else
+			memmap_init_pram(size, nid, j, zone_start_pfn);
 	}
 }
 
@@ -6542,7 +6548,7 @@ static void __ref alloc_node_mem_map(struct pglist_data *pgdat)
 		return;
 
 #ifdef CONFIG_FLAT_NODE_MEM_MAP
-	pr_info("DO_NOTHING: NO enterence");
+	pr_debug("DO_NOTHING: NO enterence");
 #	if 0 //ifndef YONGSEOB-MBS
 	start = pgdat->node_start_pfn & ~(MAX_ORDER_NR_PAGES - 1);
 	offset = pgdat->node_start_pfn - start;
@@ -6579,7 +6585,7 @@ static void __ref alloc_node_mem_map(struct pglist_data *pgdat)
 #endif
 #	endif
 #endif /* CONFIG_FLAT_NODE_MEM_MAP */
-	pr_info("DO NOTHING: alloc_node_mem_map\n");
+	pr_debug("DO_NOTHING: alloc_node_mem_map\n");
 }
 
 void __paginginit free_area_init_node(int nid, unsigned long *zones_size,
@@ -6616,13 +6622,13 @@ void __paginginit free_area_init_node(int nid, unsigned long *zones_size,
 #	endif
 #endif
 	//<<<2018.02.14 Yongseob
-#if 0
 	calculate_node_totalpages(pgdat, start_pfn, end_pfn,
 			zones_size, zholes_size);
-#endif
+#if 0 //what different calculate_node_totalpages vs pram
 	calculate_node_totalpages_pram(pgdat, start_pfn, end_pfn,
 			start_pfn_pram, end_pfn_pram,
 			zones_size, zholes_size);
+#endif
 	//>>>
 
 	alloc_node_mem_map(pgdat); /*NO on NUMA of sparsemem */ 
@@ -7009,6 +7015,8 @@ static void check_for_memory(pg_data_t *pgdat, int nid)
 			if (N_NORMAL_MEMORY != N_HIGH_MEMORY &&
 					zone_type <= ZONE_NORMAL)
 				node_set_state(nid, N_NORMAL_MEMORY);
+			pr_info("N_NORMAL_MEMORY=%d, N_HIGH_MEMORY=%d\n",
+					N_NORMAL_MEMORY,N_HIGH_MEMORY);
 			break;
 		}
 	}

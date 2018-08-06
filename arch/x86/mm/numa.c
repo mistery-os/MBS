@@ -22,7 +22,7 @@
 int numa_off;
 nodemask_t numa_nodes_parsed __initdata;
 //<<<2018.03.05 Yongseob
-//nodemask_t numa_nodes_parsed_pram __initdata;
+nodemask_t numa_nodes_parsed_pram __initdata;
 //>>>
 struct pglist_data *node_data[MAX_NUMNODES] __read_mostly;
 EXPORT_SYMBOL(node_data);

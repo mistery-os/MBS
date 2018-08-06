@@ -646,8 +646,8 @@ void __init init_mem_mapping(void)
 	setup_pcid();
 
 #ifdef CONFIG_X86_64
-	end = ( max_pfn > max_pfn_pram ? max_pfn << PAGE_SHIFT : max_pfn_pram << PAGE_SHIFT) ;
 	end = max_pfn << PAGE_SHIFT;
+	end = ( max_pfn > max_pfn_pram ? max_pfn << PAGE_SHIFT : max_pfn_pram << PAGE_SHIFT) ;
 #else
 	end = max_low_pfn << PAGE_SHIFT;
 #endif
@@ -680,6 +680,7 @@ void __init init_mem_mapping(void)
 
 #ifdef CONFIG_X86_64
 	if (max_pfn > max_low_pfn) {
+		pr_info("max_pfn=%lx, max_low_pfn=%lx\n",max_pfn,max_low_pfn);
 		/* can we preseve max_low_pfn ?*/
 		max_low_pfn = max_pfn;
 	}
