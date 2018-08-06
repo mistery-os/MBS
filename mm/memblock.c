@@ -1228,7 +1228,7 @@ void __init_memblock __next_pfn_range(int *idx, int nid,
 		*out_nid = r->nid;
 	return;
 next_to_pram:
-	type=memblock.pram;
+	type=&memblock.pram;
 	while (++*idx < type->cnt) {
 		r = &type->regions[*idx];
 
