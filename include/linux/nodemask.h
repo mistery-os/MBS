@@ -392,7 +392,7 @@ enum node_states {
 	//   2018.05.30 change the order from after to before N_MEMORY
 	//   2018.06.05 from behind N_MEMORY  to afore N_NORMAL_MEMORY
 	//   2018.06.05 from afore N_NORMAL_MEMORY to behind N_HIGH_MEMORY
-	//N_PRAM,			/* The node has one or more pram */
+	N_PRAM,			/* The node has one or more pram */
 	//>>>
 	N_MEMORY,		/* The node has memory(regular, high, movable) */
 	N_CPU,		/* The node has one or more cpus */
