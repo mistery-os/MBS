@@ -1207,15 +1207,17 @@ void __init_memblock __next_pfn_range(int *idx, int *ix, int nid,
 	struct memblock_region *r;
 	struct memblock_region *r_pram;
 
+	if (*ix<=type_pram->cnt)
 	r_pram = &type_pram->regions[*ix];
 
-	while (++*idx < type->cnt) {
+	//while (++*idx < type->cnt) {
+	if (*idx<=type->cnt)
 		r = &type->regions[*idx];
-		if (PFN_UP(r->base) >= PFN_DOWN(r->base + r->size))
-			continue;
-		if (nid == MAX_NUMNODES || nid == r->nid)
-			break;
-	}
+	//	if (PFN_UP(r->base) >= PFN_DOWN(r->base + r->size))
+	//		continue;
+	//	if (nid == MAX_NUMNODES || nid == r->nid)
+	//		break;
+	//}
 
 	if ((*idx >= type->cnt) && (*ix >= type_pram->cnt)) {
 		*idx = -1;
@@ -1231,6 +1233,7 @@ void __init_memblock __next_pfn_range(int *idx, int *ix, int nid,
 		*out_end_pfn = PFN_DOWN(r->base + r->size);
 	if (out_nid)
 		*out_nid = r->nid;
+	*idx++;
 	return;
 
 loop_pram:
