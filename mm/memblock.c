@@ -1198,63 +1198,49 @@ void __init_memblock __next_mem_range_rev(u64 *idx, int nid, ulong flags,
 /*
  * Common iterator interface used to define for_each_range().
  */
-void __init_memblock __next_pfn_range(int *idx, int nid, int *tag,
+void __init_memblock __next_pfn_range(int *idx, int *ix, int nid, 
 		unsigned long *out_start_pfn,
 		unsigned long *out_end_pfn, int *out_nid)
 {
-	struct memblock_type *type; 
-	//struct memblock_type *type = &memblock.memory;
+	struct memblock_type *type=&memblock.memory;
+        struct memblock_type *type_pram=&memblock.pram; 
 	struct memblock_region *r;
+	struct memblock_region *r_pram;
 
-	if (*tag == 2)
-		goto next_to_pram;
+	r_pram = &type_pram->regions[*ix];
 
-	type=&memblock.memory;
 	while (++*idx < type->cnt) {
 		r = &type->regions[*idx];
-
 		if (PFN_UP(r->base) >= PFN_DOWN(r->base + r->size))
 			continue;
 		if (nid == MAX_NUMNODES || nid == r->nid)
 			break;
 	}
-	if (*idx >= type->cnt) {
+
+	if ((*idx >= type->cnt) && (*idx_pram >= type_pram->cnt)) {
 		*idx = -1;
-		*tag = 2;
-		goto next_to_pram;
-	}
-
-	if (out_start_pfn)
-		*out_start_pfn = PFN_UP(r->base);
-	if (out_end_pfn)
-		*out_end_pfn = PFN_DOWN(r->base + r->size);
-	if (out_nid)
-		*out_nid = r->nid;
-	return;
-
-next_to_pram:
-	type=&memblock.pram;
-	while (++*idx < type->cnt) {
-		r = &type->regions[*idx];
-
-		if (PFN_UP(r->base) >= PFN_DOWN(r->base + r->size))
-			continue;
-		if (nid == MAX_NUMNODES || nid == r->nid)
-			break;
-	}
-	if (*idx >= type->cnt) {
-		*idx = -1;
-		*tag = 3;
 		return;
 	}
 
 	if (out_start_pfn)
-		*out_start_pfn = PFN_UP(r->base);
+		if ( PFN_UP(r->base) < PFN_DOWN(r_pram->base) )
+			*out_start_pfn = PFN_UP(r->base);
+		else 
+			*out_start_pfn = PFN_UP(r_pram->base);
 	if (out_end_pfn)
-		*out_end_pfn = PFN_DOWN(r->base + r->size);
+		if ( PFN_DOWN(r->base + r->size) < PFN_DOWN(r_pram->base+r_pram->size))
+			*out_end_pfn = PFN_DOWN(r->base + r->size);
+		else
+			*out_end_pfn = PFN_DOWN(r_pram->base + r_pram->size);
 	if (out_nid)
+		if ( PFN_UP(r->base) < PFN_DOWN(r_pram->base) )
 		*out_nid = r->nid;
+		else{
+		*out_nid = r_pram->nid;
+		*p_pram++;
+		}
 	return;
+
 }
 
 /*
@@ -1754,7 +1740,7 @@ void __init __memblock_free_early(phys_addr_t base, phys_addr_t size)
 	memblock_dbg("%s: [%#016llx-%#016llx] %pF\n",
 			__func__, (u64)base, (u64)base + size - 1,
 			(void *)_RET_IP_);
-//	pr_info(">>>>GOTCHA\n");
+	//	pr_info(">>>>GOTCHA\n");
 	kmemleak_free_part_phys(base, size);
 	memblock_remove_range(&memblock.reserved, base, size);
 }

@@ -206,7 +206,8 @@ int memblock_search_pfn_nid_pram(unsigned long pfn, unsigned long *start_pfn,
 			    unsigned long  *end_pfn);
 void __next_pram_pfn_range(int *idx, int nid, unsigned long *out_start_pfn,
 			  unsigned long *out_end_pfn, int *out_nid);
-void __next_pfn_range(int *idx, int nid, int *tag, unsigned long *out_start_pfn,
+void __next_pfn_range(int *idx, int *ix, int nid, int *tag, 
+		unsigned long *out_start_pfn,
 			  unsigned long *out_end_pfn, int *out_nid);
 unsigned long memblock_next_valid_pfn_pram(unsigned long pfn, unsigned long max_pfn);
 //>>>
@@ -224,9 +225,9 @@ unsigned long memblock_next_valid_pfn_pram(unsigned long pfn, unsigned long max_
 #define for_each_mem_pfn_range(i, nid, p_start, p_end, p_nid)		\
 	for (i = -1, __next_mem_pfn_range(&i, nid, p_start, p_end, p_nid); \
 	     i >= 0; __next_mem_pfn_range(&i, nid, p_start, p_end, p_nid))
-#define for_each_pfn_range(i, nid, tag, p_start, p_end, p_nid)		\
-	for (i = -1, __next_pfn_range(&i, nid, &tag, p_start, p_end, p_nid); \
-	     tag !=3; __next_pfn_range(&i, nid, &tag, p_start, p_end, p_nid))
+#define for_each_pfn_range(i,ix, nid, p_start, p_end, p_nid)		\
+	for (i = -1,ix=0, __next_pfn_range(&i,&ix, nid, p_start, p_end, p_nid); \
+	     i >= 0; __next_pfn_range(&i,&ix, nid, p_start, p_end, p_nid))
 //<<<2018.02.13 Yongseob
 #define for_each_pram_pfn_range(i, nid, p_start, p_end, p_nid)		\
 	for (i = -1, __next_pram_pfn_range(&i, nid, p_start, p_end, p_nid); \
