@@ -5939,8 +5939,9 @@ void __init sparse_memory_present_with_active_regions(int nid)
 {
 	unsigned long start_pfn, end_pfn;
 	int i, this_nid;
+	int tag;
 
-	for_each_pfn_range(i, nid, &start_pfn, &end_pfn, &this_nid)
+	for_each_pfn_range(i, nid, tag, &start_pfn, &end_pfn, &this_nid)
 		memory_present(this_nid, start_pfn, end_pfn);
 #	if 0 //ifndef YONGSEOB-MBS
 	for_each_mem_pfn_range(i, nid, &start_pfn, &end_pfn, &this_nid)

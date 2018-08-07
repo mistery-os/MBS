@@ -1198,13 +1198,16 @@ void __init_memblock __next_mem_range_rev(u64 *idx, int nid, ulong flags,
 /*
  * Common iterator interface used to define for_each_range().
  */
-void __init_memblock __next_pfn_range(int *idx, int nid,
+void __init_memblock __next_pfn_range(int *idx, int nid, int *tag,
 		unsigned long *out_start_pfn,
 		unsigned long *out_end_pfn, int *out_nid)
 {
 	struct memblock_type *type; 
 	//struct memblock_type *type = &memblock.memory;
 	struct memblock_region *r;
+
+	if *tag == 2
+		goto next_to_pram;
 
 	type=&memblock.memory;
 	while (++*idx < type->cnt) {
@@ -1217,6 +1220,7 @@ void __init_memblock __next_pfn_range(int *idx, int nid,
 	}
 	if (*idx >= type->cnt) {
 		*idx = -1;
+		*tag = 2;
 		goto next_to_pram;
 	}
 
@@ -1227,6 +1231,7 @@ void __init_memblock __next_pfn_range(int *idx, int nid,
 	if (out_nid)
 		*out_nid = r->nid;
 	return;
+
 next_to_pram:
 	type=&memblock.pram;
 	while (++*idx < type->cnt) {
@@ -1239,6 +1244,7 @@ next_to_pram:
 	}
 	if (*idx >= type->cnt) {
 		*idx = -1;
+		*tag = 3;
 		return;
 	}
 
