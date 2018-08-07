@@ -1217,7 +1217,7 @@ void __init_memblock __next_pfn_range(int *idx, int *ix, int nid,
 			break;
 	}
 
-	if ((*idx >= type->cnt) && (*idx_pram >= type_pram->cnt)) {
+	if ((*idx >= type->cnt) && (*ix >= type_pram->cnt)) {
 		*idx = -1;
 		return;
 	}
@@ -1237,7 +1237,7 @@ void __init_memblock __next_pfn_range(int *idx, int *ix, int nid,
 		*out_nid = r->nid;
 		else{
 		*out_nid = r_pram->nid;
-		*p_pram++;
+		*ix++;
 		}
 	return;
 
