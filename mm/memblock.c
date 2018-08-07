@@ -1202,8 +1202,8 @@ void __init_memblock __next_pfn_range(int *idx, int *ix, int nid,
 		unsigned long *out_start_pfn,
 		unsigned long *out_end_pfn, int *out_nid)
 {
-	struct memblock_type *type=&memblock.memory;
-        struct memblock_type *type_pram=&memblock.pram; 
+	struct memblock_type *type	= &memblock.memory;
+        struct memblock_type *type_pram	= &memblock.pram; 
 	struct memblock_region *r;
 	struct memblock_region *r_pram;
 
@@ -1222,25 +1222,26 @@ void __init_memblock __next_pfn_range(int *idx, int *ix, int nid,
 		return;
 	}
 
+	if (r_pram->base < r->base)
+		goto loop_pram;
+
 	if (out_start_pfn)
-		if ( PFN_UP(r->base) < PFN_DOWN(r_pram->base) )
-			*out_start_pfn = PFN_UP(r->base);
-		else 
-			*out_start_pfn = PFN_UP(r_pram->base);
+		*out_start_pfn = PFN_UP(r->base);
 	if (out_end_pfn)
-		if ( PFN_DOWN(r->base + r->size) < PFN_DOWN(r_pram->base+r_pram->size))
-			*out_end_pfn = PFN_DOWN(r->base + r->size);
-		else
-			*out_end_pfn = PFN_DOWN(r_pram->base + r_pram->size);
+		*out_end_pfn = PFN_DOWN(r->base + r->size);
 	if (out_nid)
-		if ( PFN_UP(r->base) < PFN_DOWN(r_pram->base) )
 		*out_nid = r->nid;
-		else{
-		*out_nid = r_pram->nid;
-		*ix++;
-		}
 	return;
 
+loop_pram:
+	if (out_start_pfn)
+		*out_start_pfn = PFN_UP(r_pram->base);
+	if (out_end_pfn)
+		*out_end_pfn = PFN_DOWN(r_pram->base + r_pram->size);
+	if (out_nid)
+		*out_nid = r_pram->nid;
+	*ix++;
+	return;
 }
 
 /*
