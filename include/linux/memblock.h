@@ -206,7 +206,7 @@ int memblock_search_pfn_nid_pram(unsigned long pfn, unsigned long *start_pfn,
 			    unsigned long  *end_pfn);
 void __next_pram_pfn_range(int *idx, int nid, unsigned long *out_start_pfn,
 			  unsigned long *out_end_pfn, int *out_nid);
-void __next_pfn_range(int *idx, int nid, int tag, unsigned long *out_start_pfn,
+void __next_pfn_range(int *idx, int nid, int *tag, unsigned long *out_start_pfn,
 			  unsigned long *out_end_pfn, int *out_nid);
 unsigned long memblock_next_valid_pfn_pram(unsigned long pfn, unsigned long max_pfn);
 //>>>

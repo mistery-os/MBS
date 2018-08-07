@@ -1206,7 +1206,7 @@ void __init_memblock __next_pfn_range(int *idx, int nid, int *tag,
 	//struct memblock_type *type = &memblock.memory;
 	struct memblock_region *r;
 
-	if *tag == 2
+	if (*tag == 2)
 		goto next_to_pram;
 
 	type=&memblock.memory;
