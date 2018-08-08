@@ -1144,8 +1144,8 @@ void __init setup_arch(char **cmdline_p)
 		max_low_pfn_pram = max_pfn_pram;
 		//>>>
 	}
-	high_memory =(max_pfn >= max_pfn_pram ? (void *)__va(max_pfn * PAGE_SIZE - 1) + 1 : (void *)__va(max_pfn_pram * PAGE_SIZE - 1) + 1) ;
-	//high_memory = (void *)__va(max_pfn * PAGE_SIZE - 1) + 1;
+	//high_memory =(max_pfn >= max_pfn_pram ? (void *)__va(max_pfn * PAGE_SIZE - 1) + 1 : (void *)__va(max_pfn_pram * PAGE_SIZE - 1) + 1) ;
+	high_memory = (void *)__va(max_pfn * PAGE_SIZE - 1) + 1;
 	pr_info("high_memory(ld)= %ld\n",(unsigned long)high_memory);
 #endif
 

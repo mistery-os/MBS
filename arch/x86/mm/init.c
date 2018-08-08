@@ -854,9 +854,7 @@ void __init zone_sizes_init(void)
 	memset(max_zone_pfns, 0, sizeof(max_zone_pfns));
 
 #ifdef CONFIG_ZONE_DMA
-#	if 0 //ifndef YONGSEOB-MBS
 	max_zone_pfns[ZONE_DMA]		= min(MAX_DMA_PFN, max_low_pfn);
-#	endif
 #endif
 #ifdef CONFIG_ZONE_DMA32
 	max_zone_pfns[ZONE_DMA32]	= min(MAX_DMA32_PFN, max_low_pfn);
@@ -867,9 +865,7 @@ void __init zone_sizes_init(void)
 	max_zone_pfns[ZONE_PRAM]	= max_pfn_pram;
 	//>>>
 #ifdef CONFIG_HIGHMEM
-#	if 0 //ifndef YONGSEOB-MBS
 	max_zone_pfns[ZONE_HIGHMEM]	= max_pfn;
-#	endif
 #endif
 
 	free_area_init_nodes(max_zone_pfns);
