@@ -5939,18 +5939,18 @@ void __init sparse_memory_present_with_active_regions(int nid)
 {
 	unsigned long start_pfn, end_pfn;
 	int i, this_nid;
+	unsigned long start_pfn_pram, end_pfn_pram;
+	int i_pram, this_nid_pram;
 
 	for_each_mem_pfn_range(i, nid, &start_pfn, &end_pfn, &this_nid)
 		memory_present(this_nid, start_pfn, end_pfn);
-	for_each_pram_pfn_range(i, nid, &start_pfn, &end_pfn, &this_nid)
-		memory_present(this_nid, start_pfn, end_pfn);
+	for_each_pram_pfn_range(i, nid, &start_pfn_pram, &end_pfn_pram, &this_nid_pram)
+		memory_present(this_nid_pram, start_pfn_pram, end_pfn_pram);
 #	if 0 //ifndef YONGSEOB-MBS
 	int ix;
 	for_each_pfn_range(i, ix, nid, &start_pfn, &end_pfn, &this_nid)
 		memory_present(this_nid, start_pfn, end_pfn);
 	//<<<2018.02.14 Yongseob
-	unsigned long start_pfn_pram, end_pfn_pram;
-	int i_pram, this_nid_pram;
 	//>>>
 	//>>>
 #	endif
