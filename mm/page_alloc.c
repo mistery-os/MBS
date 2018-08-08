@@ -6622,14 +6622,14 @@ void __paginginit free_area_init_node(int nid, unsigned long *zones_size,
 	start_pfn = node_start_pfn;
 #	endif
 #endif
+#if 0 //what different calculate_node_totalpages vs pram
 	//<<<2018.02.14 Yongseob
 	calculate_node_totalpages(pgdat, start_pfn, end_pfn,
 			zones_size, zholes_size);
-#if 0 //what different calculate_node_totalpages vs pram
+#endif
 	calculate_node_totalpages_pram(pgdat, start_pfn, end_pfn,
 			start_pfn_pram, end_pfn_pram,
 			zones_size, zholes_size);
-#endif
 	//>>>
 
 	alloc_node_mem_map(pgdat); /*NO on NUMA of sparsemem */ 
