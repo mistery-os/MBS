@@ -841,15 +841,11 @@ extern unsigned long lruvec_lru_size(struct lruvec *lruvec, enum lru_list lru, i
 #ifdef CONFIG_HAVE_MEMORY_PRESENT
 void memory_present(int nid, unsigned long start, unsigned long end);
 #else
-#	if 0 //ifndef YONGSEOB-MBS
 static inline void memory_present(int nid, unsigned long start, unsigned long end) {}
-#	endif
 #endif
 
 #ifdef CONFIG_HAVE_MEMORYLESS_NODES
-#	if 0 //ifndef YONGSEOB-MBS
 int local_memory_node(int node_id);
-#	endif
 #else
 static inline int local_memory_node(int node_id) { return node_id; };
 #endif
@@ -1162,14 +1158,12 @@ struct mem_section {
 	/* See declaration of similar field in struct zone */
 	unsigned long *pageblock_flags;
 #ifdef CONFIG_PAGE_EXTENSION
-#	if 0 //ifndef YONGSEOB-MBS
 	/*
 	 * If SPARSEMEM, pgdat doesn't have page_ext pointer. We use
 	 * section. (see page_ext.h about this.)
 	 */
 	struct page_ext *page_ext;
 	unsigned long pad;
-#	endif
 #endif
 	/*
 	 * WARNING: mem_section must be a power-of-2 in size for the
@@ -1180,9 +1174,7 @@ struct mem_section {
 #ifdef CONFIG_SPARSEMEM_EXTREME
 #define SECTIONS_PER_ROOT       (PAGE_SIZE / sizeof (struct mem_section))
 #else
-#	if 0 //ifndef YONGSEOB-MBS 
 #define SECTIONS_PER_ROOT	1
-#	endif
 #endif
 
 #define SECTION_NR_TO_ROOT(sec)	((sec) / SECTIONS_PER_ROOT)
@@ -1192,9 +1184,7 @@ struct mem_section {
 #ifdef CONFIG_SPARSEMEM_EXTREME
 extern struct mem_section **mem_section;
 #else
-#	if 0 //ifndef YONGSEOB-MBS
 extern struct mem_section mem_section[NR_SECTION_ROOTS][SECTIONS_PER_ROOT];
-#	endif
 #endif
 
 static inline struct mem_section *__nr_to_section(unsigned long nr)
@@ -1321,10 +1311,8 @@ static inline int pfn_present(unsigned long pfn)
 				/* include/linux/mmzone.h  */
 void sparse_init(void);
 #else
-#	if 0 //ifndef YONGSEOB-MBS
 #define sparse_init()	do {} while (0)
 #define sparse_index_init(_sec, _nid)  do {} while (0)
-#	endif
 #endif /* CONFIG_SPARSEMEM */
 
 /*

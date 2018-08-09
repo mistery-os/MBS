@@ -104,9 +104,7 @@ int pcibios_set_irq_routing(struct pci_dev *dev, int pin, int irq);
 #ifdef CONFIG_PCI
 extern void early_quirks(void);
 #else
-#	if 0 //ifndef YONGSEOB-MBS
 static inline void early_quirks(void) { }
-#	endif
 #endif
 
 extern void pci_iommu_alloc(void);

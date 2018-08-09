@@ -32,7 +32,6 @@ static inline void invalidate_kernel_vmap_range(void *vaddr, int size)
 #include <asm/kmap_types.h>
 
 #ifdef CONFIG_HIGHMEM
-#	if 0 //ifndef YONGSEOB-MBS
 #include <asm/highmem.h>
 
 /* declarations for linux/mm/highmem.c */
@@ -43,7 +42,6 @@ void kmap_flush_unused(void);
 
 struct page *kmap_to_page(void *addr);
 
-#	endif
 #else /* CONFIG_HIGHMEM */
 
 static inline unsigned int nr_free_highpages(void) { return 0; }

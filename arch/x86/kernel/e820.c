@@ -788,13 +788,11 @@ u64 __init e820__memblock_alloc_reserved(u64 size, u64 align)
 }
 
 #ifdef CONFIG_X86_32
-#	if 0 //ifndef YONGSEOB-MBS
 # ifdef CONFIG_X86_PAE
 #  define MAX_ARCH_PFN		(1ULL<<(36-PAGE_SHIFT))
 # else
 #  define MAX_ARCH_PFN		(1ULL<<(32-PAGE_SHIFT))
 # endif
-#	endif
 #else /* CONFIG_X86_32 */
 # define MAX_ARCH_PFN MAXMEM>>PAGE_SHIFT
 #endif

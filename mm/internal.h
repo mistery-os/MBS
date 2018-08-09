@@ -444,12 +444,10 @@ static inline void mminit_verify_zonelist(void)
 extern void mminit_validate_memmodel_limits(unsigned long *start_pfn,
 				unsigned long *end_pfn);
 #else
-#	if 0 //ifndef YONGSEOB-MBS
 static inline void mminit_validate_memmodel_limits(unsigned long *start_pfn,
 				unsigned long *end_pfn)
 {
 }
-#	endif
 #endif /* CONFIG_SPARSEMEM */
 
 #define NODE_RECLAIM_NOSCAN	-2

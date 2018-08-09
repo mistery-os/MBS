@@ -294,7 +294,6 @@ EXPORT_SYMBOL(nr_online_nodes);
 int page_group_by_mobility_disabled __read_mostly;
 
 #ifdef CONFIG_DEFERRED_STRUCT_PAGE_INIT
-#	if 0 //ifndef YONGSEOB-MBS
 
 /*
  * Determine how many pages need to be initialized durig early boot
@@ -360,7 +359,6 @@ static inline bool update_defer_init(pg_data_t *pgdat,
 
 	return true;
 }
-#	endif
 #else
 static inline void reset_deferred_meminit(pg_data_t *pgdat)
 {
@@ -624,7 +622,6 @@ void prep_compound_page(struct page *page, unsigned int order)
 }
 
 #ifdef CONFIG_DEBUG_PAGEALLOC
-#	if 0 //ifndef YONGSEOB-MBS
 unsigned int _debug_guardpage_minorder;
 bool _debug_pagealloc_enabled __read_mostly
 			= IS_ENABLED(CONFIG_DEBUG_PAGEALLOC_ENABLE_DEFAULT);
@@ -724,7 +721,6 @@ static inline void clear_page_guard(struct zone *zone, struct page *page,
 	if (!is_migrate_isolate(migratetype))
 		__mod_zone_freepage_state(zone, (1 << order), migratetype);
 }
-#	endif
 #else
 struct page_ext_operations debug_guardpage_ops;
 static inline bool set_page_guard(struct zone *zone, struct page *page,
@@ -1194,11 +1190,9 @@ static void __meminit __init_single_page(struct page *page, unsigned long pfn,
 
 	INIT_LIST_HEAD(&page->lru);
 #ifdef WANT_PAGE_VIRTUAL
-#	if 0 //ifndef YONGSEOB-MBS
 	/* The shift won't overflow because ZONE_NORMAL is below 4G. */
 	if (!is_highmem_idx(zone))
 		set_page_address(page, __va(pfn << PAGE_SHIFT));
-#	endif
 #endif
 }
 
@@ -1355,7 +1349,6 @@ static inline bool __meminit early_pfn_in_nid(unsigned long pfn, int node)
 }
 
 #else
-#	if 0 //ifndef YONGSEOB-MBS
 
 static inline bool __meminit early_pfn_in_nid(unsigned long pfn, int node)
 {
@@ -1367,7 +1360,6 @@ meminit_pfn_in_nid(unsigned long pfn, int node,
 {
 	return true;
 }
-#	endif
 #endif
 
 
@@ -1736,7 +1728,6 @@ void __init page_alloc_init_late(void)
 	struct zone *zone;
 
 #ifdef CONFIG_DEFERRED_STRUCT_PAGE_INIT
-#	if 0 //ifndef YONGSEOB-MBS
 	int nid;
 
 	/* There will be num_node_state(N_MEMORY) threads */
@@ -1753,7 +1744,6 @@ void __init page_alloc_init_late(void)
 
 	/* Reinit limits that are based on free pages after the kernel is up */
 	files_maxfiles_init();
-#	endif
 #endif
 #ifdef CONFIG_ARCH_DISCARD_MEMBLOCK
 	/* Discard memblock private memory */
@@ -3027,7 +3017,6 @@ failed:
 }
 
 #ifdef CONFIG_FAIL_PAGE_ALLOC
-#	if 0 //ifndef YONGSEOB-MBS
 
 static struct {
 	struct fault_attr attr;
@@ -3096,7 +3085,6 @@ late_initcall(fail_page_alloc_debugfs);
 
 #endif /* CONFIG_FAULT_INJECTION_DEBUG_FS */
 
-#	endif
 #else /* CONFIG_FAIL_PAGE_ALLOC */
 
 static inline bool should_fail_alloc_page(gfp_t gfp_mask, unsigned int order)
@@ -3243,12 +3231,10 @@ static bool zone_allows_reclaim(struct zone *local_zone, struct zone *zone)
 				RECLAIM_DISTANCE;
 }
 #else	/* CONFIG_NUMA */
-#	if 0 //ifndef YONGSEOB-MBS
 static bool zone_allows_reclaim(struct zone *local_zone, struct zone *zone)
 {
 	return true;
 }
-#	endif
 #endif	/* CONFIG_NUMA */
 
 /*
@@ -5946,7 +5932,6 @@ void __init sparse_memory_present_with_active_regions(int nid)
 	int i_pram, this_nid_pram;
 	for_each_pram_pfn_range(i_pram, nid, &start_pfn_pram, &end_pfn_pram, &this_nid_pram)
 		memory_present(this_nid_pram, start_pfn_pram, end_pfn_pram);
-#	if 0 //ifndef YONGSEOB-MBS
 	int ix;
 	for_each_pfn_range(i, ix, nid, &start_pfn, &end_pfn, &this_nid)
 		memory_present(this_nid, start_pfn, end_pfn);
@@ -5956,7 +5941,6 @@ void __init sparse_memory_present_with_active_regions(int nid)
 	//<<<2018.02.14 Yongseob
 	//>>>
 	//>>>
-#	endif
 }
 
 /**
@@ -6206,7 +6190,6 @@ static unsigned long __meminit zone_absent_pages_in_node(int nid,
 }
 
 #else /* CONFIG_HAVE_MEMBLOCK_NODE_MAP */
-#	if 0 //ifndef YONGSEOB-MBS
 static inline unsigned long __meminit zone_spanned_pages_in_node(int nid,
 		unsigned long zone_type,
 		unsigned long node_start_pfn,
@@ -6237,7 +6220,6 @@ static inline unsigned long __meminit zone_absent_pages_in_node(int nid,
 
 	return zholes_size[zone_type];
 }
-#	endif
 #endif /* CONFIG_HAVE_MEMBLOCK_NODE_MAP */
 
 static void __meminit calculate_node_totalpages(struct pglist_data *pgdat,
@@ -6340,7 +6322,6 @@ static void __meminit calculate_node_totalpages_pram(struct pglist_data *pgdat,
 //>>>
 
 #ifndef CONFIG_SPARSEMEM
-#	if 0 //ifndef YONGSEOB-MBS
 /*
  * Calculate the size of the zone->blockflags rounded to an unsigned long
  * Start by making sure zonesize is a multiple of pageblock_order by rounding
@@ -6373,14 +6354,12 @@ static void __init setup_usemap(struct pglist_data *pgdat,
 			memblock_virt_alloc_node_nopanic(usemapsize,
 					pgdat->node_id);
 }
-#	endif
 #else
 static inline void setup_usemap(struct pglist_data *pgdat, struct zone *zone,
 		unsigned long zone_start_pfn, unsigned long zonesize) {}
 #endif /* CONFIG_SPARSEMEM */
 
 #ifdef CONFIG_HUGETLB_PAGE_SIZE_VARIABLE
-#	if 0 //ifndef YONGSEOB-MBS
 /* Initialise the number of pages represented by NR_PAGEBLOCK_BITS */
 void __paginginit set_pageblock_order(void)
 {
@@ -6402,7 +6381,6 @@ void __paginginit set_pageblock_order(void)
 	 */
 	pageblock_order = order;
 }
-#	endif
 #else /* CONFIG_HUGETLB_PAGE_SIZE_VARIABLE */
 
 /*
@@ -6553,7 +6531,6 @@ static void __ref alloc_node_mem_map(struct pglist_data *pgdat)
 
 #ifdef CONFIG_FLAT_NODE_MEM_MAP
 	pr_debug("DO_NOTHING: NO enterence");
-#	if 0 //ifndef YONGSEOB-MBS
 	start = pgdat->node_start_pfn & ~(MAX_ORDER_NR_PAGES - 1);
 	offset = pgdat->node_start_pfn - start;
 	/* ia64 gets its own node_mem_map, before this, without bootmem */
@@ -6587,7 +6564,6 @@ static void __ref alloc_node_mem_map(struct pglist_data *pgdat)
 #endif /* CONFIG_HAVE_MEMBLOCK_NODE_MAP */
 	}
 #endif
-#	endif
 #endif /* CONFIG_FLAT_NODE_MEM_MAP */
 	pr_debug("DO_NOTHING: alloc_node_mem_map\n");
 }
@@ -6621,9 +6597,7 @@ void __paginginit free_area_init_node(int nid, unsigned long *zones_size,
 			end_pfn_pram ? ((u64)end_pfn_pram << PAGE_SHIFT) - 1 : 0);
 	//>>>
 #else
-#if	0 //ifndef YONGSEOB-MBS
 	start_pfn = node_start_pfn;
-#	endif
 #endif
 #if 0 //what different calculate_node_totalpages vs pram
 	//<<<2018.02.14 Yongseob
@@ -6637,11 +6611,9 @@ void __paginginit free_area_init_node(int nid, unsigned long *zones_size,
 
 	alloc_node_mem_map(pgdat); /*NO on NUMA of sparsemem */ 
 #ifdef CONFIG_FLAT_NODE_MEM_MAP
-#	if 0 //ifndef YONGSEOB-MBS
 	printk(KERN_DEBUG "free_area_init_node: node %d, pgdat %08lx, node_mem_map %08lx\n",
 			nid, (unsigned long)pgdat,
 			(unsigned long)pgdat->node_mem_map);
-#	endif
 #endif
 
 	reset_deferred_meminit(pgdat); /* NO on NUMA of sparsemem */

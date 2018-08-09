@@ -235,7 +235,6 @@ extern void set_zone_contiguous(struct zone *zone);
 extern void clear_zone_contiguous(struct zone *zone);
 
 #else /* ! CONFIG_MEMORY_HOTPLUG */
-#	if 0 //ifndef YONGSEOB-MBS
 #define pfn_to_online_page(pfn)			\
 ({						\
 	struct page *___page = NULL;		\
@@ -289,7 +288,6 @@ static inline bool movable_node_is_enabled(void)
 {
 	return false;
 }
-#	endif
 #endif /* ! CONFIG_MEMORY_HOTPLUG */
 
 #ifdef CONFIG_MEMORY_HOTREMOVE

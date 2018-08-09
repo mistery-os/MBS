@@ -81,7 +81,6 @@ extern int __node_distance(int, int);
 #define node_distance(a, b) __node_distance(a, b)
 
 #else /* !CONFIG_NUMA */
-#	if 0 // ifndef YONGSEOB-MBS
 
 static inline int numa_node_id(void)
 {
@@ -99,7 +98,6 @@ static inline int early_cpu_to_node(int cpu)
 
 static inline void setup_node_to_cpumask_map(void) { }
 
-#	endif
 #endif
 
 #include <asm-generic/topology.h>

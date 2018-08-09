@@ -45,11 +45,9 @@ extern void copy_from_early_mem(void *dest, phys_addr_t src,
 				unsigned long size);
 
 #else
-#	if 0 //ifndef YONGSEOB-MBS
 static inline void early_ioremap_init(void) { }
 static inline void early_ioremap_setup(void) { }
 static inline void early_ioremap_reset(void) { }
-#	endif
 #endif
 
 #endif /* _ASM_EARLY_IOREMAP_H_ */

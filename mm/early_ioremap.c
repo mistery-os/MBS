@@ -271,7 +271,6 @@ void __init copy_from_early_mem(void *dest, phys_addr_t src, unsigned long size)
 }
 
 #else /* CONFIG_MMU */
-#	if 0 //ifndef YONGSEOB-MBS
 
 void __init __iomem *
 early_ioremap(resource_size_t phys_addr, unsigned long size)
@@ -295,7 +294,6 @@ void __init early_iounmap(void __iomem *addr, unsigned long size)
 {
 }
 
-#	endif
 #endif /* CONFIG_MMU */
 
 

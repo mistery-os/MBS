@@ -6,7 +6,6 @@
 
 #ifndef __ASSEMBLY__
 
-#	if 0 //ifndef YONGSEOB-MBS
 #if defined(CONFIG_FLATMEM)
 
 #ifndef ARCH_PFN_OFFSET
@@ -25,20 +24,16 @@
 #endif
 
 #endif /* CONFIG_DISCONTIGMEM */
-#	endif
 
 /*
  * supports 3 memory models.
  */
 #if defined(CONFIG_FLATMEM)
-#	if 0 //ifndef YONGSEOB-MBS
 
 #define __pfn_to_page(pfn)	(mem_map + ((pfn) - ARCH_PFN_OFFSET))
 #define __page_to_pfn(page)	((unsigned long)((page) - mem_map) + \
 				 ARCH_PFN_OFFSET)
-#	endif
 #elif defined(CONFIG_DISCONTIGMEM)
-#if	0 //ifndef YONGSEOB-MBS
 
 #define __pfn_to_page(pfn)			\
 ({	unsigned long __pfn = (pfn);		\
@@ -52,7 +47,6 @@
 	(unsigned long)(__pg - __pgdat->node_mem_map) +			\
 	 __pgdat->node_start_pfn;					\
 })
-#	endif
 #elif defined(CONFIG_SPARSEMEM_VMEMMAP)
 
 /* memmap is virtually contiguous.  */
@@ -60,7 +54,6 @@
 #define __page_to_pfn(page)	(unsigned long)((page) - vmemmap)
 
 #elif defined(CONFIG_SPARSEMEM)
-#	if 0 //ifndef YONGSEOB-MBS
 /*
  * Note: section's mem_map is encoded to reflect its start_pfn.
  * section[i].section_mem_map == mem_map's address - start_pfn;
@@ -76,7 +69,6 @@
 	struct mem_section *__sec = __pfn_to_section(__pfn);	\
 	__section_mem_map_addr(__sec) + __pfn;		\
 })
-#	endif
 #endif /* CONFIG_FLATMEM/DISCONTIGMEM/SPARSEMEM */
 
 /*

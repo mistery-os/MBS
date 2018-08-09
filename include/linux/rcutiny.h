@@ -119,9 +119,7 @@ static inline void exit_rcu(void) { }
 #ifdef CONFIG_SRCU
 void rcu_scheduler_starting(void);
 #else /* #ifndef CONFIG_SRCU */
-#	if 0 //ifndef YONGSEOB-MBS
 static inline void rcu_scheduler_starting(void) { }
-#	endif
 #endif /* #else #ifndef CONFIG_SRCU */
 static inline void rcu_end_inkernel_boot(void) { }
 static inline bool rcu_is_watching(void) { return true; }

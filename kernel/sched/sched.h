@@ -971,11 +971,9 @@ extern void sched_init_numa(void);
 extern void sched_domains_numa_masks_set(unsigned int cpu);
 extern void sched_domains_numa_masks_clear(unsigned int cpu);
 #else
-#	if 0 //ifndef YONGSEOB-MBS
 static inline void sched_init_numa(void) { }
 static inline void sched_domains_numa_masks_set(unsigned int cpu) { }
 static inline void sched_domains_numa_masks_clear(unsigned int cpu) { }
-#	endif
 #endif
 
 #ifdef CONFIG_NUMA_BALANCING

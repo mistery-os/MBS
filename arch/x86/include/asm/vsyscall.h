@@ -15,13 +15,11 @@ extern void set_vsyscall_pgtable_user_bits(pgd_t *root);
  */
 extern bool emulate_vsyscall(struct pt_regs *regs, unsigned long address);
 #else
-#	if 0 //ifndef YONGSEOB-MBS
 static inline void map_vsyscall(void) {}
 static inline bool emulate_vsyscall(struct pt_regs *regs, unsigned long address)
 {
 	return false;
 }
-#	endif
 #endif
 
 #endif /* _ASM_X86_VSYSCALL_H */

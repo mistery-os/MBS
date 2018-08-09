@@ -928,7 +928,6 @@ static inline bool __cpupid_match_pid(pid_t task_pid, int cpupid)
 
 #define cpupid_match_pid(task, cpupid) __cpupid_match_pid(task->pid, cpupid)
 #ifdef LAST_CPUPID_NOT_IN_PAGE_FLAGS
-#	if 0 //ifndef YONGSEOB-MBS
 static inline int page_cpupid_xchg_last(struct page *page, int cpupid)
 {
 	return xchg(&page->_last_cpupid, cpupid & LAST_CPUPID_MASK);
@@ -942,7 +941,6 @@ static inline void page_cpupid_reset_last(struct page *page)
 {
 	page->_last_cpupid = -1 & LAST_CPUPID_MASK;
 }
-#	endif
 #else
 static inline int page_cpupid_last(struct page *page)
 {
@@ -957,7 +955,6 @@ static inline void page_cpupid_reset_last(struct page *page)
 }
 #endif /* LAST_CPUPID_NOT_IN_PAGE_FLAGS */
 #else /* !CONFIG_NUMA_BALANCING */
-#	if 0 //ifndef YONGSEOB-MBS
 static inline int page_cpupid_xchg_last(struct page *page, int cpupid)
 {
 	return page_to_nid(page); /* XXX */
@@ -1001,7 +998,6 @@ static inline bool cpupid_match_pid(struct task_struct *task, int cpupid)
 {
 	return false;
 }
-#	endif
 #endif /* CONFIG_NUMA_BALANCING */
 
 static inline struct zone *page_zone(const struct page *page)
@@ -1045,9 +1041,7 @@ static inline void set_page_links(struct page *page, enum zone_type zone,
 	set_page_zone(page, zone);
 	set_page_node(page, node);
 #ifdef SECTION_IN_PAGE_FLAGS
-#	if 0 //ifndef YONGSEOB-MBS
 	set_page_section(page, pfn_to_section_nr(pfn));
-#	endif
 #endif
 }
 
@@ -1102,11 +1096,9 @@ static inline void set_page_address(struct page *page, void *address)
 #endif
 
 #if defined(HASHED_PAGE_VIRTUAL)
-#	if 0 //ifndef YONGSEOB-MBS
 void *page_address(const struct page *page);
 void set_page_address(struct page *page, void *virtual);
 void page_address_init(void);
-#	endif
 #endif
 
 #if !defined(HASHED_PAGE_VIRTUAL) && !defined(WANT_PAGE_VIRTUAL)
@@ -2017,7 +2009,6 @@ extern void sparse_memory_present_with_active_regions(int nid);
 
 #if !defined(CONFIG_HAVE_MEMBLOCK_NODE_MAP) && \
     !defined(CONFIG_HAVE_ARCH_EARLY_PFN_TO_NID)
-#	if 0 //ifndef YONGSEOB-MBS
 static inline int __early_pfn_to_nid(unsigned long pfn,
 					struct mminit_pfnnid_cache *state)
 {
@@ -2028,7 +2019,6 @@ static inline int __early_pfn_to_nid_pram(unsigned long pfn,
 {
 	return 0;
 }
-#	endif
 #else
 /* please see mm/page_alloc.c */
 extern int __meminit early_pfn_to_nid(unsigned long pfn);
@@ -2438,7 +2428,6 @@ static inline bool page_is_poisoned(struct page *page) { return false; }
 #endif
 
 #ifdef CONFIG_DEBUG_PAGEALLOC
-#	if 0 //ifndef YONGSEOB-MBS
 extern bool _debug_pagealloc_enabled;
 extern void __kernel_map_pages(struct page *page, int numpages, int enable);
 
@@ -2458,7 +2447,6 @@ kernel_map_pages(struct page *page, int numpages, int enable)
 #ifdef CONFIG_HIBERNATION
 extern bool kernel_page_present(struct page *page);
 #endif	/* CONFIG_HIBERNATION */
-#	endif
 #else	/* CONFIG_DEBUG_PAGEALLOC */
 static inline void
 kernel_map_pages(struct page *page, int numpages, int enable) {}
@@ -2648,9 +2636,7 @@ static inline bool page_is_guard(struct page *page) { return false; }
 #if MAX_NUMNODES > 1
 void __init setup_nr_node_ids(void);
 #else
-#	if 0 //ifndef YONGSEOB-MBS
 static inline void setup_nr_node_ids(void) {}
-#	endif
 #endif
 
 #endif /* __KERNEL__ */

@@ -373,7 +373,6 @@ EXPORT_SYMBOL(kunmap_high);
 #endif
 
 #if defined(HASHED_PAGE_VIRTUAL)
-#	if 0 //ifndef YONGSEOB-MBS
 
 #define PA_HASH_ORDER	7
 
@@ -415,7 +414,6 @@ void *page_address(const struct page *page)
 
 	if (!PageHighMem(page))
 		return lowmem_page_address(page);
-#	if 0 //ifndef YONGSEOB-MBS
 	pas = page_slot(page);
 	ret = NULL;
 	spin_lock_irqsave(&pas->lock, flags);
@@ -432,7 +430,6 @@ void *page_address(const struct page *page)
 done:
 	spin_unlock_irqrestore(&pas->lock, flags);
 	return ret;
-#	endif
 }
 
 EXPORT_SYMBOL(page_address);
@@ -484,5 +481,4 @@ void __init page_address_init(void)
 	}
 }
 
-#	endif
 #endif	/* defined(CONFIG_HIGHMEM) && !defined(WANT_PAGE_VIRTUAL) */

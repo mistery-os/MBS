@@ -86,14 +86,12 @@
 #endif
 
 #ifndef CONFIG_NEED_MULTIPLE_NODES
-#	if 0 //ifndef YONGSEOB-MBS
 /* use the per-pgdat data instead for discontigmem - mbligh */
 unsigned long max_mapnr;
 EXPORT_SYMBOL(max_mapnr);
 
 struct page *mem_map;
 EXPORT_SYMBOL(mem_map);
-#	endif
 #endif
 
 /*

@@ -25,7 +25,6 @@
 #include <linux/vmalloc.h>
 
 #ifdef CONFIG_DEBUG_KMEMLEAK
-#	if 0 //ifndef YONGSEOB-MBS
 
 extern void kmemleak_init(void) __init;
 extern void kmemleak_alloc(const void *ptr, size_t size, int min_count,
@@ -67,7 +66,6 @@ static inline void kmemleak_erase(void **ptr)
 	*ptr = NULL;
 }
 
-#	endif
 #else
 
 static inline void kmemleak_init(void)

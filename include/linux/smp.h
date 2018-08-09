@@ -133,7 +133,6 @@ static inline int get_boot_cpu_id(void)
 }
 
 #else /* !SMP */
-#	if 0 //ifndef YONGSEOB-MBS
 static inline void smp_send_stop(void) { }
 
 /*
@@ -164,10 +163,8 @@ static inline void kick_all_cpus_sync(void) {  }
 static inline void wake_up_all_idle_cpus(void) {  }
 
 #ifdef CONFIG_UP_LATE_INIT
-#	if 0 //ifndef YONGSEOB-MBS
 extern void __init up_late_init(void);
 static inline void smp_init(void) { up_late_init(); }
-#	endif
 #else
 static inline void smp_init(void) { }
 #endif
@@ -176,7 +173,6 @@ static inline int get_boot_cpu_id(void)
 {
 	return 0;
 }
-#	endif
 #endif /* !SMP */
 
 /*
@@ -195,10 +191,8 @@ static inline int get_boot_cpu_id(void)
  * the warning message, as your code might not work under PREEMPT.
  */
 #ifdef CONFIG_DEBUG_PREEMPT
-#	if 0 //YONGSEOB-MBS
   extern unsigned int debug_smp_processor_id(void);
 # define smp_processor_id() debug_smp_processor_id()
-#	endif
 #else
 # define smp_processor_id() raw_smp_processor_id()
 #endif

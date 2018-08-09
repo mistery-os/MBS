@@ -181,8 +181,6 @@ void devm_memunmap(struct device *dev, void *addr)
 				devm_memremap_match, addr));
 }
 EXPORT_SYMBOL(devm_memunmap);
-// YONGSEOB-MBS
-#	if 0 //ifndef YONGSEOB-MBS
 static DEFINE_MUTEX(prammap_lock);
 static RADIX_TREE(prammap_radix, GFP_KERNEL);
 static void pgmap_pram_radix_release(struct resource *res)
@@ -205,7 +203,6 @@ struct dev_pagemap *find_dev_pagemap(resource_size_t phys)
 	page_map = radix_tree_lookup(&parmmap_radix, PHYS_PFN(phys));
 	return page_map ? &page_map->pgmap : NULL;
 }
-#	endif
 
 #ifdef CONFIG_ZONE_DEVICE
 static DEFINE_MUTEX(pgmap_lock);

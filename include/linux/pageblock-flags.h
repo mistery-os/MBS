@@ -42,10 +42,8 @@ enum pageblock_bits {
 #ifdef CONFIG_HUGETLB_PAGE
 
 #ifdef CONFIG_HUGETLB_PAGE_SIZE_VARIABLE
-#	if 0 //ifndef YONGSEOB-MBS
 /* Huge page sizes are variable */
 extern unsigned int pageblock_order;
-#	endif
 #else /* CONFIG_HUGETLB_PAGE_SIZE_VARIABLE */
 
 /* Huge pages are a constant size */
@@ -54,11 +52,9 @@ extern unsigned int pageblock_order;
 #endif /* CONFIG_HUGETLB_PAGE_SIZE_VARIABLE */
 
 #else /* CONFIG_HUGETLB_PAGE */
-#	if 0 //ifndef YONGSEOB-MBS
 
 /* If huge pages are not used, group by MAX_ORDER_NR_PAGES */
 #define pageblock_order		(MAX_ORDER-1)
-#	endif
 #endif /* CONFIG_HUGETLB_PAGE */
 
 #define pageblock_nr_pages	(1UL << pageblock_order)
