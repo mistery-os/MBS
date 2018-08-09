@@ -756,10 +756,10 @@ void __init paging_init(void)
 	 */
 	//<<<2018.05.17 Yongseob
 	node_clear_state(0, N_MEMORY);
-//#	if 0 //ifndef YONGSEOB-MBS
+#	if 0 //ifndef YONGSEOB-MBS
 	if (N_MEMORY != N_NORMAL_MEMORY)
 		node_clear_state(0, N_NORMAL_MEMORY);
-//#	endif
+#	endif
 
 	zone_sizes_init(); // initializes the pgdat_t instances of all nodes
 }
