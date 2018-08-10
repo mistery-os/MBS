@@ -5530,14 +5530,11 @@ not_early:
 		if (!(pfn & (pageblock_nr_pages - 1))) {
 			struct page *page = pfn_to_page(pfn);
 
-	pr_info("if   pfn = %#018x, page= %#018x\n",
-			pfn,&page);
 			__init_single_page(page, pfn, zone, nid);
 			set_pageblock_migratetype(page, MIGRATE_MOVABLE);
 			cond_resched();
 		} else {
-	pr_info("else pfn = %#018x\n",
-			pfn);
+	//pr_info("else pfn = %#018x\n", pfn);
 			__init_single_pfn(pfn, zone, nid);
 		}
 	}
@@ -5629,12 +5626,13 @@ not_early:
 		if (!(pfn & (pageblock_nr_pages - 1))) {
 			struct page *page = pfn_to_page(pfn);
 
-//	pr_info("pfn = %#018x, pageblock_nr_pages= %#018x\n",
-//	      pfn, pageblock_nr_pages ); //printed
+	pr_info("if   pfn = %#018x, pageblock_nr_pages= %#018x\n",
+	      pfn, pageblock_nr_pages ); //printed
 			__init_single_page(page, pfn, zone, nid);
 			set_pageblock_migratetype(page, MIGRATE_MOVABLE);
 			cond_resched();
 		} else {
+	pr_info("else pfn = %#018x\n", pfn);
 			__init_single_pfn(pfn, zone, nid);
 		}
 	}
