@@ -5529,12 +5529,14 @@ not_early:
 		 */
 		if (!(pfn & (pageblock_nr_pages - 1))) {
 			struct page *page = pfn_to_page(pfn);
+	//pr_info("if   pfn = %#018x, pageblock_nr_pages= %#018x\n",
+	//      pfn, pageblock_nr_pages ); //printed
 
 			__init_single_page(page, pfn, zone, nid);
 			set_pageblock_migratetype(page, MIGRATE_MOVABLE);
 			cond_resched();
 		} else {
-	//pr_info("else pfn = %#018x\n", pfn);
+	//pr_info("else pfn = %#018x\n", pfn); //printed
 			__init_single_pfn(pfn, zone, nid);
 		}
 	}
@@ -5626,13 +5628,13 @@ not_early:
 		if (!(pfn & (pageblock_nr_pages - 1))) {
 			struct page *page = pfn_to_page(pfn);
 
-	pr_info("if   pfn = %#018x, pageblock_nr_pages= %#018x\n",
-	      pfn, pageblock_nr_pages ); //printed
+	//pr_info("if   pfn = %#018x, pageblock_nr_pages= %#018x\n",
+	//      pfn, pageblock_nr_pages ); //printed
 			__init_single_page(page, pfn, zone, nid);
 			set_pageblock_migratetype(page, MIGRATE_MOVABLE);
 			cond_resched();
 		} else {
-	pr_info("else pfn = %#018x\n", pfn);
+	//pr_info("else pfn = %#018x\n", pfn);//printed
 			__init_single_pfn(pfn, zone, nid);
 		}
 	}
@@ -7001,7 +7003,8 @@ static void check_for_memory(pg_data_t *pgdat, int nid)
 			//node_set_state(nid, N_PRAM);
 			//>>>
 			if (N_NORMAL_MEMORY != N_HIGH_MEMORY &&
-					zone_type <= ZONE_NORMAL)
+					zone_type <= ZONE_PRAM)
+					//zone_type <= ZONE_NORMAL)
 				node_set_state(nid, N_NORMAL_MEMORY);
 			pr_info("N_NORMAL_MEMORY=%d, N_HIGH_MEMORY=%d\n",
 					N_NORMAL_MEMORY,N_HIGH_MEMORY);
