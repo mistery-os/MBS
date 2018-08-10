@@ -14,7 +14,7 @@
  * used by the headers in misc.h.
  */
 #define __pa(x)  ((unsigned long)(x))
-pr_info("__va : arch/x86/boot/compressed/pagetable.c\n");
+#define VA_DEBUG	1
 #define __va(x)  ((void *)((unsigned long)(x)))
 
 /*
