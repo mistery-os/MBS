@@ -74,7 +74,7 @@ extern unsigned long memory_end;
 #endif
 
 #ifndef __ASSEMBLY__
-
+pr_info("__va : include/asm-generic/page.h\n");
 #define __va(x) ((void *)((unsigned long) (x)))
 #define __pa(x) ((unsigned long) (x))
 

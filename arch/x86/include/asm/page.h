@@ -56,6 +56,7 @@ static inline void copy_user_page(void *to, void *from, unsigned long vaddr,
 	__phys_addr_symbol(__phys_reloc_hide((unsigned long)(x)))
 
 #ifndef __va
+pr_info("__va : arch/x86/include/asm/page.h\n");
 #define __va(x)			((void *)((unsigned long)(x)+PAGE_OFFSET))
 #endif
 

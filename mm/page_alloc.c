@@ -6314,7 +6314,7 @@ static void __meminit calculate_node_totalpages_pram(struct pglist_data *pgdat,
 		pr_cont("zone_start_pfn: %#018Lx -  ",(u64)zone_start_pfn);
 		pr_cont("zone_end_pfn: %#018Lx\n", (u64)zone_end_pfn);
 
-		if (i != ZONE_PRAM){
+		if (i != ZONE_PRAM){//TEST69 YONGSEOB
 		totalpages += size;
 		realtotalpages += real_size;
 		}

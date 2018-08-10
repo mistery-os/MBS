@@ -1082,7 +1082,6 @@ static __always_inline void *lowmem_page_address(const struct page *page)
 #endif
 
 #if defined(WANT_PAGE_VIRTUAL)
-#	if 0
 static inline void *page_address(const struct page *page)
 {
 	return page->virtual;
@@ -1092,7 +1091,6 @@ static inline void set_page_address(struct page *page, void *address)
 	page->virtual = address;
 }
 #define page_address_init()  do { } while(0)
-#	endif
 #endif
 
 #if defined(HASHED_PAGE_VIRTUAL)
