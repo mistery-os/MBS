@@ -5536,8 +5536,8 @@ not_early:
 			set_pageblock_migratetype(page, MIGRATE_MOVABLE);
 			cond_resched();
 		} else {
-	pr_info("else pfn = %#018x, page= %#018x\n",
-			pfn,&page);
+	pr_info("else pfn = %#018x\n",
+			pfn);
 			__init_single_pfn(pfn, zone, nid);
 		}
 	}
