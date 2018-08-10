@@ -1189,9 +1189,9 @@ static void __meminit __init_single_page(struct page *page, unsigned long pfn,
 	page_cpupid_reset_last(page);
 
 	INIT_LIST_HEAD(&page->lru);
-	pr_info("VA_DEBUG = %d\n", VA_DEBUG);
 #ifdef WANT_PAGE_VIRTUAL
 	/* The shift won't overflow because ZONE_NORMAL is below 4G. */
+	pr_info("VA_DEBUG = %d\n", VA_DEBUG);//arch/x86/include/asm/page.h
 	if (!is_highmem_idx(zone))
 		set_page_address(page, __va(pfn << PAGE_SHIFT));
 #endif
