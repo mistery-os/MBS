@@ -6314,8 +6314,10 @@ static void __meminit calculate_node_totalpages_pram(struct pglist_data *pgdat,
 		pr_cont("zone_start_pfn: %#018Lx -  ",(u64)zone_start_pfn);
 		pr_cont("zone_end_pfn: %#018Lx\n", (u64)zone_end_pfn);
 
+		if (i != ZONE_PRAM){
 		totalpages += size;
 		realtotalpages += real_size;
+		}
 	}
 
 	pgdat->node_spanned_pages = totalpages;
@@ -6596,7 +6598,7 @@ void __paginginit free_area_init_node(int nid, unsigned long *zones_size,
 			end_pfn ? ((u64)end_pfn << PAGE_SHIFT) - 1 : 0);
 	//<<<2018.02.14 Yongseob
 	get_pfn_range_for_nid_pram(nid, &start_pfn_pram, &end_pfn_pram);
-	pr_info("Initpram setup node %d [mem %#018Lx-%#018Lx]\n", nid,
+	pr_info("InitMBS setup node %d [mem %#018Lx-%#018Lx]\n", nid,
 			(u64)start_pfn_pram << PAGE_SHIFT,
 			end_pfn_pram ? ((u64)end_pfn_pram << PAGE_SHIFT) - 1 : 0);
 	//>>>
