@@ -7003,8 +7003,7 @@ static void check_for_memory(pg_data_t *pgdat, int nid)
 			//node_set_state(nid, N_PRAM);
 			//>>>
 			if (N_NORMAL_MEMORY != N_HIGH_MEMORY &&
-					zone_type <= ZONE_PRAM)
-					//zone_type <= ZONE_NORMAL)
+					zone_type <= ZONE_NORMAL)
 				node_set_state(nid, N_NORMAL_MEMORY);
 			pr_info("N_NORMAL_MEMORY=%d, N_HIGH_MEMORY=%d\n",
 					N_NORMAL_MEMORY,N_HIGH_MEMORY);
