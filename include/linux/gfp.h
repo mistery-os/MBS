@@ -61,12 +61,13 @@ struct vm_area_struct;
  */
 #define __GFP_DMA	((__force gfp_t)___GFP_DMA)
 #define __GFP_HIGHMEM	((__force gfp_t)___GFP_HIGHMEM)
+#define __GFP_PRAM	((__force gfp_t)___GFP_PRAM)
 #define __GFP_DMA32	((__force gfp_t)___GFP_DMA32)
 #define __GFP_MOVABLE	((__force gfp_t)___GFP_MOVABLE)  /* ZONE_MOVABLE allowed */
 //<<<2018.05.30 Yongseob
 //#define GFP_ZONEMASK	(__GFP_DMA|__GFP_HIGHMEM|__GFP_DMA32|__GFP_MOVABLE)
-#define __GFP_PRAM	((__force gfp_t)___GFP_PRAM)
-#define GFP_ZONEMASK	(__GFP_DMA|__GFP_HIGHMEM|__GFP_DMA32|__GFP_MOVABLE|__GFP_PRAM)
+//#define GFP_ZONEMASK	(__GFP_DMA|__GFP_HIGHMEM|__GFP_DMA32|__GFP_MOVABLE|__GFP_PRAM)
+#define GFP_ZONEMASK	(__GFP_DMA|__GFP_DMA32|__GFP_MOVABLE|__GFP_PRAM)
 //>>>
 /*
  * Page mobility and placement hints
