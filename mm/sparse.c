@@ -523,7 +523,6 @@ static struct page __init *sparse_early_mem_map_alloc(unsigned long pnum)
 
 void __weak __meminit vmemmap_populate_print_last(void)
 {
-	pr_info("vmemmap_populate_print_last : mm/sparse.c\n");
 }
 
 /**

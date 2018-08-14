@@ -1362,9 +1362,9 @@ unsigned long __init_memblock memblock_next_valid_pfn_pram(unsigned long pfn,
 	} while (left < right);
 
 	if (right == type->cnt)
-		return max_pfn;
+		return max_pfn_pram;
 	else
-		return min(PHYS_PFN(type->regions[right].base), max_pfn);
+		return min(PHYS_PFN(type->regions[right].base), max_pfn_pram);
 }
 //>>>
 
