@@ -1172,7 +1172,7 @@ static void __init register_page_bootmem_info(void)
 	int i;
 
 	for_each_online_node(i)
-		register_page_bootmem_info_node(NODE_DATA(i));
+		register_page_bootmem_info_node(NODE_DATA(i));//mm/memory_hotplug.c
 #endif
 }
 

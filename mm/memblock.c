@@ -395,14 +395,14 @@ void __init memblock_discard(void)
 				memblock.memory.max);
 		__memblock_free_late(addr, size);
 	}
-#if 0
+//#if 0
 	if (memblock.pram.regions != memblock_pram_init_regions) {
 		addr = __pa(memblock.pram.regions);
 		size = PAGE_ALIGN(sizeof(struct memblock_region) *
 				memblock.pram.max);
 		__memblock_free_late(addr, size);
 	}
-#endif
+//#endif
 }
 #endif
 

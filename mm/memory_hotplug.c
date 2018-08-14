@@ -160,6 +160,7 @@ void put_page_bootmem(struct page *page)
 
 #ifdef CONFIG_HAVE_BOOTMEM_INFO_NODE
 #ifndef CONFIG_SPARSEMEM_VMEMMAP
+#	if 0 //ifndef YONGSEOB-MBS
 static void register_page_bootmem_info_section(unsigned long start_pfn)
 {
 	unsigned long *usemap, mapsize, section_nr, i;
@@ -193,6 +194,7 @@ static void register_page_bootmem_info_section(unsigned long start_pfn)
 		get_page_bootmem(section_nr, page, MIX_SECTION_INFO);
 
 }
+#	endif
 #else /* CONFIG_SPARSEMEM_VMEMMAP */
 static void register_page_bootmem_info_section(unsigned long start_pfn)
 {

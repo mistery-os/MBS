@@ -1730,6 +1730,7 @@ void __init page_alloc_init_late(void)
 	struct zone *zone;
 
 #ifdef CONFIG_DEFERRED_STRUCT_PAGE_INIT
+#	if 0 //ifndef YONGSEOB-MBS
 	int nid;
 
 	/* There will be num_node_state(N_MEMORY) threads */
@@ -1746,6 +1747,7 @@ void __init page_alloc_init_late(void)
 
 	/* Reinit limits that are based on free pages after the kernel is up */
 	files_maxfiles_init();
+#	endif
 #endif
 #ifdef CONFIG_ARCH_DISCARD_MEMBLOCK
 	/* Discard memblock private memory */
@@ -4289,10 +4291,10 @@ static inline bool prepare_alloc_pages(gfp_t gfp_mask, unsigned int order,
 		unsigned int *alloc_flags)
 {
 	ac->high_zoneidx = gfp_zone(gfp_mask);
-#if 0
-	if ( ac->high_zoneidx == ZONE_PRAM)
-		pr_debug("ZONE_PRAM requested\n");//works fine pr_info
-#endif
+//#if 0
+	if ( ac->high_zoneidx & ZONE_PRAM)
+		pr_info("ZONE_PRAM requested\n");//works fine pr_info
+//#endif
 	ac->zonelist = node_zonelist(preferred_nid, gfp_mask);
 	ac->nodemask = nodemask;
 	ac->migratetype = gfpflags_to_migratetype(gfp_mask);
