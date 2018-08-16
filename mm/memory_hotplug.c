@@ -236,6 +236,8 @@ void __init register_page_bootmem_info_node(struct pglist_data *pgdat)
 
 	pfn = pgdat->node_start_pfn;
 	end_pfn = pgdat_end_pfn(pgdat);
+	//ifndef YONGSEOB-MBS
+	pr_info("pfn= %#016x,\t end_pfn= %#016x\n",pfn,end_pfn);
 
 	/* register section info */
 	for (; pfn < end_pfn; pfn += PAGES_PER_SECTION) {

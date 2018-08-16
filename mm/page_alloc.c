@@ -110,9 +110,6 @@ EXPORT_SYMBOL(latent_entropy);
 nodemask_t node_states[NR_NODE_STATES] __read_mostly = {
 	[N_POSSIBLE] = NODE_MASK_ALL,
 	[N_ONLINE] = { { [0] = 1UL } },
-	//<<<2018.05.17 Yongseob
-	[N_PRAM] = { { [0] = 1UL } },
-	//>>>
 #ifndef CONFIG_NUMA
 	[N_NORMAL_MEMORY] = { { [0] = 1UL } },
 #ifdef CONFIG_HIGHMEM
@@ -120,6 +117,9 @@ nodemask_t node_states[NR_NODE_STATES] __read_mostly = {
 #endif
 	[N_MEMORY] = { { [0] = 1UL } },
 	[N_CPU] = { { [0] = 1UL } },
+	//<<<2018.05.17 Yongseob
+	[N_PRAM] = { { [0] = 1UL } },
+	//>>>
 #endif	/* NUMA */
 };
 EXPORT_SYMBOL(node_states);
@@ -4291,19 +4291,17 @@ static inline bool prepare_alloc_pages(gfp_t gfp_mask, unsigned int order,
 		unsigned int *alloc_flags)
 {
 	ac->high_zoneidx = gfp_zone(gfp_mask);
-//#if 0
+#if 0
 	if ( ac->high_zoneidx & GFP_PRAM)
 		pr_info("GFP_PRAM requested\n");//works fine pr_info
-	if ( ac->high_zoneidx & ZONE_DMA32)
-		pr_info("ZONE_DMA32 requested\n");//works fine pr_info
-//#endif
+#endif
 	ac->zonelist = node_zonelist(preferred_nid, gfp_mask);
 	ac->nodemask = nodemask;
 	ac->migratetype = gfpflags_to_migratetype(gfp_mask);
 	//<<<2018.05.30 Yongseob
 #if 0   // 2018.06.07 temporaly disabled
 
-	if (ac->high_zoneidx == ZONE_PRAM ) //if ( gfp_mask & GFP_PRAM )
+	if (ac->high_zoneidx & ZONE_PRAM ) //if ( gfp_mask & GFP_PRAM )
 		*alloc_flags |= ALLOC_NO_WATERMARKS;
 #endif  //>>>
 
@@ -5935,12 +5933,12 @@ void __init free_bootmem_with_active_regions(int nid, unsigned long max_low_pfn)
  */
 void __init sparse_memory_present_with_active_regions(int nid)
 {
-		unsigned long start_pfn_pram, end_pfn_pram;
+	unsigned long start_pfn_pram, end_pfn_pram;
 	int i_pram, this_nid_pram;
 	for_each_pram_pfn_range(i_pram, nid, &start_pfn_pram, &end_pfn_pram, &this_nid_pram)
 		memory_present(this_nid_pram, start_pfn_pram, end_pfn_pram);
 
-unsigned long start_pfn, end_pfn;
+	unsigned long start_pfn, end_pfn;
 	int i, this_nid;
 	for_each_mem_pfn_range(i, nid, &start_pfn, &end_pfn, &this_nid)
 		memory_present(this_nid, start_pfn, end_pfn);
@@ -7009,8 +7007,8 @@ static void check_for_memory(pg_data_t *pgdat, int nid)
 			if (N_NORMAL_MEMORY != N_HIGH_MEMORY &&
 					zone_type <= ZONE_NORMAL)
 				node_set_state(nid, N_NORMAL_MEMORY);
-			pr_info("N_NORMAL_MEMORY=%d, N_HIGH_MEMORY=%d\n",
-					N_NORMAL_MEMORY,N_HIGH_MEMORY);
+			//pr_info("N_NORMAL_MEMORY=%d, N_HIGH_MEMORY=%d\n",
+			//		N_NORMAL_MEMORY,N_HIGH_MEMORY);
 			break;
 		}
 	}
