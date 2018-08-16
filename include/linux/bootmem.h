@@ -18,7 +18,7 @@ extern unsigned long max_low_pfn;
 extern unsigned long min_low_pfn;
 
 //<<<2018.02.14 Yongseob
-extern unsigned long max_low_pfn_pram;
+extern unsigned long max_pram_pfn;
 extern unsigned long min_low_pfn_pram;
 extern unsigned long max_pfn_pram;
 extern unsigned long long max_possible_pfn_pram;

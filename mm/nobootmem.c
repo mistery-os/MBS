@@ -38,7 +38,7 @@ unsigned long max_pfn;
 unsigned long long max_possible_pfn;
 
 //<<<2018.02.14 Yongseob
-unsigned long max_low_pfn_pram;
+unsigned long max_pram_pfn;
 unsigned long min_low_pfn_pram;
 unsigned long max_pfn_pram;
 unsigned long long max_possible_pfn_pram;

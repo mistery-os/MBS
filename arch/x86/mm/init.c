@@ -648,6 +648,7 @@ void __init init_mem_mapping(void)
 #ifdef CONFIG_X86_64
 	end = max_pfn << PAGE_SHIFT;
 	end = ( max_pfn > max_pfn_pram ? max_pfn << PAGE_SHIFT : max_pfn_pram << PAGE_SHIFT) ;
+	end = ( max_pfn > max_pfn_pram ? max_pfn << PAGE_SHIFT : max_pram_pfn << PAGE_SHIFT) ;
 #else
 	end = max_low_pfn << PAGE_SHIFT;
 #endif
@@ -861,7 +862,7 @@ void __init zone_sizes_init(void)
 #endif
 	max_zone_pfns[ZONE_NORMAL]	= max_low_pfn;
 	//<<<2018.02.14 Yongseob
-	max_zone_pfns[ZONE_PRAM]	= max_low_pfn_pram;
+	max_zone_pfns[ZONE_PRAM]	= max_pram_pfn;
 	max_zone_pfns[ZONE_PRAM]	= max_pfn_pram;
 	//>>>
 #ifdef CONFIG_HIGHMEM

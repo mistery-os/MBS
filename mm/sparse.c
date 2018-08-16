@@ -214,6 +214,7 @@ void __init memory_present(int nid, unsigned long start, unsigned long end)
 
 		size = sizeof(struct mem_section*) * NR_SECTION_ROOTS;
 		align = 1 << (INTERNODE_CACHE_SHIFT);
+		pr_info("INTERNODE_CACHE_SHIFT=%d\n",INTERNODE_CACHE_SHIFT);
 		mem_section = memblock_virt_alloc(size, align);
 	}
 #endif
@@ -630,7 +631,7 @@ void __init sparse_init(void)
 	BUILD_BUG_ON(!is_power_of_2(sizeof(struct mem_section)));
 
 	/* Setup pageblock_order for HUGETLB_PAGE_SIZE_VARIABLE */
-	set_pageblock_order();
+	set_pageblock_order();/* Do nothing MBS */
 
 	/*
 	 * map is using big page (aka 2M in x86 64 bit)

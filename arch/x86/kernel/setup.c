@@ -1126,12 +1126,12 @@ void __init setup_arch(char **cmdline_p)
 	if (max_pfn > (1UL<<(32 - PAGE_SHIFT))){
 		max_low_pfn = e820__end_of_low_ram_pfn();
 		//<<<2018.02.13 Yongseob
-		max_low_pfn_pram = e820__end_of_low_pram_pfn();
+		max_pram_pfn = e820__end_of_low_pram_pfn();
 		//>>>
 	}else{
 		max_low_pfn = max_pfn;
 	       	//<<<2018.02.13 Yongseob
-		max_low_pfn_pram = max_pfn_pram;
+		max_pram_pfn = max_pfn_pram;
 		//>>>
 	}
 	high_memory =(max_pfn >= max_pfn_pram ? (void *)__va(max_pfn * PAGE_SIZE - 1) + 1 : (void *)__va(max_pfn_pram * PAGE_SIZE - 1) + 1) ;
@@ -1159,6 +1159,7 @@ void __init setup_arch(char **cmdline_p)
 
 	memblock_set_current_limit(ISA_END_ADDRESS);
 	e820__memblock_setup(); // arch/x86/kernel/e820.c
+				// pr_info"MEMBLOCK configuration"
 
 	if (!early_xdbc_setup_hardware())
 		early_xdbc_register_console();
