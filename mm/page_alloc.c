@@ -4292,8 +4292,10 @@ static inline bool prepare_alloc_pages(gfp_t gfp_mask, unsigned int order,
 {
 	ac->high_zoneidx = gfp_zone(gfp_mask);
 //#if 0
-	if ( ac->high_zoneidx & ZONE_PRAM)
-		pr_info("ZONE_PRAM requested\n");//works fine pr_info
+	if ( ac->high_zoneidx & GFP_PRAM)
+		pr_info("GFP_PRAM requested\n");//works fine pr_info
+	if ( ac->high_zoneidx & ZONE_DMA32)
+		pr_info("ZONE_DMA32 requested\n");//works fine pr_info
 //#endif
 	ac->zonelist = node_zonelist(preferred_nid, gfp_mask);
 	ac->nodemask = nodemask;
