@@ -648,7 +648,9 @@ void __init init_mem_mapping(void)
 #ifdef CONFIG_X86_64
 	end = max_pfn << PAGE_SHIFT;
 	end = ( max_pfn > max_pfn_pram ? max_pfn << PAGE_SHIFT : max_pfn_pram << PAGE_SHIFT) ;
-//	end = ( max_pfn > max_pfn_pram ? max_pfn << PAGE_SHIFT : max_pram_pfn << PAGE_SHIFT) ;
+	end = ( max_pfn > max_pram_pfn ? max_pfn << PAGE_SHIFT : max_pram_pfn << PAGE_SHIFT) ;
+	pr_info("max_pfn=%#0x, max_pfn_pram=%#0x, max_pram_pfn=%#0x, end=%#0x\n",
+			max_pfn,max_pfn_pram,max_pram_pfn,end);
 #else
 	end = max_low_pfn << PAGE_SHIFT;
 #endif
@@ -663,9 +665,8 @@ void __init init_mem_mapping(void)
 	 * If the allocation is in bottom-up direction, we setup direct mapping
 	 * in bottom-up, otherwise we setup direct mapping in top-down.
 	 */
-	if (memblock_bottom_up()) {
+	if (memblock_bottom_up()) {//does not work.. top-down works
 		unsigned long kernel_end = __pa_symbol(_end);
-		pr_info("init_mem_mapping:memblock_bottom_up\n");
 
 		/*
 		 * we need two separate calls here. This is because we want to
