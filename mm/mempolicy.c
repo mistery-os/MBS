@@ -132,7 +132,7 @@ static struct mempolicy default_policy = {
 enum zone_type policy_zone_pram = 0;
 static struct mempolicy default_policy_pram = {
 	.refcnt = ATOMIC_INIT(1), /* never free it */
-	.mode = MPOL_INTERLEAVE,
+	.mode = MPOL_LOCAL,
 	.flags = MPOL_F_LOCAL,
 };
 //>>>
@@ -2694,8 +2694,10 @@ void __init numa_policy_init(void)
 		//<<<2018.05.31 Yongseob
 		preferred_mbs_node_policy[nid] = (struct mempolicy) {
 			.refcnt = ATOMIC_INIT(1),
-			.mode = MPOL_INTERLEAVE,
-			.flags = MPOL_F_MOF | MPOL_F_MORON,
+			.mode = MPOL_LOCAL,
+			//.mode = MPOL_INTERLEAVE,
+			.flags = MPOL_F_LOCA | LMPOL_F_MOF | MPOL_F_MORON,
+			//. v = { .nodes = ,},
 		};
 		//>>>
 	}
