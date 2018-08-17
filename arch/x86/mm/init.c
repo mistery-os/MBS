@@ -492,6 +492,35 @@ unsigned long __ref init_memory_mapping(unsigned long start,
  * That range would have hole in the middle or ends, and only ram parts
  * will be mapped in init_range_memory_mapping().
  */
+static unsigned long __init init_range_pram_mapping(
+					   unsigned long r_start,
+					   unsigned long r_end)
+{
+	unsigned long start_pfn, end_pfn;
+	unsigned long mapped_ram_size = 0;
+	int i;
+
+	for_each_pram_pfn_range(i, MAX_NUMNODES, &start_pfn, &end_pfn, NULL) {
+		u64 start = clamp_val(PFN_PHYS(start_pfn), r_start, r_end);
+		u64 end = clamp_val(PFN_PHYS(end_pfn), r_start, r_end);
+		if (start >= end)
+			continue;
+
+		/*
+		 * if it is overlapping with brk pgt, we need to
+		 * alloc pgt buf from memblock instead.
+		 */
+		can_use_brk_pgt = max(start, (u64)pgt_buf_end<<PAGE_SHIFT) >=
+				    min(end, (u64)pgt_buf_top<<PAGE_SHIFT);
+		init_memory_mapping(start, end);
+		mapped_ram_size += end - start;
+		can_use_brk_pgt = true;
+	}
+
+	return mapped_ram_size;
+}
+
+
 static unsigned long __init init_range_memory_mapping(
 					   unsigned long r_start,
 					   unsigned long r_end)
@@ -582,14 +611,18 @@ static void __init memory_map_top_down(unsigned long map_start,
 			start = map_start;
 		mapped_ram_size += init_range_memory_mapping(start,
 							last_start);
+		mapped_ram_size += init_range_pram_mapping(start,
+							last_start);
 		last_start = start;
 		min_pfn_mapped = last_start >> PAGE_SHIFT;
 		if (mapped_ram_size >= step_size)
 			step_size = get_new_step_size(step_size);
 	}
 
-	if (real_end < map_end)
+	if (real_end < map_end){
 		init_range_memory_mapping(real_end, map_end);
+		init_range_pram_mapping(real_end, map_end);
+	}
 }
 
 /**
@@ -648,7 +681,7 @@ void __init init_mem_mapping(void)
 #ifdef CONFIG_X86_64
 	end = max_pfn << PAGE_SHIFT;
 	end = ( max_pfn > max_pfn_pram ? max_pfn << PAGE_SHIFT : max_pfn_pram << PAGE_SHIFT) ;
-	end = ( max_pfn > max_pram_pfn ? max_pfn << PAGE_SHIFT : max_pram_pfn << PAGE_SHIFT) ;
+	//end = ( max_pfn > max_pram_pfn ? max_pfn << PAGE_SHIFT : max_pram_pfn << PAGE_SHIFT) ;
 	pr_info("max_pfn=%#0x, max_pfn_pram=%#0x, max_pram_pfn=%#0x, end=%#0x\n",
 			max_pfn,max_pfn_pram,max_pram_pfn,end);
 #else
