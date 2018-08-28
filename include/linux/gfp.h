@@ -487,13 +487,11 @@ static inline int gfp_zonelist(gfp_t flags)
 	if (unlikely(flags & __GFP_THISNODE))
 		if (unlikely(gfp_zone(flags) & __GFP_PRAM))
 			return ZONELIST_MBS_NOFALLBACK;
-		else
-			return ZONELIST_NOFALLBACK;
+		return ZONELIST_NOFALLBACK;
 #endif
 	if (gfp_zone(flags) & __GFP_PRAM )
 		return ZONELIST_MBS_FALLBACK; //tricky???
-	else
-		return ZONELIST_FALLBACK;
+	return ZONELIST_FALLBACK;
 }
 
 /*
