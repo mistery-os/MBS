@@ -136,6 +136,18 @@ source "fs/proc/Kconfig"
 source "fs/kernfs/Kconfig"
 source "fs/sysfs/Kconfig"
 
+config mbsFS
+	bool "Tmpfs virtual memory file system support (former shm fs)"
+	help
+	  mbsFS is a file system which keeps all files in
+	  memory bus-connected storage.
+
+	  Everything in mbsFS is temporary in the sense that no files will be
+	  created on your hard drive. The files live in 
+	  memory bus-connected storage and swap
+	  space. If you unmount a tmpfs instance, everything stored therein is
+	  lost.
+
 config TMPFS
 	bool "Tmpfs virtual memory file system support (former shm fs)"
 	depends on SHMEM

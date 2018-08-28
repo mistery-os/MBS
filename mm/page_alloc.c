@@ -5043,6 +5043,31 @@ static void zoneref_set_zone(struct zone *zone, struct zoneref *zoneref)
 }
 
 /*
+ * Builds allocation MBS zone lists.
+ *
+ * Add all populated zones of a node to the zonelist.
+ */
+static int build_zonerefs_node_MBS(pg_data_t *pgdat, struct zoneref *zonerefs)
+{
+	struct zone *zone;
+	enum zone_type zone_type = MAX_NR_ZONES; /* include/linux/mmzone.h */
+	int nr_zones = 0;
+
+	do {
+		zone_type--;
+		if (zone_type == ZONE_PRAM){
+		zone = pgdat->node_zones + zone_type;
+		if (managed_zone(zone)) {
+			zoneref_set_zone(zone, &zonerefs[nr_zones++]);
+		//	check_highest_zone(zone_type); /* include/linux/mempolicy.h */
+		}
+		}
+	} while (zone_type);
+
+	return nr_zones;
+}
+
+/*
  * Builds allocation fallback zone lists.
  *
  * Add all populated zones of a node to the zonelist.
@@ -5188,20 +5213,27 @@ static void build_zonelists_in_node_order(pg_data_t *pgdat, int *node_order,
 		unsigned nr_nodes)
 {
 	struct zoneref *zonerefs;
+	struct zoneref *zonerefs_MBS;
 	int i;
 
 	zonerefs = pgdat->node_zonelists[ZONELIST_FALLBACK]._zonerefs;
+	zonerefs_MBS = pgdat->node_zonelists[ZONELIST_MBS_FALLBACK]._zonerefs;
 
 	for (i = 0; i < nr_nodes; i++) {
 		int nr_zones;
+		int nr_zones_MBS;
 
 		pg_data_t *node = NODE_DATA(node_order[i]);
 
 		nr_zones = build_zonerefs_node(node, zonerefs);
 		zonerefs += nr_zones;
+		nr_zones_MBS = build_zonerefs_node_MBS(node, zonerefs_MBS);
+		zonerefs_MBS += nr_zones_MBS;
 	}
 	zonerefs->zone = NULL;
 	zonerefs->zone_idx = 0;
+	zonerefs_MBS->zone = NULL;
+	zonerefs_MBS->zone_idx = 0;
 }
 
 /*
@@ -5211,12 +5243,20 @@ static void build_thisnode_zonelists(pg_data_t *pgdat)
 {
 	struct zoneref *zonerefs;
 	int nr_zones;
+	struct zoneref *zonerefs_MBS;
+	int nr_zones_MBS;
 
 	zonerefs = pgdat->node_zonelists[ZONELIST_NOFALLBACK]._zonerefs;
 	nr_zones = build_zonerefs_node(pgdat, zonerefs);
 	zonerefs += nr_zones;
 	zonerefs->zone = NULL;
 	zonerefs->zone_idx = 0;
+
+	zonerefs_MBS = pgdat->node_zonelists[ZONELIST_MBS_NOFALLBACK]._zonerefs;
+	nr_zones_MBS = build_zonerefs_node(pgdat, zonerefs_MBS);
+	zonerefs_MBS += nr_zones_MBS;
+	zonerefs_MBS->zone = NULL;
+	zonerefs_MBS->zone_idx = 0;
 }
 
 /*
