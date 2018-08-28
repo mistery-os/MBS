@@ -484,10 +484,12 @@ static inline enum zone_type gfp_zone(gfp_t flags)
 static inline int gfp_zonelist(gfp_t flags)
 {
 #ifdef CONFIG_NUMA
-	if (unlikely(flags & __GFP_THISNODE))
-		if (unlikely(gfp_zone(flags) & __GFP_PRAM))
+	if (unlikely(flags & __GFP_THISNODE)){
+		if (unlikely(gfp_zone(flags) & __GFP_PRAM)){
 			return ZONELIST_MBS_NOFALLBACK;
+		}
 		return ZONELIST_NOFALLBACK;
+	}
 #endif
 	if (gfp_zone(flags) & __GFP_PRAM )
 		return ZONELIST_MBS_FALLBACK; //tricky???
