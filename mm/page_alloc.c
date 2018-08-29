@@ -220,7 +220,7 @@ int sysctl_lowmem_reserve_ratio[MAX_NR_ZONES-1] = {
 };
 
 EXPORT_SYMBOL(totalram_pages);
-
+/*
 static char * const zone_names[MAX_NR_ZONES] = {
 #ifdef CONFIG_ZONE_DMA
 	 "DMA",
@@ -233,6 +233,25 @@ static char * const zone_names[MAX_NR_ZONES] = {
 	 "HighMem",
 #endif
 	 "MBS",
+	 "Movable",
+#ifdef CONFIG_ZONE_DEVICE
+	 "Device",
+#endif
+};
+*/
+
+static char * const zone_names[MAX_NR_ZONES] = {
+	 "MBS",
+#ifdef CONFIG_ZONE_DMA
+	 "DMA",
+#endif
+#ifdef CONFIG_ZONE_DMA32
+	 "DMA32",
+#endif
+	 "Normal",
+#ifdef CONFIG_HIGHMEM
+	 "HighMem",
+#endif
 	 "Movable",
 #ifdef CONFIG_ZONE_DEVICE
 	 "Device",
