@@ -20,7 +20,7 @@ struct vm_area_struct;
 #define ___GFP_PRAM		0x01u
 //#define ___GFP_DMA		0x01u
 #define ___GFP_DMA		0x2000000u
-//#define ___GFP_HIGHMEM		0x02u
+#define ___GFP_HIGHMEM		0x02u
 //#define ___GFP_HIGHMEM		0x2000000u
 //#define ___GFP_PRAM		0x02u
 //>>>
