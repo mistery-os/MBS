@@ -259,10 +259,10 @@ struct lruvec {
 /* LRU Isolation modes. */
 typedef unsigned __bitwise isolate_mode_t;
 //<<<2018.05.28 Yongseob
-enum zone_pramW {
-	pramW_MIN,
-	pramW_LOW,
-	pramW_HIGH,
+enum zone_watermarks_pram {
+	pram_MIN,
+	pram_LOW,
+	pram_HIGH,
 	NR_pramWMARK
 };
 
@@ -311,6 +311,7 @@ struct per_cpu_nodestat {
 #endif /* !__GENERATING_BOUNDS.H */
 
 enum zone_type {
+	ZONE_PRAM,
 #ifdef CONFIG_ZONE_DMA
 	/*
 	 * ZONE_DMA is used when there are devices that are not able
@@ -345,7 +346,6 @@ enum zone_type {
 	 * performed on pages in ZONE_NORMAL if the DMA devices support
 	 * transfers to all addressable memory.
 	 */
-	ZONE_PRAM,
 	ZONE_NORMAL,
 #ifdef CONFIG_HIGHMEM
 	/*
