@@ -311,7 +311,6 @@ struct per_cpu_nodestat {
 #endif /* !__GENERATING_BOUNDS.H */
 
 enum zone_type {
-	ZONE_PRAM,
 #ifdef CONFIG_ZONE_DMA
 	/*
 	 * ZONE_DMA is used when there are devices that are not able
@@ -346,6 +345,7 @@ enum zone_type {
 	 * performed on pages in ZONE_NORMAL if the DMA devices support
 	 * transfers to all addressable memory.
 	 */
+	ZONE_PRAM,
 	ZONE_NORMAL,
 #ifdef CONFIG_HIGHMEM
 	/*

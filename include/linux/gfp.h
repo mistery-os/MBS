@@ -17,12 +17,10 @@ struct vm_area_struct;
 
 /* Plain integer GFP bitmasks. Do not use this directly. */
 //<<<2018.02.14 Yongseob
-#define ___GFP_PRAM		0x01u
-//#define ___GFP_DMA		0x01u
-#define ___GFP_DMA		0x2000000u
-#define ___GFP_HIGHMEM		0x02u
-//#define ___GFP_HIGHMEM		0x2000000u
-//#define ___GFP_PRAM		0x02u
+#define ___GFP_DMA		0x01u
+//#define ___GFP_HIGHMEM		0x02u
+#define ___GFP_HIGHMEM		0x2000000u
+#define ___GFP_PRAM		0x02u
 //>>>
 #define ___GFP_DMA32		0x04u
 #define ___GFP_MOVABLE		0x08u
@@ -69,8 +67,9 @@ struct vm_area_struct;
 //<<<2018.05.30 Yongseob
 //#define GFP_ZONEMASK	(__GFP_DMA|__GFP_HIGHMEM|__GFP_DMA32|__GFP_MOVABLE)
 //#define GFP_ZONEMASK	(__GFP_DMA|__GFP_HIGHMEM|__GFP_DMA32|__GFP_MOVABLE|__GFP_PRAM)
-//#define GFP_ZONEMASK	(__GFP_DMA|__GFP_DMA32|__GFP_MOVABLE|__GFP_PRAM)
-#define GFP_ZONEMASK	(__GFP_HIGHMEM|__GFP_DMA32|__GFP_MOVABLE|__GFP_PRAM)
+#define GFP_ZONEMASK	(__GFP_DMA|__GFP_DMA32|__GFP_MOVABLE|__GFP_PRAM)
+//#define GFP_ZONEMASK	(__GFP_HIGHMEM|__GFP_DMA32|__GFP_MOVABLE|__GFP_PRAM)
+//failed buddy system
 //>>>
 /*
  * Page mobility and placement hints
@@ -421,16 +420,6 @@ static inline bool gfpflags_allow_blocking(const gfp_t gfp_flags)
 )
 #define GFP_ZONE_TABLE ( \
 	(ZONE_NORMAL << 0 * GFP_ZONES_SHIFT)			       \
-	| (OPT_ZONE_DMA << ___GFP_DMA * GFP_ZONES_SHIFT)	       \
-	| (OPT_ZONE_PRAM << ___GFP_PRAM * GFP_ZONES_SHIFT)	       \
-	| (OPT_ZONE_DMA32 << ___GFP_DMA32 * GFP_ZONES_SHIFT)	       \
-	| (ZONE_NORMAL << ___GFP_MOVABLE * GFP_ZONES_SHIFT)	       \
-	| (OPT_ZONE_DMA << (___GFP_MOVABLE | ___GFP_DMA) * GFP_ZONES_SHIFT)    \
-	| (OPT_ZONE_DMA32 << (___GFP_MOVABLE | ___GFP_DMA32) * GFP_ZONES_SHIFT)\
-)
-#endif
-#define GFP_ZONE_TABLE ( \
-	(ZONE_NORMAL << 0 * GFP_ZONES_SHIFT)			       \
 	| (OPT_ZONE_PRAM << ___GFP_PRAM * GFP_ZONES_SHIFT)	       \
 	| (OPT_ZONE_HIGHMEM << ___GFP_HIGHMEM * GFP_ZONES_SHIFT)       \
 	| (OPT_ZONE_DMA32 << ___GFP_DMA32 * GFP_ZONES_SHIFT)	       \
@@ -439,6 +428,17 @@ static inline bool gfpflags_allow_blocking(const gfp_t gfp_flags)
 	| (ZONE_MOVABLE << (___GFP_MOVABLE | ___GFP_HIGHMEM) * GFP_ZONES_SHIFT)\
 	| (OPT_ZONE_DMA32 << (___GFP_MOVABLE | ___GFP_DMA32) * GFP_ZONES_SHIFT)\
 )
+#endif
+#define GFP_ZONE_TABLE ( \
+	(ZONE_NORMAL << 0 * GFP_ZONES_SHIFT)			       \
+	| (OPT_ZONE_DMA << ___GFP_DMA * GFP_ZONES_SHIFT)	       \
+	| (OPT_ZONE_PRAM << ___GFP_PRAM * GFP_ZONES_SHIFT)	       \
+	| (OPT_ZONE_DMA32 << ___GFP_DMA32 * GFP_ZONES_SHIFT)	       \
+	| (ZONE_NORMAL << ___GFP_MOVABLE * GFP_ZONES_SHIFT)	       \
+	| (OPT_ZONE_DMA << (___GFP_MOVABLE | ___GFP_DMA) * GFP_ZONES_SHIFT)    \
+	| (OPT_ZONE_DMA32 << (___GFP_MOVABLE | ___GFP_DMA32) * GFP_ZONES_SHIFT)\
+)
+
 /*	| (ZONE_MOVABLE << (___GFP_MOVABLE | ___GFP_PRAM) * GFP_ZONES_SHIFT)\ */
 //>>>
 /*
@@ -460,17 +460,6 @@ static inline bool gfpflags_allow_blocking(const gfp_t gfp_flags)
 	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_DMA | ___GFP_HIGHMEM)  \
 )
 #define GFP_ZONE_BAD ( \
-	1 << (___GFP_DMA | ___GFP_PRAM)				      \
-	| 1 << (___GFP_DMA | ___GFP_DMA32)				      \
-	| 1 << (___GFP_DMA32 | ___GFP_PRAM)				      \
-	| 1 << (___GFP_DMA | ___GFP_DMA32 | ___GFP_PRAM)		      \
-	| 1 << (___GFP_MOVABLE | ___GFP_PRAM | ___GFP_DMA)		      \
-	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_DMA)		      \
-	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_PRAM)		      \
-	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_DMA | ___GFP_PRAM)  \
-)
-*/
-#define GFP_ZONE_BAD ( \
 	1 << (___GFP_PRAM | ___GFP_HIGHMEM)				      \
 	| 1 << (___GFP_PRAM | ___GFP_DMA32)				      \
 	| 1 << (___GFP_DMA32 | ___GFP_HIGHMEM)				      \
@@ -480,6 +469,18 @@ static inline bool gfpflags_allow_blocking(const gfp_t gfp_flags)
 	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_HIGHMEM)		      \
 	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_PRAM | ___GFP_HIGHMEM)  \
 )
+*/
+#define GFP_ZONE_BAD ( \
+	1 << (___GFP_DMA | ___GFP_PRAM)				      \
+	| 1 << (___GFP_DMA | ___GFP_DMA32)				      \
+	| 1 << (___GFP_DMA32 | ___GFP_PRAM)				      \
+	| 1 << (___GFP_DMA | ___GFP_DMA32 | ___GFP_PRAM)		      \
+	| 1 << (___GFP_MOVABLE | ___GFP_PRAM | ___GFP_DMA)		      \
+	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_DMA)		      \
+	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_PRAM)		      \
+	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_DMA | ___GFP_PRAM)  \
+)
+
 //>>>
 static inline enum zone_type gfp_zone(gfp_t flags)
 {

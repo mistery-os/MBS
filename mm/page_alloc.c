@@ -241,13 +241,13 @@ static char * const zone_names[MAX_NR_ZONES] = {
 */
 
 static char * const zone_names[MAX_NR_ZONES] = {
-	 "MBS",
 #ifdef CONFIG_ZONE_DMA
 	 "DMA",
 #endif
 #ifdef CONFIG_ZONE_DMA32
 	 "DMA32",
 #endif
+	 "MBS",
 	 "Normal",
 #ifdef CONFIG_HIGHMEM
 	 "HighMem",
