@@ -227,12 +227,21 @@ IF_HAVE_VM_SOFTDIRTY(VM_SOFTDIRTY,	"softdirty"	)		\
 #else
 #define IFDEF_ZONE_HIGHMEM(X)
 #endif
-
+/*
 #define ZONE_TYPE						\
 	IFDEF_ZONE_DMA(		EM (ZONE_DMA,	 "DMA"))	\
 	IFDEF_ZONE_DMA32(	EM (ZONE_DMA32,	 "DMA32"))	\
 				EM (ZONE_NORMAL, "Normal")	\
 				EM (ZONE_PRAM, "PStorage")	\
+	IFDEF_ZONE_HIGHMEM(	EM (ZONE_HIGHMEM,"HighMem"))	\
+				EMe(ZONE_MOVABLE,"Movable")
+*/
+
+#define ZONE_TYPE						\
+				EM (ZONE_PRAM, "PStorage")	\
+	IFDEF_ZONE_DMA(		EM (ZONE_DMA,	 "DMA"))	\
+	IFDEF_ZONE_DMA32(	EM (ZONE_DMA32,	 "DMA32"))	\
+				EM (ZONE_NORMAL, "Normal")	\
 	IFDEF_ZONE_HIGHMEM(	EM (ZONE_HIGHMEM,"HighMem"))	\
 				EMe(ZONE_MOVABLE,"Movable")
 

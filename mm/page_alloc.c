@@ -5043,6 +5043,29 @@ static void zoneref_set_zone(struct zone *zone, struct zoneref *zoneref)
 }
 
 /*
+ * Builds allocation fallback zone lists.
+ *
+ * Add all populated zones of a node to the zonelist.
+ */
+static int build_zonerefs_node(pg_data_t *pgdat, struct zoneref *zonerefs)
+{
+	struct zone *zone;
+	enum zone_type zone_type = MAX_NR_ZONES; /* include/linux/mmzone.h */
+	int nr_zones = 0;
+
+	do {
+		zone_type--;
+		zone = pgdat->node_zones + zone_type;
+		if (managed_zone(zone)) {
+			zoneref_set_zone(zone, &zonerefs[nr_zones++]);
+			check_highest_zone(zone_type); /* include/linux/mempolicy.h */
+		}
+	} while (zone_type);
+
+	return nr_zones;
+}
+
+/*
  * Builds allocation MBS zone lists.
  *
  * Add all populated zones of a node to the zonelist.
@@ -5061,29 +5084,6 @@ static int build_zonerefs_node_MBS(pg_data_t *pgdat, struct zoneref *zonerefs)
 			zoneref_set_zone(zone, &zonerefs[nr_zones++]);
 		//	check_highest_zone(zone_type); /* include/linux/mempolicy.h */
 		}
-		}
-	} while (zone_type);
-
-	return nr_zones;
-}
-
-/*
- * Builds allocation fallback zone lists.
- *
- * Add all populated zones of a node to the zonelist.
- */
-static int build_zonerefs_node(pg_data_t *pgdat, struct zoneref *zonerefs)
-{
-	struct zone *zone;
-	enum zone_type zone_type = MAX_NR_ZONES; /* include/linux/mmzone.h */
-	int nr_zones = 0;
-
-	do {
-		zone_type--;
-		zone = pgdat->node_zones + zone_type;
-		if (managed_zone(zone)) {
-			zoneref_set_zone(zone, &zonerefs[nr_zones++]);
-			check_highest_zone(zone_type); /* include/linux/mempolicy.h */
 		}
 	} while (zone_type);
 

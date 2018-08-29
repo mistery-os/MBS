@@ -311,6 +311,7 @@ struct per_cpu_nodestat {
 #endif /* !__GENERATING_BOUNDS.H */
 
 enum zone_type {
+	ZONE_PRAM,
 #ifdef CONFIG_ZONE_DMA
 	/*
 	 * ZONE_DMA is used when there are devices that are not able
@@ -369,7 +370,7 @@ enum zone_type {
 	//2018.06.07 between ZONE_DEVICE and __MAX_NR_ZONES
 	//2018.06.07 between ZONE_HIGHMEM and ZONE_MOVABLE
 	//           zone_names ordef chaged
-	ZONE_PRAM,
+	//ZONE_PRAM,
 	//>>>
 	ZONE_MOVABLE,
 #ifdef CONFIG_ZONE_DEVICE
@@ -602,8 +603,8 @@ enum {
 	ZONELIST_NOFALLBACK,	/* zonelist without fallback (__GFP_THISNODE) */
 #endif
 	/*
-	ZONELIST_MBS_FALLBACK, //YONGSEOB
-	ZONELIST_MBS_NOFALLBACK, //YONGSEOB
+	ZONELIST_MBS_FALLBACK, 
+	ZONELIST_MBS_NOFALLBACK, 
 	*/
 	MAX_ZONELISTS
 };

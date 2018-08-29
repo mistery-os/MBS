@@ -683,7 +683,7 @@ void __init init_mem_mapping(void)
 	end = ( max_pfn > max_pfn_pram ? max_pfn << PAGE_SHIFT : max_pfn_pram << PAGE_SHIFT) ;
 	//end = ( max_pfn > max_pram_pfn ? max_pfn << PAGE_SHIFT : max_pram_pfn << PAGE_SHIFT) ;
 	pr_info("max_pfn=%#0x, max_pfn_pram=%#0x, max_pram_pfn=%#0x, end=%#0x\n",
-			max_pfn,max_pfn_pram,max_pram_pfn,end);
+			max_pfn,max_pfn_pram,max_pram_pfn,(unsigned int)end);
 #else
 	end = max_low_pfn << PAGE_SHIFT;
 #endif
