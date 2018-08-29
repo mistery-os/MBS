@@ -485,14 +485,14 @@ static inline int gfp_zonelist(gfp_t flags)
 {
 #ifdef CONFIG_NUMA
 	if (unlikely(flags & __GFP_THISNODE)){
-		if (unlikely(gfp_zone(flags) & __GFP_PRAM)){
-			return ZONELIST_MBS_NOFALLBACK;
-		}
+//		if (unlikely(gfp_zone(flags) & __GFP_PRAM)){
+//			return ZONELIST_MBS_NOFALLBACK;
+//		}
 		return ZONELIST_NOFALLBACK;
 	}
 #endif
-	if (gfp_zone(flags) & __GFP_PRAM )
-		return ZONELIST_MBS_FALLBACK; //tricky???
+//	if (gfp_zone(flags) & __GFP_PRAM )
+//		return ZONELIST_MBS_FALLBACK; //tricky???
 	return ZONELIST_FALLBACK;
 }
 

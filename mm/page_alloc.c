@@ -5213,27 +5213,34 @@ static void build_zonelists_in_node_order(pg_data_t *pgdat, int *node_order,
 		unsigned nr_nodes)
 {
 	struct zoneref *zonerefs;
-	struct zoneref *zonerefs_MBS;
 	int i;
 
 	zonerefs = pgdat->node_zonelists[ZONELIST_FALLBACK]._zonerefs;
-	zonerefs_MBS = pgdat->node_zonelists[ZONELIST_MBS_FALLBACK]._zonerefs;
 
 	for (i = 0; i < nr_nodes; i++) {
 		int nr_zones;
-		int nr_zones_MBS;
 
 		pg_data_t *node = NODE_DATA(node_order[i]);
 
 		nr_zones = build_zonerefs_node(node, zonerefs);
 		zonerefs += nr_zones;
-		nr_zones_MBS = build_zonerefs_node_MBS(node, zonerefs_MBS);
-		zonerefs_MBS += nr_zones_MBS;
 	}
 	zonerefs->zone = NULL;
 	zonerefs->zone_idx = 0;
+/*
+	struct zoneref *zonerefs_MBS;
+	zonerefs_MBS = pgdat->node_zonelists[ZONELIST_MBS_FALLBACK]._zonerefs;
+	for (i = 0; i < nr_nodes; i++) {
+		int nr_zones_MBS;
+
+		pg_data_t *node = NODE_DATA(node_order[i]);
+
+		nr_zones_MBS = build_zonerefs_node_MBS(node, zonerefs_MBS);
+		zonerefs_MBS += nr_zones_MBS;
+	}
 	zonerefs_MBS->zone = NULL;
 	zonerefs_MBS->zone_idx = 0;
+*/
 }
 
 /*
@@ -5243,20 +5250,22 @@ static void build_thisnode_zonelists(pg_data_t *pgdat)
 {
 	struct zoneref *zonerefs;
 	int nr_zones;
-	struct zoneref *zonerefs_MBS;
-	int nr_zones_MBS;
 
 	zonerefs = pgdat->node_zonelists[ZONELIST_NOFALLBACK]._zonerefs;
 	nr_zones = build_zonerefs_node(pgdat, zonerefs);
 	zonerefs += nr_zones;
 	zonerefs->zone = NULL;
 	zonerefs->zone_idx = 0;
+/*
+	struct zoneref *zonerefs_MBS;
+	int nr_zones_MBS;
 
 	zonerefs_MBS = pgdat->node_zonelists[ZONELIST_MBS_NOFALLBACK]._zonerefs;
 	nr_zones_MBS = build_zonerefs_node(pgdat, zonerefs_MBS);
 	zonerefs_MBS += nr_zones_MBS;
 	zonerefs_MBS->zone = NULL;
 	zonerefs_MBS->zone_idx = 0;
+*/
 }
 
 /*
