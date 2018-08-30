@@ -1088,6 +1088,8 @@ void __init setup_arch(char **cmdline_p)
        	//<<<2018.02.13 Yongseob
 	max_pfn_pram = e820__end_of_pram_pfn();
 	//>>>
+	pr_info("DEBUG:: max_pfn = %#lx max_pfn_pram = %#lx\n",
+			 max_pfn, max_pfn_pram);
 
 	/* update e820 for memory not covered by WB MTRRs */
 	mtrr_bp_init();
@@ -1096,6 +1098,8 @@ void __init setup_arch(char **cmdline_p)
 		//<<<2018.02.13 Yongseob
 		max_pfn_pram = e820__end_of_pram_pfn();//arch/x86/kernel/e820.c
 		//>>>
+		pr_info("DEBUG::: max_pfn = %#lx max_pfn_pram = %#lx\n",
+				 max_pfn, max_pfn_pram);
 	}
 	max_possible_pfn = max_pfn;
        	//<<<2018.02.13 Yongseob
