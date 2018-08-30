@@ -885,8 +885,8 @@ unsigned long __init e820__end_of_pram_pfn(void)
 
 unsigned long __init e820__end_of_low_pram_pfn(void)
 {
-	return e820_end_pfn(1UL << (32 - PAGE_SHIFT), E820_TYPE_PRAM);
 	return e820_end_pfn_pram(1UL << (32 - PAGE_SHIFT), E820_TYPE_PRAM);
+	return e820_end_pfn(1UL << (32 - PAGE_SHIFT), E820_TYPE_PRAM);
 }
 //>>>
 

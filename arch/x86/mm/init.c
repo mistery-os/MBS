@@ -675,12 +675,12 @@ void __init init_mem_mapping(void)
 	unsigned long end;
 
 	pti_check_boottime_disable();
-	probe_page_size_mask();
+	probe_page_size_mask();/*Using GB pages for direct mapping*/
 	setup_pcid();
 
 #ifdef CONFIG_X86_64
-	//end = max_pfn << PAGE_SHIFT;
 	end =  max_pfn > max_pfn_pram ? (max_pfn << PAGE_SHIFT) : (max_pfn_pram << PAGE_SHIFT) ;
+	end = max_pfn << PAGE_SHIFT;
 	//end = ( max_pfn > max_pram_pfn ? max_pfn << PAGE_SHIFT : max_pram_pfn << PAGE_SHIFT) ;
 	pr_info("max_pfn=%#0x, max_pfn_pram=%#0x, max_pram_pfn=%#0x, end=%#0x\n",
 			max_pfn,max_pfn_pram,max_pram_pfn,end);

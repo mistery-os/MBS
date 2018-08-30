@@ -1088,9 +1088,10 @@ void __init setup_arch(char **cmdline_p)
        	//<<<2018.02.13 Yongseob
 	max_pfn_pram = e820__end_of_pram_pfn();
 	//>>>
+	/*
 	pr_info("DEBUG:: max_pfn = %#lx max_pfn_pram = %#lx\n",
 			 max_pfn, max_pfn_pram);
-
+	*/
 	/* update e820 for memory not covered by WB MTRRs */
 	mtrr_bp_init();
 	if (mtrr_trim_uncached_memory(max_pfn)) {
@@ -1098,8 +1099,10 @@ void __init setup_arch(char **cmdline_p)
 		//<<<2018.02.13 Yongseob
 		max_pfn_pram = e820__end_of_pram_pfn();//arch/x86/kernel/e820.c
 		//>>>
+		/*
 		pr_info("DEBUG::: max_pfn = %#lx max_pfn_pram = %#lx\n",
-				 max_pfn, max_pfn_pram);
+				 max_pfn, max_pfn_pram); //not called
+				 */
 	}
 	max_possible_pfn = max_pfn;
        	//<<<2018.02.13 Yongseob
@@ -1132,6 +1135,8 @@ void __init setup_arch(char **cmdline_p)
 		max_low_pfn = e820__end_of_low_ram_pfn();
 		//<<<2018.02.13 Yongseob
 		max_pram_pfn = e820__end_of_low_pram_pfn();
+		pr_info("DEBUG>> max_low_pfn = %#lx max_pram_pfn = %#lx\n",
+				 max_low_pfn, max_pram_pfn); 
 		//>>>
 	}else{
 		max_low_pfn = max_pfn;
