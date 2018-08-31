@@ -327,7 +327,7 @@ int __init numa_cleanup_meminfo(struct numa_meminfo *mi)
 
 	return 0;
 }
-int __init numa_cleanup_meminfo_pram(struct numa_meminfo *mi)
+int __init nusa_cleanup_meminfo_pram(struct numa_meminfo *mi)
 {
 	const u64 low = 0;
 	const u64 high = PFN_PHYS(max_pfn);
