@@ -22,7 +22,7 @@
 int numa_off;
 nodemask_t numa_nodes_parsed __initdata;
 //<<<2018.03.05 Yongseob
-nodemask_t numa_nodes_parsed_pram __initdata;
+nodemask_t nusa_nodes_parsed __initdata;
 //>>>
 struct pglist_data *node_data[MAX_NUMNODES] __read_mostly;
 EXPORT_SYMBOL(node_data);
@@ -542,6 +542,79 @@ static void __init numa_clear_kernel_node_hotplug(void)
 	}
 }
 
+static int __init nusa_register_memblks(struct numa_meminfo *mi)
+{
+	unsigned long uninitialized_var(pfn_align);
+	int i, nid;
+
+	/* Account for nodes with cpus and no memory */
+	node_possible_map = nusa_nodes_parsed;
+	numa_nodemask_from_meminfo(&node_possible_map, mi);
+	if (WARN_ON(nodes_empty(node_possible_map)))
+		return -EINVAL;
+
+	for (i = 0; i < mi->nr_blks; i++) {
+		struct numa_memblk *mb = &mi->blk[i];
+		memblock_set_node(mb->start, mb->end - mb->start,
+				  &memblock.pram, mb->nid);
+	}
+
+	/*
+	 * At very early time, the kernel have to use some memory such as
+	 * loading the kernel image. We cannot prevent this anyway. So any
+	 * node the kernel resides in should be un-hotpluggable.
+	 *
+	 * And when we come here, alloc node data won't fail.
+	 */
+	numa_clear_kernel_node_hotplug();
+
+	/*
+	 * If sections array is gonna be used for pfn -> nid mapping, check
+	 * whether its granularity is fine enough.
+	 */
+#ifdef NODE_NOT_IN_PAGE_FLAGS
+	pfn_align = node_map_pfn_alignment();
+	if (pfn_align && pfn_align < PAGES_PER_SECTION) {
+		printk(KERN_WARNING "Node alignment %LuMB < min %LuMB, rejecting NUMA config\n",
+		       PFN_PHYS(pfn_align) >> 20,
+		       PFN_PHYS(PAGES_PER_SECTION) >> 20);
+		return -EINVAL;
+	}
+#endif
+	if (!numa_meminfo_cover_memory(mi))
+		return -EINVAL;
+
+	/* Finally register nodes. */
+	for_each_node_mask(nid, node_possible_map) {
+		u64 start = PFN_PHYS(max_pfn);
+		u64 end = 0;
+
+		for (i = 0; i < mi->nr_blks; i++) {
+			if (nid != mi->blk[i].nid)
+				continue;
+			start = min(mi->blk[i].start, start);
+			end = max(mi->blk[i].end, end);
+		}
+
+		if (start >= end)
+			continue;
+
+		/*
+		 * Don't confuse VM with a node that doesn't have the
+		 * minimum amount of memory:
+		 */
+		if (end && (end - start) < NODE_MIN_SIZE)
+			continue;
+
+		alloc_node_data(nid);
+	}
+
+	/* Dump memblock with node info and return. */
+	memblock_dump_all();
+	return 0;
+}
+
+
 static int __init numa_register_memblks(struct numa_meminfo *mi)
 {
 	unsigned long uninitialized_var(pfn_align);
@@ -641,7 +714,7 @@ static void __init numa_init_array(void)
 static int __init numa_init(int (*init_func)(void))
 {
 	int i;
-	int ret;
+	int ret, ret2;
 
 	for (i = 0; i < MAX_LOCAL_APIC; i++)
 		set_apicid_to_node(i, NUMA_NO_NODE);
@@ -649,12 +722,12 @@ static int __init numa_init(int (*init_func)(void))
 	nodes_clear(numa_nodes_parsed);
 	nodes_clear(node_possible_map);
 	nodes_clear(node_online_map);
+	memset(&numa_meminfo, 0, sizeof(numa_meminfo));
+	memset(&nusa_meminfo, 0, sizeof(nusa_meminfo));
 	//<<<2018.03.21 Yongseob
 	WARN_ON(memblock_set_node(0, ULLONG_MAX, &memblock.pram,
 				  MAX_NUMNODES));
 	//>>>
-	memset(&numa_meminfo, 0, sizeof(numa_meminfo));
-	memset(&nusa_meminfo, 0, sizeof(nusa_meminfo));
 	WARN_ON(memblock_set_node(0, ULLONG_MAX, &memblock.memory,
 				  MAX_NUMNODES));
 	WARN_ON(memblock_set_node(0, ULLONG_MAX, &memblock.reserved,
@@ -678,12 +751,14 @@ static int __init numa_init(int (*init_func)(void))
 	memblock_set_bottom_up(false);
 
 	ret = numa_cleanup_meminfo(&numa_meminfo);
+	//ret2 = nusa_cleanup_meminfo(&nusa_meminfo);
 	if (ret < 0)
 		return ret;
 
 	numa_emulation(&numa_meminfo, numa_distance_cnt);
 
 	ret = numa_register_memblks(&numa_meminfo);
+	//ret2 = nusa_register_memblks(&nusa_meminfo);
 	if (ret < 0)
 		return ret;
 
