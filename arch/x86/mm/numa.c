@@ -724,14 +724,14 @@ static int __init numa_init(int (*init_func)(void))
 	nodes_clear(node_online_map);
 	memset(&numa_meminfo, 0, sizeof(numa_meminfo));
 	memset(&nusa_meminfo, 0, sizeof(nusa_meminfo));
-	//<<<2018.03.21 Yongseob
-	WARN_ON(memblock_set_node(0, ULLONG_MAX, &memblock.pram,
-				  MAX_NUMNODES));
-	//>>>
 	WARN_ON(memblock_set_node(0, ULLONG_MAX, &memblock.memory,
 				  MAX_NUMNODES));
 	WARN_ON(memblock_set_node(0, ULLONG_MAX, &memblock.reserved,
 				  MAX_NUMNODES));
+	//<<<2018.03.21 Yongseob
+	WARN_ON(memblock_set_node(0, ULLONG_MAX, &memblock.pram,
+				  MAX_NUMNODES));
+	//>>>
 	/* In case that parsing SRAT failed. */
 	WARN_ON(memblock_clear_hotplug(0, ULLONG_MAX));
 	numa_reset_distance();

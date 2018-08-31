@@ -830,8 +830,8 @@ static unsigned long __init e820_end_pfn(unsigned long limit_pfn, enum e820_type
 	if (last_pfn > max_arch_pfn)
 		last_pfn = max_arch_pfn;
 
-	pr_info("e820: last_pfn = %#lx max_arch_pfn = %#lx\n",
-			 last_pfn, max_arch_pfn);
+	pr_info("e820(type: %d) last_pfn = %#lx max_arch_pfn = %#lx\n",
+			type, last_pfn, max_arch_pfn);
 	return last_pfn;
 }
 
