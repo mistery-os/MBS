@@ -6001,16 +6001,15 @@ void __init free_bootmem_with_active_regions(int nid, unsigned long max_low_pfn)
  */
 void __init sparse_memory_present_with_active_regions(int nid)
 {
-	unsigned long start_pfn_pram, end_pfn_pram;
-	int i_pram, this_nid_pram;
-	for_each_pram_pfn_range(i_pram, nid, &start_pfn_pram, &end_pfn_pram, &this_nid_pram)
-		memory_present(this_nid_pram, start_pfn_pram, end_pfn_pram);
-
 	unsigned long start_pfn, end_pfn;
 	int i, this_nid;
 	for_each_mem_pfn_range(i, nid, &start_pfn, &end_pfn, &this_nid)
 		memory_present(this_nid, start_pfn, end_pfn);
-
+	
+	unsigned long start_pfn_pram, end_pfn_pram;
+	int i_pram, this_nid_pram;
+	for_each_pram_pfn_range(i_pram, nid, &start_pfn_pram, &end_pfn_pram, &this_nid_pram)
+		memory_present(this_nid_pram, start_pfn_pram, end_pfn_pram);
 
 #if 0
 	int ix;

@@ -714,8 +714,8 @@ static int __init numa_register_memblks(struct numa_meminfo *mi)
 		memblock_set_node(mb->start, mb->end - mb->start,
 				  &memblock.memory, mb->nid);
 		//<<<2018.03.23 Yongseob
-		memblock_set_node(mb->start, mb->end - mb->start,
-				  &memblock.pram, mb->nid);
+//		memblock_set_node(mb->start, mb->end - mb->start,
+//				  &memblock.pram, mb->nid);
 		//>>>
 	}
 
