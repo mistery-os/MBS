@@ -841,7 +841,7 @@ static int __init numa_init(int (*init_func)(void))
 	numa_emulation(&numa_meminfo, numa_distance_cnt);
 
 	ret = numa_register_memblks(&numa_meminfo);
-	//ret2 = nusa_register_memblks(&nusa_meminfo);
+	ret2 = nusa_register_memblks(&nusa_meminfo);
 	if (ret < 0)
 		return ret;
 
