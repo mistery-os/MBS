@@ -233,6 +233,18 @@ static void __init alloc_node_data(int nid)
 	memset(NODE_DATA(nid), 0, sizeof(pg_data_t));
 
 	node_set_online(nid);
+
+	printk(KERN_INFO "NODE_DATA(%d) allocated [mem %#010Lx-%#010Lx]\n", nid,
+	       nd_pa, nd_pa + nd_size - 1);
+	tnid = early_pfn_to_nid_pram(nd_pa >> PAGE_SHIFT);
+	if (tnid != nid)
+		printk(KERN_INFO "    NODE_DATA(%d) on node %d\n", nid, tnid);
+
+	node_data[nid] = nd;
+	memset(NODE_DATA(nid), 0, sizeof(pg_data_t));
+
+	node_set_online(nid);
+
 }
 
 /**
@@ -714,10 +726,11 @@ static int __init numa_register_memblks(struct numa_meminfo *mi)
 		memblock_set_node(mb->start, mb->end - mb->start,
 				  &memblock.memory, mb->nid);
 		//<<<2018.03.23 Yongseob
-//		memblock_set_node(mb->start, mb->end - mb->start,
-//				  &memblock.pram, mb->nid);
+		memblock_set_node(mb->start, mb->end - mb->start,
+				  &memblock.pram, mb->nid);
 		//>>>
 	}
+	/*
 	for (i = 0; i < mi->nr_blks; i++) {
 		struct numa_memblk *mb = &mi->blk[i];
 		//<<<2018.03.23 Yongseob
@@ -725,7 +738,7 @@ static int __init numa_register_memblks(struct numa_meminfo *mi)
 				  &memblock.pram, mb->nid);
 		//>>>
 	}
-
+	*/
 
 	/*
 	 * At very early time, the kernel have to use some memory such as
