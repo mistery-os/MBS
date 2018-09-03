@@ -251,15 +251,15 @@ unsigned long memblock_next_valid_pfn_pram(unsigned long pfn, unsigned long max_
 	for_each_mem_range(i, &memblock.memory, &memblock.reserved,	\
 			   nid, flags, p_start, p_end, p_nid)
 //<<<2018.06.07 Yongseob T1
-#if 0
 #define for_each_free_pram_range(i, nid, flags, p_start, p_end, p_nid)	\
 	for_each_mem_range(i, &memblock.pram, &memblock.reserved,	\
 			   nid, flags, p_start, p_end, p_nid)
-#endif
+#if 0
 //   2018.06.07 Trial 2
 #define for_each_free_pram_range(i, nid, flags, p_start, p_end, p_nid)	\
 	for_each_mem_range(i, &memblock.pram, NULL,\
 			   nid, flags, p_start, p_end, p_nid)
+#endif
 //>>>
 /**
  * for_each_free_mem_range_reverse - rev-iterate through free memblock areas
