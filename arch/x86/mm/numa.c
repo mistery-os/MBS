@@ -261,11 +261,9 @@ int __init numa_cleanup_meminfo(struct numa_meminfo *mi)
 
 		/* and there's no empty or non-exist block */
 		if (bi->start >= bi->end ||
-		    !memblock_overlaps_region(&memblock.memory,
-			bi->start, bi->end - bi->start))
-			numa_remove_memblk_from(i--, mi);
-		if (bi->start >= bi->end ||
 		    !memblock_overlaps_region(&memblock.pram,
+			bi->start, bi->end - bi->start) ||
+		    !memblock_overlaps_region(&memblock.memory,
 			bi->start, bi->end - bi->start))
 			numa_remove_memblk_from(i--, mi);
 	}
