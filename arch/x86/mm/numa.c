@@ -714,8 +714,8 @@ static int __init numa_register_memblks(struct numa_meminfo *mi)
 		memblock_set_node(mb->start, mb->end - mb->start,
 				  &memblock.memory, mb->nid);
 		//<<<2018.03.23 Yongseob
-//		memblock_set_node(mb->start, mb->end - mb->start,
-//				  &memblock.pram, mb->nid);
+		memblock_set_node(mb->start, mb->end - mb->start,
+				  &memblock.pram, mb->nid);
 		//>>>
 	}
 
@@ -834,14 +834,14 @@ static int __init numa_init(int (*init_func)(void))
 	memblock_set_bottom_up(false);
 
 	ret = numa_cleanup_meminfo(&numa_meminfo);
-	ret2 = nusa_cleanup_meminfo_pram(&nusa_meminfo);
+	//ret2 = nusa_cleanup_meminfo_pram(&nusa_meminfo);
 	if (ret < 0)
 		return ret;
 
 	numa_emulation(&numa_meminfo, numa_distance_cnt);
 
 	ret = numa_register_memblks(&numa_meminfo);
-	ret2 = nusa_register_memblks(&nusa_meminfo);
+	//ret2 = nusa_register_memblks(&nusa_meminfo);
 	if (ret < 0)
 		return ret;
 
