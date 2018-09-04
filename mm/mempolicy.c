@@ -130,7 +130,7 @@ static struct mempolicy default_policy = {
 };
 //<<<2018.06.04 Yongseob
 enum zone_type policy_zone_pram = 0;
-static struct mempolicy default_policy_pram = {
+static struct mempolicy default_pram_policy = {
 	.refcnt = ATOMIC_INIT(1), /* never free it */
 	.mode = MPOL_LOCAL,
 	.flags = MPOL_F_LOCAL,
@@ -138,7 +138,7 @@ static struct mempolicy default_policy_pram = {
 //>>>
 static struct mempolicy preferred_node_policy[MAX_NUMNODES];
 //<<<2018.05.31 Yongseob
-static struct mempolicy preferred_mbs_node_policy[MAX_NUMNODES];
+static struct mempolicy preferred_pram_node_policy[MAX_NUMNODES];
 //>>>
 struct mempolicy *get_pram_policy(struct task_struct *p)
 {
@@ -150,13 +150,13 @@ struct mempolicy *get_pram_policy(struct task_struct *p)
 
 	node = numa_node_id();
 	if (node != NUMA_NO_NODE) {
-		pol = &preferred_mbs_node_policy[node];
-		/* preferred_mbs_node_policy is not initialised early in boot */
+		pol = &preferred_pram_node_policy[node];
+		/* preferred_pram_node_policy is not initialised early in boot */
 		if (pol->mode)
 			return pol;
 	}
 
-	return &default_policy_pram;
+	return &default_pram_policy;
 }
 struct mempolicy *get_task_policy(struct task_struct *p)
 {
@@ -366,8 +366,15 @@ void __mpol_put(struct mempolicy *p)
 		return;
 	kmem_cache_free(policy_cache, p);
 }
+void __mpol_put_pram(struct mempolicy *p)
+{
+	if (!atomic_dec_and_test(&p->refcnt))
+		return;
+	kmem_cache_free(policy_cache_pram, p);
+}
 //<<<2018.05.18 Yongseob
 EXPORT_SYMBOL_GPL(__mpol_put);
+EXPORT_SYMBOL_GPL(__mpol_put_pram);
 //>>>
 
 static void mpol_rebind_default(struct mempolicy *pol, const nodemask_t *nodes)
@@ -868,6 +875,41 @@ static long do_set_mempolicy(unsigned short mode, unsigned short flags,
 		current->il_prev = MAX_NUMNODES-1;
 	task_unlock(current);
 	mpol_put(old);
+	ret = 0;
+out:
+	NODEMASK_SCRATCH_FREE(scratch);
+	return ret;
+}
+
+static long do_set_prampolicy(unsigned short mode, unsigned short flags,
+			     nodemask_t *nodes)
+{
+	struct mempolicy *new, *old;
+	NODEMASK_SCRATCH(scratch);
+	int ret;
+
+	if (!scratch)
+		return -ENOMEM;
+
+	new = mpol_new_pram(mode, flags, nodes);
+	if (IS_ERR(new)) {
+		ret = PTR_ERR(new);
+		goto out;
+	}
+
+	task_lock(current);
+	ret = mpol_set_nodemask_pram(new, nodes, scratch);
+	if (ret) {
+		task_unlock(current);
+		mpol_put_pram(new);
+		goto out;
+	}
+	old = current->prampolicy;
+	current->mbspolicy = new;
+	if (new && new->mode == MPOL_INTERLEAVE)
+		current->il_prev = MAX_NUMNODES-1;
+	task_unlock(current);
+	mpol_put_pram(old);
 	ret = 0;
 out:
 	NODEMASK_SCRATCH_FREE(scratch);
@@ -2105,7 +2147,7 @@ EXPORT_SYMBOL_GPL(alloc_pages_vma);
  */
 struct page *alloc_prams_current(gfp_t gfp, unsigned order)
 {
-	struct mempolicy *pol = &default_policy_pram;
+	struct mempolicy *pol = &default_pram_policy;
 	struct page *page;
 
 	if (!in_interrupt() && !(gfp & __GFP_THISNODE))
@@ -2692,13 +2734,15 @@ void __init numa_policy_init(void)
 			.v = { .preferred_node = nid, },
 		};
 		//<<<2018.05.31 Yongseob
-		preferred_mbs_node_policy[nid] = (struct mempolicy) {
+		/*
+		preferred_pram_node_policy[nid] = (struct mempolicy) {
 			.refcnt = ATOMIC_INIT(1),
 			.mode = MPOL_LOCAL,
 			//.mode = MPOL_INTERLEAVE,
 			.flags = MPOL_F_LOCAL| MPOL_F_MOF | MPOL_F_MORON,
 			//. v = { .nodes = ,},
 		};
+		*/
 		//>>>
 	}
 
@@ -2728,7 +2772,18 @@ void __init numa_policy_init(void)
 
 	if (do_set_mempolicy(MPOL_INTERLEAVE, 0, &interleave_nodes))
 		pr_err("%s: interleaving failed\n", __func__);
-
+	//if (do_set_prampolicy(MPOL_INTERLEAVE, 0, &interleave_nodes))
+	//	pr_err("%s: interleaving failed\n", __func__);
+	for_each_node(nid) {
+		//<<<2018.05.31 Yongseob
+		preferred_pram_node_policy[nid] = (struct mempolicy) {
+			.refcnt = ATOMIC_INIT(1),
+			.mode = MPOL_INTERLEAVE,
+			.flags = MPOL_F_LOCAL| MPOL_F_MOF | MPOL_F_MORON,
+			. v = { .nodes = &interleave_nodes,},
+		};
+		//>>>
+	}
 	check_numabalancing_enable();
 }
 
@@ -2889,6 +2944,128 @@ out:
 }
 //<<<2018.05.18 Yongseob
 EXPORT_SYMBOL_GPL(mpol_parse_str);
+int mpol_parse_str_PRAM(char *str, struct mempolicy **mpol)
+{
+	struct mempolicy *new = NULL;
+	unsigned short mode;
+	unsigned short mode_flags;
+	nodemask_t nodes;
+	char *nodelist = strchr(str, ':');
+	char *flags = strchr(str, '=');
+	int err = 1;
+
+	if (nodelist) {
+		/* NUL-terminate mode or flags string */
+		*nodelist++ = '\0';
+		if (nodelist_parse(nodelist, nodes))
+			goto out;
+		if (!nodes_subset(nodes, node_states[N_MEMORY]))
+			goto out;
+	} else
+		nodes_clear(nodes);
+
+	if (flags)
+		*flags++ = '\0';	/* terminate mode string */
+
+	for (mode = 0; mode < MPOL_MAX; mode++) {
+		if (!strcmp(str, policy_modes[mode])) {
+			break;
+		}
+	}
+	if (mode >= MPOL_MAX)
+		goto out;
+
+	switch (mode) {
+		case MPOL_PREFERRED:
+			/*
+			 * Insist on a nodelist of one node only
+			 */
+			if (nodelist) {
+				char *rest = nodelist;
+				while (isdigit(*rest))
+					rest++;
+				if (*rest)
+					goto out;
+			}
+			break;
+		case MPOL_INTERLEAVE:
+			/*
+			 * Default to online nodes with memory if no nodelist
+			 */
+			if (!nodelist)
+				nodes = node_states[N_MEMORY];
+			break;
+		case MPOL_LOCAL:
+			/*
+			 * Don't allow a nodelist;  mpol_new() checks flags
+			 */
+			if (nodelist)
+				goto out;
+			mode = MPOL_PREFERRED;
+			break;
+		case MPOL_DEFAULT:
+			/*
+			 * Insist on a empty nodelist
+			 */
+			if (!nodelist)
+				err = 0;
+			goto out;
+		case MPOL_BIND:
+			/*
+			 * Insist on a nodelist
+			 */
+			if (!nodelist)
+				goto out;
+	}
+
+	mode_flags = 0;
+	if (flags) {
+		/*
+		 * Currently, we only support two mutually exclusive
+		 * mode flags.
+		 */
+		if (!strcmp(flags, "static"))
+			mode_flags |= MPOL_F_STATIC_NODES;
+		else if (!strcmp(flags, "relative"))
+			mode_flags |= MPOL_F_RELATIVE_NODES;
+		else
+			goto out;
+	}
+
+	new = mpol_new(mode, mode_flags, &nodes);
+	if (IS_ERR(new))
+		goto out;
+
+	/*
+	 * Save nodes for mpol_to_str() to show the tmpfs mount options
+	 * for /proc/mounts, /proc/pid/mounts and /proc/pid/mountinfo.
+	 */
+	if (mode != MPOL_PREFERRED)
+		new->v.nodes = nodes;
+	else if (nodelist)
+		new->v.preferred_node = first_node(nodes);
+	else
+		new->flags |= MPOL_F_LOCAL;
+
+	/*
+	 * Save nodes for contextualization: this will be used to "clone"
+	 * the mempolicy in a specific context [cpuset] at a later time.
+	 */
+	new->w.user_nodemask = nodes;
+
+	err = 0;
+
+out:
+	/* Restore string for error message */
+	if (nodelist)
+		*--nodelist = ':';
+	if (flags)
+		*--flags = '=';
+	if (!err)
+		*mpol = new;
+	return err;
+}
+EXPORT_SYMBOL_GPL(mpol_parse_str_PRAM);
 //>>>
 //<<<2018.05.23 Yongseob
 int mpol_parse_pram(char *str, struct mempolicy **mpol)

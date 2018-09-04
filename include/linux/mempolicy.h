@@ -68,6 +68,13 @@ static inline void mpol_put(struct mempolicy *pol)
 	if (pol)
 		__mpol_put(pol);
 }
+extern void __mpol_put_pram(struct mempolicy *pol);
+static inline void mpol_put_pram(struct mempolicy *pol)
+{
+	if (pol)
+		__mpol_put_pram(pol);
+}
+
 
 /*
  * Does mempolicy pol need explicit unref after use?
@@ -306,7 +313,10 @@ static inline int mpol_parse_str(char *str, struct mempolicy **mpol)
 	return 1;	/* error */
 }
 #endif
-
+static inline int mpol_parse_str_PRAM(char *str, struct mempolicy **mpol)
+{
+	return 1;	/* error */
+}
 static inline int mpol_misplaced(struct page *page, struct vm_area_struct *vma,
 				 unsigned long address)
 {
