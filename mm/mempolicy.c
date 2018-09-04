@@ -2815,7 +2815,7 @@ void __init numa_policy_init(void)
 			.refcnt = ATOMIC_INIT(1),
 			.mode = MPOL_INTERLEAVE,
 			.flags = MPOL_F_LOCAL| MPOL_F_MOF | MPOL_F_MORON,
-			. v = { .nodes = &interleave_nodes,},
+			. v = { .nodes = interleave_nodes,},
 		};
 		//>>>
 	}
