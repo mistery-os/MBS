@@ -2827,6 +2827,11 @@ void numa_default_policy(void)
 {
 	do_set_mempolicy(MPOL_DEFAULT, 0, NULL);
 }
+void nusa_default_policy(void)
+{
+	do_set_prampolicy(MPOL_DEFAULT, 0, NULL);
+}
+
 
 /*
  * Parse and format mempolicy from/to strings

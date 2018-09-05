@@ -411,6 +411,7 @@ static noinline void __ref rest_init(void)
 	rcu_read_unlock();
 
 	numa_default_policy();
+	nusa_default_policy();
 	pid = kernel_thread(kthreadd, NULL, CLONE_FS | CLONE_FILES);
 	rcu_read_lock();
 	kthreadd_task = find_task_by_pid_ns(pid, &init_pid_ns);
@@ -999,6 +1000,7 @@ static int __ref kernel_init(void *unused)
 	mark_readonly();
 	system_state = SYSTEM_RUNNING;
 	numa_default_policy();
+	nusa_default_policy();
 
 	rcu_end_inkernel_boot();
 
