@@ -160,12 +160,12 @@ struct mempolicy *__get_vma_policy(struct vm_area_struct *vma,
 		unsigned long addr);
 bool vma_policy_mof(struct vm_area_struct *vma);
 
-void mpol_shared_pram_policy_init(struct shared_policy *sp, struct mempolicy *mpol);
-int mpol_set_shared_pram_policy(struct shared_policy *info,
+void mpol_shared_pram_policy_init(struct shared_pram_policy *sp, struct mempolicy *mpol);
+int mpol_set_shared_pram_policy(struct shared_pram_policy *info,
 				struct vm_area_struct *vma,
 				struct mempolicy *new);
-void mpol_free_shared_pram_policy(struct shared_policy *p);
-struct mempolicy *mpol_shared_pram_policy_lookup(struct shared_policy *sp,
+void mpol_free_shared_pram_policy(struct shared_pram_policy *p);
+struct mempolicy *mpol_shared_pram_policy_lookup(struct shared_pram_policy *sp,
 					    unsigned long idx);
 
 struct mempolicy *get_pram_policy(struct task_struct *p);
