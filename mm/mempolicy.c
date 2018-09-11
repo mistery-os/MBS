@@ -2601,7 +2601,7 @@ sp_lookup(struct shared_policy *sp, unsigned long start, unsigned long end)
 	return rb_entry(n, struct sp_node, nd);
 }
 
-static struct sp_node *
+static struct sp_pram_node *
 sp_pram_lookup(struct shared_pram_policy *sp, unsigned long start, unsigned long end)
 {
 	struct rb_node *n = sp->root.rb_node;
@@ -2663,7 +2663,7 @@ static void sp_pram_insert(struct shared_pram_policy *sp, struct sp_pram_node *n
 
 	while (*p) {
 		parent = *p;
-		nd = rb_entry(parent, struct sp_node, nd);
+		nd = rb_entry(parent, struct sp_pram_node, nd);
 		if (new->start < nd->start)
 			p = &(*p)->rb_left;
 		else if (new->end > nd->end)
@@ -2880,7 +2880,7 @@ static void sp_pram_node_init(struct sp_pram_node *node, unsigned long start,
 	node->end = end;
 	node->policy = pol;
 }
-static struct sp_node *sp_pram_alloc(unsigned long start, unsigned long end,
+static struct sp_pram_node *sp_pram_alloc(unsigned long start, unsigned long end,
 				struct mempolicy *pol)
 {
 	struct sp_pram_node *n;
@@ -2975,13 +2975,13 @@ static int shared_pram_policy_replace(struct shared_pram_policy *sp, unsigned lo
 
 restart:
 	write_lock(&sp->lock);
-	n = sp_lookup(sp, start, end);
+	n = sp_pram_lookup(sp, start, end);
 	/* Take care of old policies in the same range. */
 	while (n && n->start < end) {
 		struct rb_node *next = rb_next(&n->nd);
 		if (n->start >= start) {
 			if (n->end <= end)
-				sp_delete(sp, n);
+				sp_pram_delete(sp, n);
 			else
 				n->start = end;
 		} else {
@@ -3003,7 +3003,7 @@ restart:
 		}
 		if (!next)
 			break;
-		n = rb_entry(next, struct sp_node, nd);
+		n = rb_entry(next, struct sp_pram_node, nd);
 	}
 	if (new)
 		sp_pram_insert(sp, new);
@@ -3085,7 +3085,7 @@ int mpol_set_shared_pram_policy(struct shared_pram_policy *info,
 			struct vm_area_struct *vma, struct mempolicy *npol)
 {
 	int err;
-	struct sp_node *new = NULL;
+	struct sp_pram_node *new = NULL;
 	unsigned long sz = vma_pages(vma);
 
 	pr_debug("set_shared_pram_policy %lx sz %lu %d %d %lx\n",
@@ -3099,7 +3099,7 @@ int mpol_set_shared_pram_policy(struct shared_pram_policy *info,
 		if (!new)
 			return -ENOMEM;
 	}
-	err = shared_policy_replace(info, vma->vm_pgoff, vma->vm_pgoff+sz, new);
+	err = shared_pram_policy_replace(info, vma->vm_pgoff, vma->vm_pgoff+sz, new);
 	if (err && new)
 		sp_pram_free(new);
 	return err;
@@ -3166,7 +3166,7 @@ void mpol_free_shared_pram_policy(struct shared_pram_policy *p)
 	write_lock(&p->lock);
 	next = rb_first(&p->root);
 	while (next) {
-		n = rb_entry(next, struct sp_node, nd);
+		n = rb_entry(next, struct sp_pram_node, nd);
 		next = rb_next(&n->nd);
 		sp_pram_delete(p, n);
 	}
