@@ -3120,7 +3120,7 @@ put_mpol:
 	}
 }
 //<<<2018.05.18 Yongseob
-EXPORT_SYMBOL_GPL(mpol_shared_policy_init);
+EXPORT_SYMBOL_GPL(mpol_shared_pram_policy_init);
 
 int mpol_set_shared_pram_policy(struct shared_pram_policy *info,
 			struct vm_area_struct *vma, struct mempolicy *npol)
@@ -3180,7 +3180,7 @@ int mpol_set_shared_pram_policy(struct shared_pram_policy *info,
 			struct vm_area_struct *vma, struct mempolicy *npol)
 {
 	int err;
-	struct sp_node *new = NULL;
+	struct sp_pram_node *new = NULL;
 	unsigned long sz = vma_pages(vma);
 
 	pr_debug("set_shared_policy %lx sz %lu %d %d %lx\n",
