@@ -631,7 +631,6 @@ void lru_add_drain_cpu(int cpu)
 
 	activate_page_drain(cpu);
 }
-
 /**
  * deactivate_file_page - forcefully deactivate a file page
  * @page: page to deactivate
@@ -683,6 +682,7 @@ void lru_add_drain(void)
 	lru_add_drain_cpu(get_cpu());
 	put_cpu();
 }
+EXPORT_SYMBOL_GPL(lru_add_drain);
 
 static void lru_add_drain_per_cpu(struct work_struct *dummy)
 {
@@ -733,6 +733,7 @@ void lru_add_drain_all(void)
 	lru_add_drain_all_cpuslocked();
 	put_online_cpus();
 }
+EXPORT_SYMBOL_GPL(lru_add_drain_all);
 
 /**
  * release_pages - batched put_page()
