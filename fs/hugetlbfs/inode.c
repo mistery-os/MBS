@@ -1364,6 +1364,7 @@ out_shm_unlock:
 	}
 	return file;
 }
+EXPORT_SYMBOL_GPL(hugetlb_file_setup);
 
 static int __init init_hugetlbfs_fs(void)
 {
