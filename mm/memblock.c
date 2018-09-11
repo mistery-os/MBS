@@ -63,7 +63,7 @@ struct memblock memblock __initdata_memblock = {
 };
 //<<<2018.02.13 Yongseob
 //#if IS_ENABLED(CONFIG_BLK_DEV_MBS)
-EXPORT_SYMBOL(memblock);
+EXPORT_SYMBOL_GPL(memblock);
 //#endif
 //>>>
 int memblock_debug __initdata_memblock;

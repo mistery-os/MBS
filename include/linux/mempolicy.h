@@ -208,6 +208,7 @@ int do_migrate_pages(struct mm_struct *mm, const nodemask_t *from,
 #ifdef CONFIG_TMPFS
 extern int mpol_parse_str(char *str, struct mempolicy **mpol);
 #endif
+extern int mpol_parse_str_pram(char *str, struct mempolicy **mpol);
 
 extern void mpol_to_str(char *buffer, int maxlen, struct mempolicy *pol);
 
@@ -337,7 +338,7 @@ static inline int mpol_parse_str(char *str, struct mempolicy **mpol)
 	return 1;	/* error */
 }
 #endif
-static inline int mpol_parse_str_PRAM(char *str, struct mempolicy **mpol)
+static inline int mpol_parse_str_pram(char *str, struct mempolicy **mpol)
 {
 	return 1;	/* error */
 }

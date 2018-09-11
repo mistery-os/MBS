@@ -3511,6 +3511,7 @@ out:
 }
 //<<<2018.05.18 Yongseob
 EXPORT_SYMBOL_GPL(mpol_parse_str);
+
 int mpol_parse_str_pram(char *str, struct mempolicy **mpol)
 {
 	struct mempolicy *new = NULL;
