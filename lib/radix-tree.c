@@ -41,6 +41,7 @@
 
 /* Number of nodes in fully populated tree of given height */
 static unsigned long height_to_maxnodes[RADIX_TREE_MAX_PATH + 1] __read_mostly;
+static unsigned long height_to_maxnodes_pram[RADIX_TREE_MAX_PATH + 1] __read_mostly;
 
 /*
  * Radix tree node cache.
@@ -2271,6 +2272,10 @@ static __init void radix_tree_init_maxnodes(void)
 		for (j = i; j > 0; j--)
 			height_to_maxnodes[i] += height_to_maxindex[j - 1] + 1;
 	}
+	for (i = 0; i < ARRAY_SIZE(height_to_maxnodes_pram); i++) {
+		for (j = i; j > 0; j--)
+			height_to_maxnodes_pram[i] += height_to_maxindex[j - 1] + 1;
+	}
 }
 
 static int radix_tree_cpu_dead(unsigned int cpu)
@@ -2300,7 +2305,12 @@ void __init radix_tree_init(void)
 			sizeof(struct radix_tree_node), 0,
 			SLAB_PANIC | SLAB_RECLAIM_ACCOUNT,
 			radix_tree_node_ctor);
+	radix_tree_node_cachep = kmem_cache_create("radix_tree_node_pram",
+			sizeof(struct radix_tree_node), 0,
+			SLAB_PANIC | SLAB_RECLAIM_ACCOUNT,
+			radix_tree_node_ctor);
 	radix_tree_init_maxnodes();
+
 	ret = cpuhp_setup_state_nocalls(CPUHP_RADIX_DEAD, "lib/radix:dead",
 					NULL, radix_tree_cpu_dead);
 	WARN_ON(ret < 0);

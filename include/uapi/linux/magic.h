@@ -89,5 +89,5 @@
 #define BALLOON_KVM_MAGIC	0x13661366
 #define ZSMALLOC_MAGIC		0x58295829
 
-#define MBSFS_MAGIC		0x20180831	//random number
+#define MBSFS_MAGIC		0x20181231	//random number
 #endif /* __LINUX_MAGIC_H__ */

@@ -114,6 +114,7 @@
 static struct kmem_cache *policy_cache;
 //<<<2018.05.23 Yongseob
 static struct kmem_cache *policy_cache_pram;
+static struct kmem_cache *sn_pram_cache;
 //>>>
 static struct kmem_cache *sn_cache;
 
@@ -1076,6 +1077,91 @@ static long do_get_mempolicy(int *policy, nodemask_t *nmask,
 		up_read(&current->mm->mmap_sem);
 	return err;
 }
+static long do_get_prampolicy(int *policy, nodemask_t *nmask,
+			     unsigned long addr, unsigned long flags)
+{
+	int err;
+	struct mm_struct *mm = current->mm;
+	struct vm_area_struct *vma = NULL;
+	struct mempolicy *pol = current->prampolicy;
+
+	if (flags &
+		~(unsigned long)(MPOL_F_NODE|MPOL_F_ADDR|MPOL_F_MEMS_ALLOWED))
+		return -EINVAL;
+
+	if (flags & MPOL_F_MEMS_ALLOWED) {
+		if (flags & (MPOL_F_NODE|MPOL_F_ADDR))
+			return -EINVAL;
+		*policy = 0;	/* just so it's initialized */
+		task_lock(current);
+		*nmask  = cpuset_current_mems_allowed;
+		task_unlock(current);
+		return 0;
+	}
+
+	if (flags & MPOL_F_ADDR) {
+		/*
+		 * Do NOT fall back to task policy if the
+		 * vma/shared policy at addr is NULL.  We
+		 * want to return MPOL_DEFAULT in this case.
+		 */
+		down_read(&mm->mmap_sem);
+		vma = find_vma_intersection(mm, addr, addr+1);
+		if (!vma) {
+			up_read(&mm->mmap_sem);
+			return -EFAULT;
+		}
+		if (vma->vm_ops && vma->vm_ops->get_policy)
+			pol = vma->vm_ops->get_policy(vma, addr);
+		else
+			pol = vma->vm_policy;
+	} else if (addr)
+		return -EINVAL;
+
+	if (!pol)
+		pol = &default_pram_policy;	/* indicates default behavior */
+
+	if (flags & MPOL_F_NODE) {
+		if (flags & MPOL_F_ADDR) {
+			err = lookup_node(addr);
+			if (err < 0)
+				goto out;
+			*policy = err;
+		} else if (pol == current->prampolicy &&
+				pol->mode == MPOL_INTERLEAVE) {
+			*policy = next_node_in(current->il_prev, pol->v.nodes);
+		} else {
+			err = -EINVAL;
+			goto out;
+		}
+	} else {
+		*policy = pol == &default_pram_policy ? MPOL_DEFAULT :
+						pol->mode;
+		/*
+		 * Internal mempolicy flags must be masked off before exposing
+		 * the policy to userspace.
+		 */
+		*policy |= (pol->flags & MPOL_MODE_FLAGS);
+	}
+
+	err = 0;
+	if (nmask) {
+		if (mpol_store_user_nodemask(pol)) {
+			*nmask = pol->w.user_nodemask;
+		} else {
+			task_lock(current);
+			get_policy_nodemask(pol, nmask);
+			task_unlock(current);
+		}
+	}
+
+ out:
+	mpol_cond_put(pol);
+	if (vma)
+		up_read(&current->mm->mmap_sem);
+	return err;
+}
+
 
 #ifdef CONFIG_MIGRATION
 /*
@@ -1517,7 +1603,24 @@ SYSCALL_DEFINE3(set_mempolicy, int, mode, const unsigned long __user *, nmask,
 		return err;
 	return do_set_mempolicy(mode, flags, &nodes);
 }
+SYSCALL_DEFINE3(set_prampolicy, int, mode, const unsigned long __user *, nmask,
+		unsigned long, maxnode)
+{
+	int err;
+	nodemask_t nodes;
+	unsigned short flags;
 
+	flags = mode & MPOL_MODE_FLAGS;
+	mode &= ~MPOL_MODE_FLAGS;
+	if ((unsigned int)mode >= MPOL_MAX)
+		return -EINVAL;
+	if ((flags & MPOL_F_STATIC_NODES) && (flags & MPOL_F_RELATIVE_NODES))
+		return -EINVAL;
+	err = get_nodes(&nodes, nmask, maxnode);
+	if (err)
+		return err;
+	return do_set_prampolicy(mode, flags, &nodes);
+}
 SYSCALL_DEFINE4(migrate_pages, pid_t, pid, unsigned long, maxnode,
 		const unsigned long __user *, old_nodes,
 		const unsigned long __user *, new_nodes)
@@ -1639,6 +1742,30 @@ SYSCALL_DEFINE5(get_mempolicy, int __user *, policy,
 	return err;
 }
 
+SYSCALL_DEFINE5(get_prampolicy, int __user *, policy,
+		unsigned long __user *, nmask, unsigned long, maxnode,
+		unsigned long, addr, unsigned long, flags)
+{
+	int err;
+	int uninitialized_var(pval);
+	nodemask_t nodes;
+
+	if (nmask != NULL && maxnode < MAX_NUMNODES)
+		return -EINVAL;
+
+	err = do_get_prampolicy(&pval, &nodes, addr, flags);
+
+	if (err)
+		return err;
+
+	if (policy && put_user(pval, policy))
+		return -EFAULT;
+
+	if (nmask)
+		err = copy_nodes_to_user(nmask, maxnode, &nodes);
+
+	return err;
+}
 #ifdef CONFIG_COMPAT
 
 COMPAT_SYSCALL_DEFINE5(get_mempolicy, int __user *, policy,
@@ -1670,7 +1797,35 @@ COMPAT_SYSCALL_DEFINE5(get_mempolicy, int __user *, policy,
 
 	return err;
 }
+COMPAT_SYSCALL_DEFINE5(get_prampolicy, int __user *, policy,
+		       compat_ulong_t __user *, nmask,
+		       compat_ulong_t, maxnode,
+		       compat_ulong_t, addr, compat_ulong_t, flags)
+{
+	long err;
+	unsigned long __user *nm = NULL;
+	unsigned long nr_bits, alloc_size;
+	DECLARE_BITMAP(bm, MAX_NUMNODES);
 
+	nr_bits = min_t(unsigned long, maxnode-1, MAX_NUMNODES);
+	alloc_size = ALIGN(nr_bits, BITS_PER_LONG) / 8;
+
+	if (nmask)
+		nm = compat_alloc_user_space(alloc_size);
+
+	err = sys_get_prampolicy(policy, nm, nr_bits+1, addr, flags);
+
+	if (!err && nmask) {
+		unsigned long copy_size;
+		copy_size = min_t(unsigned long, sizeof(bm), alloc_size);
+		err = copy_from_user(bm, nm, copy_size);
+		/* ensure entire bitmap is zeroed */
+		err |= clear_user(nmask, ALIGN(maxnode-1, 8) / 8);
+		err |= compat_put_bitmap(nmask, bm, nr_bits);
+	}
+
+	return err;
+}
 COMPAT_SYSCALL_DEFINE3(set_mempolicy, int, mode, compat_ulong_t __user *, nmask,
 		       compat_ulong_t, maxnode)
 {
@@ -1691,7 +1846,26 @@ COMPAT_SYSCALL_DEFINE3(set_mempolicy, int, mode, compat_ulong_t __user *, nmask,
 
 	return sys_set_mempolicy(mode, nm, nr_bits+1);
 }
+COMPAT_SYSCALL_DEFINE3(set_prampolicy, int, mode, compat_ulong_t __user *, nmask,
+		       compat_ulong_t, maxnode)
+{
+	unsigned long __user *nm = NULL;
+	unsigned long nr_bits, alloc_size;
+	DECLARE_BITMAP(bm, MAX_NUMNODES);
 
+	nr_bits = min_t(unsigned long, maxnode-1, MAX_NUMNODES);
+	alloc_size = ALIGN(nr_bits, BITS_PER_LONG) / 8;
+
+	if (nmask) {
+		if (compat_get_bitmap(bm, nmask, nr_bits))
+			return -EFAULT;
+		nm = compat_alloc_user_space(alloc_size);
+		if (copy_to_user(nm, bm, alloc_size))
+			return -EFAULT;
+	}
+
+	return sys_set_prampolicy(mode, nm, nr_bits+1);
+}
 COMPAT_SYSCALL_DEFINE6(mbind, compat_ulong_t, start, compat_ulong_t, len,
 		       compat_ulong_t, mode, compat_ulong_t __user *, nmask,
 		       compat_ulong_t, maxnode, compat_ulong_t, flags)
@@ -1740,7 +1914,30 @@ struct mempolicy *__get_vma_policy(struct vm_area_struct *vma,
 
 	return pol;
 }
+struct mempolicy *__get_vma_policy_pram(struct vm_area_struct *vma,
+						unsigned long addr)
+{
+	struct mempolicy *pol = NULL;
 
+	if (vma) {
+		if (vma->vm_ops && vma->vm_ops->get_policy) {
+			pol = vma->vm_ops->get_policy(vma, addr);
+		} else if (vma->vm_policy) {
+			pol = vma->vm_policy;
+
+			/*
+			 * mbsFS_alloc_page() passes MPOL_F_SHARED policy with
+			 * a pseudo vma whose vma->vm_ops=NULL. Take a reference
+			 * count on these policies which will be dropped by
+			 * mpol_cond_put() later
+			 */
+			if (mpol_needs_cond_ref(pol))
+				mpol_get(pol);
+		}
+	}
+
+	return pol;
+}
 /*
  * get_vma_policy(@vma, @addr)
  * @vma: virtual memory area whose policy is sought
@@ -1763,6 +1960,17 @@ static struct mempolicy *get_vma_policy(struct vm_area_struct *vma,
 
 	return pol;
 }
+static struct mempolicy *get_vma_policy_pram(struct vm_area_struct *vma,
+						unsigned long addr)
+{
+	struct mempolicy *pol = __get_vma_policy_pram(vma, addr);
+
+	if (!pol)
+		pol = get_pram_policy(current);
+
+	return pol;
+}
+
 
 bool vma_policy_mof(struct vm_area_struct *vma)
 {
@@ -2164,7 +2372,61 @@ out:
 //<<<2018.05.18 Yongseob
 EXPORT_SYMBOL_GPL(alloc_pages_vma);
 //>>>
+struct page *
+alloc_pages_vma_pram(gfp_t gfp, int order, struct vm_area_struct *vma,
+		unsigned long addr, int node, bool hugepage)
+{
+	struct mempolicy *pol;
+	struct page *page;
+	int preferred_nid;
+	nodemask_t *nmask;
 
+	pol = get_vma_policy_pram(vma, addr);
+
+	if (pol->mode == MPOL_INTERLEAVE) {
+		unsigned nid;
+
+		nid = interleave_nid(pol, vma, addr, PAGE_SHIFT + order);
+		mpol_cond_put(pol);
+		page = alloc_page_interleave(gfp, order, nid);
+		goto out;
+	}
+
+	if (unlikely(IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE) && hugepage)) {
+		int hpage_node = node;
+
+		/*
+		 * For hugepage allocation and non-interleave policy which
+		 * allows the current node (or other explicitly preferred
+		 * node) we only try to allocate from the current/preferred
+		 * node and don't fall back to other nodes, as the cost of
+		 * remote accesses would likely offset THP benefits.
+		 *
+		 * If the policy is interleave, or does not allow the current
+		 * node in its nodemask, we allocate the standard way.
+		 */
+		if (pol->mode == MPOL_PREFERRED &&
+						!(pol->flags & MPOL_F_LOCAL))
+			hpage_node = pol->v.preferred_node;
+
+		nmask = policy_nodemask(gfp, pol);
+		if (!nmask || node_isset(hpage_node, *nmask)) {
+			mpol_cond_put(pol);
+			page = __alloc_pages_node(hpage_node,
+						gfp | __GFP_THISNODE, order);
+			goto out;
+		}
+	}
+
+	nmask = policy_nodemask(gfp, pol);
+	preferred_nid = policy_node(gfp, pol, node);
+	page = __alloc_pages_nodemask(gfp, order, preferred_nid, nmask);
+	mpol_cond_put(pol);
+out:
+	return page;
+}
+//<<<2018.05.18 Yongseob
+EXPORT_SYMBOL_GPL(alloc_pages_vma_pram);
 /**
  * 	alloc_pages_current - Allocate pages.
  *
@@ -2339,6 +2601,35 @@ sp_lookup(struct shared_policy *sp, unsigned long start, unsigned long end)
 	return rb_entry(n, struct sp_node, nd);
 }
 
+static struct sp_node *
+sp_pram_lookup(struct shared_pram_policy *sp, unsigned long start, unsigned long end)
+{
+	struct rb_node *n = sp->root.rb_node;
+
+	while (n) {
+		struct sp_pram_node *p = rb_entry(n, struct sp_pram_node, nd);
+
+		if (start >= p->end)
+			n = n->rb_right;
+		else if (end <= p->start)
+			n = n->rb_left;
+		else
+			break;
+	}
+	if (!n)
+		return NULL;
+	for (;;) {
+		struct sp_pram_node *w = NULL;
+		struct rb_node *prev = rb_prev(n);
+		if (!prev)
+			break;
+		w = rb_entry(prev, struct sp_pram_node, nd);
+		if (w->end <= start)
+			break;
+		n = prev;
+	}
+	return rb_entry(n, struct sp_pram_node, nd);
+}
 /*
  * Insert a new shared policy into the list.  Caller holds sp->lock for
  * writing.
@@ -2348,6 +2639,27 @@ static void sp_insert(struct shared_policy *sp, struct sp_node *new)
 	struct rb_node **p = &sp->root.rb_node;
 	struct rb_node *parent = NULL;
 	struct sp_node *nd;
+
+	while (*p) {
+		parent = *p;
+		nd = rb_entry(parent, struct sp_node, nd);
+		if (new->start < nd->start)
+			p = &(*p)->rb_left;
+		else if (new->end > nd->end)
+			p = &(*p)->rb_right;
+		else
+			BUG();
+	}
+	rb_link_node(&new->nd, parent, p);
+	rb_insert_color(&new->nd, &sp->root);
+	pr_debug("inserting %lx-%lx: %d\n", new->start, new->end,
+		 new->policy ? new->policy->mode : 0);
+}
+static void sp_pram_insert(struct shared_pram_policy *sp, struct sp_pram_node *new)
+{
+	struct rb_node **p = &sp->root.rb_node;
+	struct rb_node *parent = NULL;
+	struct sp_pram_node *nd;
 
 	while (*p) {
 		parent = *p;
@@ -2386,13 +2698,37 @@ mpol_shared_policy_lookup(struct shared_policy *sp, unsigned long idx)
 //<<<2018.05.17 Yongseob
 EXPORT_SYMBOL_GPL(mpol_shared_policy_lookup);
 //>>>
+struct mempolicy *
+mpol_shared_pram_policy_lookup(struct shared_pram_policy *sp, unsigned long idx)
+{
+	struct mempolicy *pol = NULL;
+	struct sp_pram_node *sn;
+
+	if (!sp->root.rb_node)
+		return NULL;
+	read_lock(&sp->lock);
+	sn = sp_pram_lookup(sp, idx, idx+1);
+	if (sn) {
+		mpol_get(sn->policy);
+		pol = sn->policy;
+	}
+	read_unlock(&sp->lock);
+	return pol;
+}
+//<<<2018.05.17 Yongseob
+EXPORT_SYMBOL_GPL(mpol_shared_pram_policy_lookup);
+//>>>
 
 static void sp_free(struct sp_node *n)
 {
 	mpol_put(n->policy);
 	kmem_cache_free(sn_cache, n);
 }
-
+static void sp_pram_free(struct sp_pram_node *n)
+{
+	mpol_put(n->policy);
+	kmem_cache_free(sn_pram_cache, n);
+}
 /**
  * mpol_misplaced - check whether current page node is valid in policy
  *
@@ -2529,6 +2865,41 @@ static struct sp_node *sp_alloc(unsigned long start, unsigned long end,
 	return n;
 }
 
+static void sp_pram_delete(struct shared_pram_policy *sp, struct sp_pram_node *n)
+{
+	pr_debug("deleting %lx-l%lx\n", n->start, n->end);
+	rb_erase(&n->nd, &sp->root);
+	sp_pram_free(n);
+}
+
+
+static void sp_pram_node_init(struct sp_pram_node *node, unsigned long start,
+			unsigned long end, struct mempolicy *pol)
+{
+	node->start = start;
+	node->end = end;
+	node->policy = pol;
+}
+static struct sp_node *sp_pram_alloc(unsigned long start, unsigned long end,
+				struct mempolicy *pol)
+{
+	struct sp_pram_node *n;
+	struct mempolicy *newpol;
+
+	n = kmem_cache_alloc(sn_pram_cache, GFP_KERNEL);
+	if (!n)
+		return NULL;
+
+	newpol = mpol_dup(pol);
+	if (IS_ERR(newpol)) {
+		kmem_cache_free(sn_pram_cache, n);
+		return NULL;
+	}
+	newpol->flags |= MPOL_F_SHARED;
+	sp_pram_node_init(n, start, end, newpol);
+
+	return n;
+}
 /* Replace a policy range. */
 static int shared_policy_replace(struct shared_policy *sp, unsigned long start,
 				 unsigned long end, struct sp_node *new)
@@ -2594,6 +2965,70 @@ alloc_new:
 		goto err_out;
 	goto restart;
 }
+static int shared_pram_policy_replace(struct shared_pram_policy *sp, unsigned long start,
+				 unsigned long end, struct sp_pram_node *new)
+{
+	struct sp_pram_node *n;
+	struct sp_pram_node *n_new = NULL;
+	struct mempolicy *mpol_new = NULL;
+	int ret = 0;
+
+restart:
+	write_lock(&sp->lock);
+	n = sp_lookup(sp, start, end);
+	/* Take care of old policies in the same range. */
+	while (n && n->start < end) {
+		struct rb_node *next = rb_next(&n->nd);
+		if (n->start >= start) {
+			if (n->end <= end)
+				sp_delete(sp, n);
+			else
+				n->start = end;
+		} else {
+			/* Old policy spanning whole new range. */
+			if (n->end > end) {
+				if (!n_new)
+					goto alloc_new;
+
+				*mpol_new = *n->policy;
+				atomic_set(&mpol_new->refcnt, 1);
+				sp_pram_node_init(n_new, end, n->end, mpol_new);
+				n->end = start;
+				sp_pram_insert(sp, n_new);
+				n_new = NULL;
+				mpol_new = NULL;
+				break;
+			} else
+				n->end = start;
+		}
+		if (!next)
+			break;
+		n = rb_entry(next, struct sp_node, nd);
+	}
+	if (new)
+		sp_pram_insert(sp, new);
+	write_unlock(&sp->lock);
+	ret = 0;
+
+err_out:
+	if (mpol_new)
+		mpol_put(mpol_new);
+	if (n_new)
+		kmem_cache_free(sn_pram_cache, n_new);
+
+	return ret;
+
+alloc_new:
+	write_unlock(&sp->lock);
+	ret = -ENOMEM;
+	n_new = kmem_cache_alloc(sn_pram_cache, GFP_KERNEL);
+	if (!n_new)
+		goto err_out;
+	mpol_new = kmem_cache_alloc(policy_cache_pram, GFP_KERNEL);
+	if (!mpol_new)
+		goto err_out;
+	goto restart;
+}
 
 /**
  * mpol_shared_policy_init - initialize shared policy for inode
@@ -2646,6 +3081,33 @@ put_mpol:
 //<<<2018.05.18 Yongseob
 EXPORT_SYMBOL_GPL(mpol_shared_policy_init);
 //>>>
+int mpol_set_shared_pram_policy(struct shared_pram_policy *info,
+			struct vm_area_struct *vma, struct mempolicy *npol)
+{
+	int err;
+	struct sp_node *new = NULL;
+	unsigned long sz = vma_pages(vma);
+
+	pr_debug("set_shared_pram_policy %lx sz %lu %d %d %lx\n",
+		 vma->vm_pgoff,
+		 sz, npol ? npol->mode : -1,
+		 npol ? npol->flags : -1,
+		 npol ? nodes_addr(npol->v.nodes)[0] : NUMA_NO_NODE);
+
+	if (npol) {
+		new = sp_pram_alloc(vma->vm_pgoff, vma->vm_pgoff + sz, npol);
+		if (!new)
+			return -ENOMEM;
+	}
+	err = shared_policy_replace(info, vma->vm_pgoff, vma->vm_pgoff+sz, new);
+	if (err && new)
+		sp_pram_free(new);
+	return err;
+}
+//<<<2018.05.17 Yongseob
+EXPORT_SYMBOL_GPL(mpol_set_shared_pram_policy);
+//>>>
+
 
 int mpol_set_shared_policy(struct shared_policy *info,
 			struct vm_area_struct *vma, struct mempolicy *npol)
@@ -2693,6 +3155,25 @@ void mpol_free_shared_policy(struct shared_policy *p)
 }
 //<<<2018.05.18 Yongseob
 EXPORT_SYMBOL_GPL(mpol_free_shared_policy);
+//>>>
+void mpol_free_shared_pram_policy(struct shared_pram_policy *p)
+{
+	struct sp_pram_node *n;
+	struct rb_node *next;
+
+	if (!p->root.rb_node)
+		return;
+	write_lock(&p->lock);
+	next = rb_first(&p->root);
+	while (next) {
+		n = rb_entry(next, struct sp_node, nd);
+		next = rb_next(&n->nd);
+		sp_pram_delete(p, n);
+	}
+	write_unlock(&p->lock);
+}
+//<<<2018.05.18 Yongseob
+EXPORT_SYMBOL_GPL(mpol_free_shared_pram_policy);
 //>>>
 #ifdef CONFIG_NUMA_BALANCING
 static int __initdata numabalancing_override;
@@ -2756,6 +3237,9 @@ void __init numa_policy_init(void)
 	policy_cache_pram = kmem_cache_create("pram_policy",
 					 sizeof(struct mempolicy),
 					 0, SLAB_PANIC, NULL);
+	sn_pram_cache = kmem_cache_create("shared_pram_policy_node",
+				     sizeof(struct sp_node),
+				     0, SLAB_PANIC, NULL);
 	//>>>
 	sn_cache = kmem_cache_create("shared_policy_node",
 				     sizeof(struct sp_node),
@@ -2830,6 +3314,7 @@ void numa_default_policy(void)
 void nusa_default_policy(void)
 {
 	do_set_prampolicy(MPOL_DEFAULT, 0, NULL);
+//	do_set_prampolicy(MPOL_INTERLEAVE, 0, NULL);
 }
 
 
@@ -2984,7 +3469,7 @@ out:
 }
 //<<<2018.05.18 Yongseob
 EXPORT_SYMBOL_GPL(mpol_parse_str);
-int mpol_parse_str_PRAM(char *str, struct mempolicy **mpol)
+int mpol_parse_str_pram(char *str, struct mempolicy **mpol)
 {
 	struct mempolicy *new = NULL;
 	unsigned short mode;
@@ -3105,7 +3590,7 @@ out:
 		*mpol = new;
 	return err;
 }
-EXPORT_SYMBOL_GPL(mpol_parse_str_PRAM);
+EXPORT_SYMBOL_GPL(mpol_parse_str_pram);
 //>>>
 //<<<2018.05.23 Yongseob
 int mpol_parse_pram(char *str, struct mempolicy **mpol)

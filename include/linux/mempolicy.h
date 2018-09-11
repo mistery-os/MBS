@@ -134,6 +134,18 @@ struct shared_policy {
 	rwlock_t lock;
 };
 
+struct sp_pram_node {
+	struct rb_node nd;
+	unsigned long start, end;
+	struct mempolicy *policy;
+};
+
+struct shared_pram_policy {
+	struct rb_root root;
+	rwlock_t lock;
+};
+
+
 int vma_dup_policy(struct vm_area_struct *src, struct vm_area_struct *dst);
 void mpol_shared_policy_init(struct shared_policy *sp, struct mempolicy *mpol);
 int mpol_set_shared_policy(struct shared_policy *info,
@@ -149,9 +161,9 @@ struct mempolicy *__get_vma_policy(struct vm_area_struct *vma,
 bool vma_policy_mof(struct vm_area_struct *vma);
 
 extern void numa_default_policy(void);
-extern void nusa_default_policy(void);
+//extern void nusa_default_policy(void);
 extern void numa_policy_init(void);
-extern void nusa_policy_init(void);
+//extern void nusa_policy_init(void);
 extern void mpol_rebind_task(struct task_struct *tsk, const nodemask_t *new);
 extern void mpol_rebind_mm(struct mm_struct *mm, nodemask_t *new);
 

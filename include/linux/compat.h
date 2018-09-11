@@ -583,6 +583,14 @@ asmlinkage long compat_sys_get_mempolicy(int __user *policy,
 					 compat_ulong_t flags);
 asmlinkage long compat_sys_set_mempolicy(int mode, compat_ulong_t __user *nmask,
 					 compat_ulong_t maxnode);
+asmlinkage long compat_sys_get_prampolicy(int __user *policy,
+					 compat_ulong_t __user *nmask,
+					 compat_ulong_t maxnode,
+					 compat_ulong_t addr,
+					 compat_ulong_t flags);
+asmlinkage long compat_sys_set_prampolicy(int mode, compat_ulong_t __user *nmask,
+					 compat_ulong_t maxnode);
+
 asmlinkage long compat_sys_mbind(compat_ulong_t start, compat_ulong_t len,
 				 compat_ulong_t mode,
 				 compat_ulong_t __user *nmask,

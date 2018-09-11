@@ -863,6 +863,7 @@ EXPORT_SYMBOL(__page_cache_alloc);
 #define PAGE_WAIT_TABLE_BITS 8
 #define PAGE_WAIT_TABLE_SIZE (1 << PAGE_WAIT_TABLE_BITS)
 static wait_queue_head_t page_wait_table[PAGE_WAIT_TABLE_SIZE] __cacheline_aligned;
+static wait_queue_head_t page_wait_table_pram[PAGE_WAIT_TABLE_SIZE] __cacheline_aligned;
 
 static wait_queue_head_t *page_waitqueue(struct page *page)
 {
@@ -875,6 +876,8 @@ void __init pagecache_init(void)
 
 	for (i = 0; i < PAGE_WAIT_TABLE_SIZE; i++)
 		init_waitqueue_head(&page_wait_table[i]);
+	for (i = 0; i < PAGE_WAIT_TABLE_SIZE; i++)
+		init_waitqueue_head(&page_wait_table_pram[i]);
 
 	page_writeback_init();
 }
