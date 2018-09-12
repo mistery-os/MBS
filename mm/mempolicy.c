@@ -2602,7 +2602,7 @@ sp_lookup(struct shared_policy *sp, unsigned long start, unsigned long end)
 }
 
 static struct sp_pram_node *
-sp_pram_lookup(struct shared_pram_policy *sp, unsigned long start, unsigned long end)
+sp_pram_lookup(struct mbsfs_pram_policy *sp, unsigned long start, unsigned long end)
 {
 	struct rb_node *n = sp->root.rb_node;
 
@@ -2655,7 +2655,7 @@ static void sp_insert(struct shared_policy *sp, struct sp_node *new)
 	pr_debug("inserting %lx-%lx: %d\n", new->start, new->end,
 		 new->policy ? new->policy->mode : 0);
 }
-static void sp_pram_insert(struct shared_pram_policy *sp, struct sp_pram_node *new)
+static void sp_pram_insert(struct mbsfs_pram_policy *sp, struct sp_pram_node *new)
 {
 	struct rb_node **p = &sp->root.rb_node;
 	struct rb_node *parent = NULL;
@@ -2699,7 +2699,7 @@ mpol_shared_policy_lookup(struct shared_policy *sp, unsigned long idx)
 EXPORT_SYMBOL_GPL(mpol_shared_policy_lookup);
 //>>>
 struct mempolicy *
-mpol_shared_pram_policy_lookup(struct shared_pram_policy *sp, unsigned long idx)
+mpol_mbsfs_pram_policy_lookup(struct mbsfs_pram_policy *sp, unsigned long idx)
 {
 	struct mempolicy *pol = NULL;
 	struct sp_pram_node *sn;
@@ -2716,7 +2716,7 @@ mpol_shared_pram_policy_lookup(struct shared_pram_policy *sp, unsigned long idx)
 	return pol;
 }
 //<<<2018.05.17 Yongseob
-EXPORT_SYMBOL_GPL(mpol_shared_pram_policy_lookup);
+EXPORT_SYMBOL_GPL(mpol_mbsfs_pram_policy_lookup);
 //>>>
 
 static void sp_free(struct sp_node *n)
@@ -2865,7 +2865,7 @@ static struct sp_node *sp_alloc(unsigned long start, unsigned long end,
 	return n;
 }
 
-static void sp_pram_delete(struct shared_pram_policy *sp, struct sp_pram_node *n)
+static void sp_pram_delete(struct mbsfs_pram_policy *sp, struct sp_pram_node *n)
 {
 	pr_debug("deleting %lx-l%lx\n", n->start, n->end);
 	rb_erase(&n->nd, &sp->root);
@@ -2965,7 +2965,7 @@ alloc_new:
 		goto err_out;
 	goto restart;
 }
-static int shared_pram_policy_replace(struct shared_pram_policy *sp, unsigned long start,
+static int shared_pram_policy_replace(struct mbsfs_pram_policy *sp, unsigned long start,
 				 unsigned long end, struct sp_pram_node *new)
 {
 	struct sp_pram_node *n;
@@ -3081,7 +3081,7 @@ put_mpol:
 //<<<2018.05.18 Yongseob
 EXPORT_SYMBOL_GPL(mpol_shared_policy_init);
 //>>>
-void mpol_shared_pram_policy_init(struct shared_pram_policy *sp, struct mempolicy *mpol)
+void mpol_mbsfs_pram_policy_init(struct mbsfs_pram_policy *sp, struct mempolicy *mpol)
 {
 	int ret;
 
@@ -3109,7 +3109,7 @@ void mpol_shared_pram_policy_init(struct shared_pram_policy *sp, struct mempolic
 		/* Create pseudo-vma that contains just the policy */
 		memset(&pvma, 0, sizeof(struct vm_area_struct));
 		pvma.vm_end = TASK_SIZE;	/* policy covers entire file */
-		mpol_set_shared_pram_policy(sp, &pvma, new); /* adds ref */
+		mpol_set_mbsfs_pram_policy(sp, &pvma, new); /* adds ref */
 
 put_new:
 		mpol_put_pram(new);			/* drop initial ref */
@@ -3120,7 +3120,7 @@ put_mpol:
 	}
 }
 //<<<2018.05.18 Yongseob
-EXPORT_SYMBOL_GPL(mpol_shared_pram_policy_init);
+EXPORT_SYMBOL_GPL(mpol_mbsfs_pram_policy_init);
 
 
 int mpol_set_shared_policy(struct shared_policy *info,
@@ -3150,14 +3150,14 @@ int mpol_set_shared_policy(struct shared_policy *info,
 EXPORT_SYMBOL_GPL(mpol_set_shared_policy);
 //>>>
 
-int mpol_set_shared_pram_policy(struct shared_pram_policy *info,
+int mpol_set_mbsfs_pram_policy(struct mbsfs_pram_policy *info,
 			struct vm_area_struct *vma, struct mempolicy *npol)
 {
 	int err;
 	struct sp_pram_node *new = NULL;
 	unsigned long sz = vma_pages(vma);
 
-	pr_debug("set_shared_pram_policy %lx sz %lu %d %d %lx\n",
+	pr_debug("set_mbsfs_pram_policy %lx sz %lu %d %d %lx\n",
 		 vma->vm_pgoff,
 		 sz, npol ? npol->mode : -1,
 		 npol ? npol->flags : -1,
@@ -3174,7 +3174,7 @@ int mpol_set_shared_pram_policy(struct shared_pram_policy *info,
 	return err;
 }
 //<<<2018.05.17 Yongseob
-EXPORT_SYMBOL_GPL(mpol_set_shared_pram_policy);
+EXPORT_SYMBOL_GPL(mpol_set_mbsfs_pram_policy);
 //>>>
 
 
@@ -3198,7 +3198,7 @@ void mpol_free_shared_policy(struct shared_policy *p)
 //<<<2018.05.18 Yongseob
 EXPORT_SYMBOL_GPL(mpol_free_shared_policy);
 //>>>
-void mpol_free_shared_pram_policy(struct shared_pram_policy *p)
+void mpol_free_mbsfs_pram_policy(struct mbsfs_pram_policy *p)
 {
 	struct sp_pram_node *n;
 	struct rb_node *next;
@@ -3215,7 +3215,7 @@ void mpol_free_shared_pram_policy(struct shared_pram_policy *p)
 	write_unlock(&p->lock);
 }
 //<<<2018.05.18 Yongseob
-EXPORT_SYMBOL_GPL(mpol_free_shared_pram_policy);
+EXPORT_SYMBOL_GPL(mpol_free_mbsfs_pram_policy);
 //>>>
 #ifdef CONFIG_NUMA_BALANCING
 static int __initdata numabalancing_override;
@@ -3279,7 +3279,7 @@ void __init numa_policy_init(void)
 	policy_cache_pram = kmem_cache_create("pram_policy",
 					 sizeof(struct mempolicy),
 					 0, SLAB_PANIC, NULL);
-	sn_pram_cache = kmem_cache_create("shared_pram_policy_node",
+	sn_pram_cache = kmem_cache_create("mbsfs_pram_policy_node",
 				     sizeof(struct sp_node),
 				     0, SLAB_PANIC, NULL);
 	//>>>
@@ -3600,12 +3600,12 @@ int mpol_parse_str_pram(char *str, struct mempolicy **mpol)
 			goto out;
 	}
 
-	new = mpol_new(mode, mode_flags, &nodes);
+	new = mpol_new_pram(mode, mode_flags, &nodes);
 	if (IS_ERR(new))
 		goto out;
 
 	/*
-	 * Save nodes for mpol_to_str() to show the tmpfs mount options
+	 * Save nodes for mpol_to_str_pram() to show the tmpfs mount options
 	 * for /proc/mounts, /proc/pid/mounts and /proc/pid/mountinfo.
 	 */
 	if (mode != MPOL_PREFERRED)
@@ -3825,4 +3825,56 @@ void mpol_to_str(char *buffer, int maxlen, struct mempolicy *pol)
 }
 //<<<2018.05.18 Yongseob
 EXPORT_SYMBOL_GPL(mpol_to_str);
+//>>>
+void mpol_to_str_pram(char *buffer, int maxlen, struct mempolicy *pol)
+{
+	char *p = buffer;
+	nodemask_t nodes = NODE_MASK_NONE;
+	unsigned short mode = MPOL_DEFAULT;
+	unsigned short flags = 0;
+
+	if (pol && pol != &default_pram_policy && !(pol->flags & MPOL_F_MORON)) {
+		mode = pol->mode;
+		flags = pol->flags;
+	}
+
+	switch (mode) {
+		case MPOL_DEFAULT:
+			break;
+		case MPOL_PREFERRED:
+			if (flags & MPOL_F_LOCAL)
+				mode = MPOL_LOCAL;
+			else
+				node_set(pol->v.preferred_node, nodes);
+			break;
+		case MPOL_BIND:
+		case MPOL_INTERLEAVE:
+			nodes = pol->v.nodes;
+			break;
+		default:
+			WARN_ON_ONCE(1);
+			snprintf(p, maxlen, "unknown");
+			return;
+	}
+
+	p += snprintf(p, maxlen, "%s", policy_modes[mode]);
+
+	if (flags & MPOL_MODE_FLAGS) {
+		p += snprintf(p, buffer + maxlen - p, "=");
+
+		/*
+		 * Currently, the only defined flags are mutually exclusive
+		 */
+		if (flags & MPOL_F_STATIC_NODES)
+			p += snprintf(p, buffer + maxlen - p, "static");
+		else if (flags & MPOL_F_RELATIVE_NODES)
+			p += snprintf(p, buffer + maxlen - p, "relative");
+	}
+
+	if (!nodes_empty(nodes))
+		p += scnprintf(p, buffer + maxlen - p, ":%*pbl",
+				nodemask_pr_args(&nodes));
+}
+//<<<2018.05.18 Yongseob
+EXPORT_SYMBOL_GPL(mpol_to_str_pram);
 //>>>

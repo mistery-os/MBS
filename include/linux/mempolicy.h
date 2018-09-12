@@ -90,6 +90,12 @@ static inline void mpol_cond_put(struct mempolicy *pol)
 	if (mpol_needs_cond_ref(pol))
 		__mpol_put(pol);
 }
+static inline void mpol_cond_put_pram(struct mempolicy *pol)
+{
+	if (mpol_needs_cond_ref(pol))
+		__mpol_put_pram(pol);
+}
+
 
 extern struct mempolicy *__mpol_dup(struct mempolicy *pol);
 static inline struct mempolicy *mpol_dup(struct mempolicy *pol)
@@ -140,7 +146,7 @@ struct sp_pram_node {
 	struct mempolicy *policy;
 };
 
-struct shared_pram_policy {
+struct mbsfs_pram_policy {
 	struct rb_root root;
 	rwlock_t lock;
 };
@@ -160,12 +166,12 @@ struct mempolicy *__get_vma_policy(struct vm_area_struct *vma,
 		unsigned long addr);
 bool vma_policy_mof(struct vm_area_struct *vma);
 
-void mpol_shared_pram_policy_init(struct shared_pram_policy *sp, struct mempolicy *mpol);
-int mpol_set_shared_pram_policy(struct shared_pram_policy *info,
+void mpol_mbsfs_pram_policy_init(struct mbsfs_pram_policy *sp, struct mempolicy *mpol);
+int mpol_set_mbsfs_pram_policy(struct mbsfs_pram_policy *info,
 				struct vm_area_struct *vma,
 				struct mempolicy *new);
-void mpol_free_shared_pram_policy(struct shared_pram_policy *p);
-struct mempolicy *mpol_shared_pram_policy_lookup(struct shared_pram_policy *sp,
+void mpol_free_mbsfs_pram_policy(struct mbsfs_pram_policy *p);
+struct mempolicy *mpol_mbsfs_pram_policy_lookup(struct mbsfs_pram_policy *sp,
 					    unsigned long idx);
 
 struct mempolicy *get_pram_policy(struct task_struct *p);
