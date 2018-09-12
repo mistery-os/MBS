@@ -217,6 +217,7 @@ extern int mpol_parse_str(char *str, struct mempolicy **mpol);
 extern int mpol_parse_str_pram(char *str, struct mempolicy **mpol);
 
 extern void mpol_to_str(char *buffer, int maxlen, struct mempolicy *pol);
+extern void mpol_to_str_pram(char *buffer, int maxlen, struct mempolicy *pol);
 
 /* Check if a vma is migratable */
 static inline bool vma_migratable(struct vm_area_struct *vma)
