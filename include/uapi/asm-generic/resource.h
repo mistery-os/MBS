@@ -46,12 +46,12 @@
 					   0-39 for nice level 19 .. -20 */
 #define RLIMIT_RTPRIO		14	/* maximum realtime priority */
 #define RLIMIT_RTTIME		15	/* timeout for RT tasks in us */
-#define RLIM_NLIMITS		16
 
 #ifndef RLIMIT_PRAMLOCK
-# define RLIMIT_PRAMLOCK	17	/* max locked-in-pram address space */
+# define RLIMIT_PRAMLOCK	16	/* max locked-in-pram address space */
 #endif
 
+#define RLIM_NLIMITS		17
 /*
  * SuS says limits have to be unsigned.
  * Which makes a ton more sense anyway.
