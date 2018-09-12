@@ -561,6 +561,7 @@ static const struct limit_names lnames[RLIM_NLIMITS] = {
 	[RLIMIT_NPROC] = {"Max processes", "processes"},
 	[RLIMIT_NOFILE] = {"Max open files", "files"},
 	[RLIMIT_MEMLOCK] = {"Max locked memory", "bytes"},
+	[RLIMIT_PRAMLOCK] = {"Max locked pram", "bytes"},
 	[RLIMIT_AS] = {"Max address space", "bytes"},
 	[RLIMIT_LOCKS] = {"Max file locks", "locks"},
 	[RLIMIT_SIGPENDING] = {"Max pending signals", "signals"},

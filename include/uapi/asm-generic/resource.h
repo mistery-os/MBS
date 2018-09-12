@@ -48,6 +48,10 @@
 #define RLIMIT_RTTIME		15	/* timeout for RT tasks in us */
 #define RLIM_NLIMITS		16
 
+#ifndef RLIMIT_PRAMLOCK
+# define RLIMIT_PRAMLOCK	17	/* max locked-in-pram address space */
+#endif
+
 /*
  * SuS says limits have to be unsigned.
  * Which makes a ton more sense anyway.

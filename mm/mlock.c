@@ -873,6 +873,7 @@ int user_pram_lock(size_t size, struct user_struct *user)
 	int allowed = 0;
 
 	locked = (size + PAGE_SIZE - 1) >> PAGE_SHIFT;
+	//lock_limit = rlimit(RLIMIT_PRAMLOCK);
 	lock_limit = rlimit(RLIMIT_MEMLOCK);
 	if (lock_limit == RLIM_INFINITY)
 		allowed = 1;
@@ -885,7 +886,7 @@ int user_pram_lock(size_t size, struct user_struct *user)
 	user->locked_shm += locked;
 	allowed = 1;
 out:
-	spin_unlock(&shmlock_user_lock);
+	spin_unlock(&pramlock_user_lock);
 	return allowed;
 }
 EXPORT_SYMBOL_GPL(user_pram_lock);
@@ -894,7 +895,7 @@ void user_pram_unlock(size_t size, struct user_struct *user)
 {
 	spin_lock(&pramlock_user_lock);
 	user->locked_shm -= (size + PAGE_SIZE - 1) >> PAGE_SHIFT;
-	spin_unlock(&shmlock_user_lock);
+	spin_unlock(&pramlock_user_lock);
 	free_uid(user);
 }
 EXPORT_SYMBOL_GPL(user_pram_unlock);

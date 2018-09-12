@@ -2531,7 +2531,28 @@ struct mempolicy *__mpol_dup(struct mempolicy *old)
 	atomic_set(&new->refcnt, 1);
 	return new;
 }
+struct mempolicy *__mpol_dup_pram(struct mempolicy *old)
+{
+	struct mempolicy *new = kmem_cache_alloc(policy_cache_pram, GFP_KERNEL);
 
+	if (!new)
+		return ERR_PTR(-ENOMEM);
+
+	/* task's mempolicy is protected by alloc_lock */
+	if (old == current->prampolicy) {
+		task_lock(current);
+		*new = *old;
+		task_unlock(current);
+	} else
+		*new = *old;
+
+	if (current_cpuset_is_being_rebound()) {
+		nodemask_t mems = cpuset_mems_allowed(current);
+		mpol_rebind_policy(new, &mems);
+	}
+	atomic_set(&new->refcnt, 1);
+	return new;
+}
 /* Slow path of a mempolicy comparison */
 bool __mpol_equal(struct mempolicy *a, struct mempolicy *b)
 {
@@ -2726,7 +2747,7 @@ static void sp_free(struct sp_node *n)
 }
 static void sp_pram_free(struct sp_pram_node *n)
 {
-	mpol_put(n->policy);
+	mpol_put_pram(n->policy);
 	kmem_cache_free(sn_pram_cache, n);
 }
 /**
@@ -2890,7 +2911,7 @@ static struct sp_pram_node *sp_pram_alloc(unsigned long start, unsigned long end
 	if (!n)
 		return NULL;
 
-	newpol = mpol_dup(pol);
+	newpol = mpol_dup_pram(pol);
 	if (IS_ERR(newpol)) {
 		kmem_cache_free(sn_pram_cache, n);
 		return NULL;
@@ -2965,7 +2986,7 @@ alloc_new:
 		goto err_out;
 	goto restart;
 }
-static int shared_pram_policy_replace(struct mbsfs_pram_policy *sp, unsigned long start,
+static int mbsfs_pram_policy_replace(struct mbsfs_pram_policy *sp, unsigned long start,
 				 unsigned long end, struct sp_pram_node *new)
 {
 	struct sp_pram_node *n;
@@ -3012,7 +3033,7 @@ restart:
 
 err_out:
 	if (mpol_new)
-		mpol_put(mpol_new);
+		mpol_put_pram(mpol_new);
 	if (n_new)
 		kmem_cache_free(sn_pram_cache, n_new);
 
@@ -3168,7 +3189,7 @@ int mpol_set_mbsfs_pram_policy(struct mbsfs_pram_policy *info,
 		if (!new)
 			return -ENOMEM;
 	}
-	err = shared_pram_policy_replace(info, vma->vm_pgoff, vma->vm_pgoff+sz, new);
+	err = mbsfs_pram_policy_replace(info, vma->vm_pgoff, vma->vm_pgoff+sz, new);
 	if (err && new)
 		sp_pram_free(new);
 	return err;

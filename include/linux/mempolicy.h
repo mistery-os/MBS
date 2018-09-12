@@ -105,6 +105,15 @@ static inline struct mempolicy *mpol_dup(struct mempolicy *pol)
 	return pol;
 }
 
+extern struct mempolicy *__mpol_dup_pram(struct mempolicy *pol);
+static inline struct mempolicy *mpol_dup_pram(struct mempolicy *pol)
+{
+	if (pol)
+		pol = __mpol_dup_pram(pol);
+	return pol;
+}
+
+
 #define vma_policy(vma) ((vma)->vm_policy)
 
 static inline void mpol_get(struct mempolicy *pol)
