@@ -113,10 +113,10 @@
 
 static struct kmem_cache *policy_cache;
 //<<<2018.05.23 Yongseob
-static struct kmem_cache *policy_cache_pram;
-static struct kmem_cache *sn_pram_cache;
+static struct kmem_cache *pram_policy_cache;
 //>>>
 static struct kmem_cache *sn_cache;
+static struct kmem_cache *sn_pram_cache;
 
 /* Highest zone. An specific allocation for a zone below that is not
    policied. */
@@ -384,7 +384,7 @@ static struct mempolicy *mpol_new_pram(unsigned short mode, unsigned short flags
 		mode = MPOL_PREFERRED;
 	} else if (nodes_empty(*nodes))
 		return ERR_PTR(-EINVAL);
-	policy = kmem_cache_alloc(policy_cache_pram, GFP_KERNEL);
+	policy = kmem_cache_alloc(pram_policy_cache, GFP_KERNEL);
 	if (!policy)
 		return ERR_PTR(-ENOMEM);
 	atomic_set(&policy->refcnt, 1);
@@ -406,7 +406,7 @@ void __mpol_put_pram(struct mempolicy *p)
 {
 	if (!atomic_dec_and_test(&p->refcnt))
 		return;
-	kmem_cache_free(policy_cache_pram, p);
+	kmem_cache_free(pram_policy_cache, p);
 }
 //<<<2018.05.18 Yongseob
 EXPORT_SYMBOL_GPL(__mpol_put);
@@ -2533,7 +2533,7 @@ struct mempolicy *__mpol_dup(struct mempolicy *old)
 }
 struct mempolicy *__mpol_dup_pram(struct mempolicy *old)
 {
-	struct mempolicy *new = kmem_cache_alloc(policy_cache_pram, GFP_KERNEL);
+	struct mempolicy *new = kmem_cache_alloc(pram_policy_cache, GFP_KERNEL);
 
 	if (!new)
 		return ERR_PTR(-ENOMEM);
@@ -2623,7 +2623,7 @@ sp_lookup(struct shared_policy *sp, unsigned long start, unsigned long end)
 }
 
 static struct sp_pram_node *
-sp_pram_lookup(struct mbsfs_pram_policy *sp, unsigned long start, unsigned long end)
+sp_pram_lookup(struct mbsfs_policy *sp, unsigned long start, unsigned long end)
 {
 	struct rb_node *n = sp->root.rb_node;
 
@@ -2676,7 +2676,7 @@ static void sp_insert(struct shared_policy *sp, struct sp_node *new)
 	pr_debug("inserting %lx-%lx: %d\n", new->start, new->end,
 		 new->policy ? new->policy->mode : 0);
 }
-static void sp_pram_insert(struct mbsfs_pram_policy *sp, struct sp_pram_node *new)
+static void sp_pram_insert(struct mbsfs_policy *sp, struct sp_pram_node *new)
 {
 	struct rb_node **p = &sp->root.rb_node;
 	struct rb_node *parent = NULL;
@@ -2720,7 +2720,7 @@ mpol_shared_policy_lookup(struct shared_policy *sp, unsigned long idx)
 EXPORT_SYMBOL_GPL(mpol_shared_policy_lookup);
 //>>>
 struct mempolicy *
-mpol_mbsfs_pram_policy_lookup(struct mbsfs_pram_policy *sp, unsigned long idx)
+mpol_mbsfs_policy_lookup(struct mbsfs_policy *sp, unsigned long idx)
 {
 	struct mempolicy *pol = NULL;
 	struct sp_pram_node *sn;
@@ -2737,7 +2737,7 @@ mpol_mbsfs_pram_policy_lookup(struct mbsfs_pram_policy *sp, unsigned long idx)
 	return pol;
 }
 //<<<2018.05.17 Yongseob
-EXPORT_SYMBOL_GPL(mpol_mbsfs_pram_policy_lookup);
+EXPORT_SYMBOL_GPL(mpol_mbsfs_policy_lookup);
 //>>>
 
 static void sp_free(struct sp_node *n)
@@ -2886,7 +2886,7 @@ static struct sp_node *sp_alloc(unsigned long start, unsigned long end,
 	return n;
 }
 
-static void sp_pram_delete(struct mbsfs_pram_policy *sp, struct sp_pram_node *n)
+static void sp_pram_delete(struct mbsfs_policy *sp, struct sp_pram_node *n)
 {
 	pr_debug("deleting %lx-l%lx\n", n->start, n->end);
 	rb_erase(&n->nd, &sp->root);
@@ -2986,7 +2986,7 @@ alloc_new:
 		goto err_out;
 	goto restart;
 }
-static int mbsfs_pram_policy_replace(struct mbsfs_pram_policy *sp, unsigned long start,
+static int mbsfs_pram_policy_replace(struct mbsfs_policy *sp, unsigned long start,
 				 unsigned long end, struct sp_pram_node *new)
 {
 	struct sp_pram_node *n;
@@ -3045,7 +3045,7 @@ alloc_new:
 	n_new = kmem_cache_alloc(sn_pram_cache, GFP_KERNEL);
 	if (!n_new)
 		goto err_out;
-	mpol_new = kmem_cache_alloc(policy_cache_pram, GFP_KERNEL);
+	mpol_new = kmem_cache_alloc(pram_policy_cache, GFP_KERNEL);
 	if (!mpol_new)
 		goto err_out;
 	goto restart;
@@ -3102,7 +3102,7 @@ put_mpol:
 //<<<2018.05.18 Yongseob
 EXPORT_SYMBOL_GPL(mpol_shared_policy_init);
 //>>>
-void mpol_mbsfs_pram_policy_init(struct mbsfs_pram_policy *sp, struct mempolicy *mpol)
+void mpol_mbsfs_policy_init(struct mbsfs_policy *sp, struct mempolicy *mpol)
 {
 	int ret;
 
@@ -3130,7 +3130,7 @@ void mpol_mbsfs_pram_policy_init(struct mbsfs_pram_policy *sp, struct mempolicy 
 		/* Create pseudo-vma that contains just the policy */
 		memset(&pvma, 0, sizeof(struct vm_area_struct));
 		pvma.vm_end = TASK_SIZE;	/* policy covers entire file */
-		mpol_set_mbsfs_pram_policy(sp, &pvma, new); /* adds ref */
+		mpol_set_mbsfs_policy(sp, &pvma, new); /* adds ref */
 
 put_new:
 		mpol_put_pram(new);			/* drop initial ref */
@@ -3141,7 +3141,7 @@ put_mpol:
 	}
 }
 //<<<2018.05.18 Yongseob
-EXPORT_SYMBOL_GPL(mpol_mbsfs_pram_policy_init);
+EXPORT_SYMBOL_GPL(mpol_mbsfs_policy_init);
 
 
 int mpol_set_shared_policy(struct shared_policy *info,
@@ -3171,7 +3171,7 @@ int mpol_set_shared_policy(struct shared_policy *info,
 EXPORT_SYMBOL_GPL(mpol_set_shared_policy);
 //>>>
 
-int mpol_set_mbsfs_pram_policy(struct mbsfs_pram_policy *info,
+int mpol_set_mbsfs_policy(struct mbsfs_policy *info,
 			struct vm_area_struct *vma, struct mempolicy *npol)
 {
 	int err;
@@ -3195,7 +3195,7 @@ int mpol_set_mbsfs_pram_policy(struct mbsfs_pram_policy *info,
 	return err;
 }
 //<<<2018.05.17 Yongseob
-EXPORT_SYMBOL_GPL(mpol_set_mbsfs_pram_policy);
+EXPORT_SYMBOL_GPL(mpol_set_mbsfs_policy);
 //>>>
 
 
@@ -3219,7 +3219,7 @@ void mpol_free_shared_policy(struct shared_policy *p)
 //<<<2018.05.18 Yongseob
 EXPORT_SYMBOL_GPL(mpol_free_shared_policy);
 //>>>
-void mpol_free_mbsfs_pram_policy(struct mbsfs_pram_policy *p)
+void mpol_free_mbsfs_policy(struct mbsfs_policy *p)
 {
 	struct sp_pram_node *n;
 	struct rb_node *next;
@@ -3236,7 +3236,7 @@ void mpol_free_mbsfs_pram_policy(struct mbsfs_pram_policy *p)
 	write_unlock(&p->lock);
 }
 //<<<2018.05.18 Yongseob
-EXPORT_SYMBOL_GPL(mpol_free_mbsfs_pram_policy);
+EXPORT_SYMBOL_GPL(mpol_free_mbsfs_policy);
 //>>>
 #ifdef CONFIG_NUMA_BALANCING
 static int __initdata numabalancing_override;
@@ -3296,14 +3296,14 @@ void __init numa_policy_init(void)
 					 sizeof(struct mempolicy),
 					 0, SLAB_PANIC, NULL);
 
-	//<<<2018.05.31 Yongseob
-	policy_cache_pram = kmem_cache_create("pram_policy",
+	pram_policy_cache = kmem_cache_create("nusa_policy",
 					 sizeof(struct mempolicy),
 					 0, SLAB_PANIC, NULL);
-	sn_pram_cache = kmem_cache_create("mbsfs_pram_policy_node",
-				     sizeof(struct sp_node),
+
+	sn_pram_cache = kmem_cache_create("mbsfs_policy_node",
+				     sizeof(struct sp_pram_node),
 				     0, SLAB_PANIC, NULL);
-	//>>>
+
 	sn_cache = kmem_cache_create("shared_policy_node",
 				     sizeof(struct sp_node),
 				     0, SLAB_PANIC, NULL);
@@ -3354,8 +3354,6 @@ void __init numa_policy_init(void)
 
 	if (do_set_mempolicy(MPOL_INTERLEAVE, 0, &interleave_nodes))
 		pr_err("%s: interleaving failed\n", __func__);
-	//if (do_set_prampolicy(MPOL_INTERLEAVE, 0, &interleave_nodes))
-	//	pr_err("%s: interleaving failed\n", __func__);
 	for_each_node(nid) {
 		//<<<2018.05.31 Yongseob
 		preferred_pram_node_policy[nid] = (struct mempolicy) {
@@ -3365,6 +3363,8 @@ void __init numa_policy_init(void)
 			. v = { .nodes = interleave_nodes,},
 		};
 		//>>>
+	if (do_set_prampolicy(MPOL_INTERLEAVE, 0, &interleave_nodes))
+		pr_err("%s: interleaving failed\n", __func__);
 	}
 	check_numabalancing_enable();
 }
