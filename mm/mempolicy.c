@@ -3345,8 +3345,8 @@ void __init numa_policy_init(void)
 			.mode = MPOL_LOCAL,
 			.flags = MPOL_F_LOCAL,
 			//.mode = MPOL_INTERLEAVE,
-			.flags = MPOL_F_LOCAL| MPOL_F_MOF | MPOL_F_MORON,
-			//. v = { .nodes = ,},
+			//.flags = MPOL_F_LOCAL| MPOL_F_MOF | MPOL_F_MORON,
+			. v = { .nodes = ,},
 		};
 		//>>>
 
@@ -3476,7 +3476,7 @@ void numa_default_policy(void)
 }
 void nusa_default_policy(void)
 {
-	do_set_prampolicy(MPOL_DEFAULT, 0, NULL);
+	do_set_prampolicy(MPOL_LOCAL, 0, NULL);
 //	do_set_prampolicy(MPOL_INTERLEAVE, 0, NULL);
 }
 

@@ -306,19 +306,19 @@ vma_dup_policy(struct vm_area_struct *src, struct vm_area_struct *dst)
 {
 	return 0;
 }
-/*
+
 static inline void numa_policy_init(void)
 {
 }
-*/
+
 static inline void numa_default_policy(void)
 {
 }
-
+/*
 static inline void nusa_policy_init(void)
 {
 }
-
+*/
 static inline void nusa_default_policy(void)
 {
 }
