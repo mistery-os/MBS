@@ -143,7 +143,7 @@ static struct mempolicy preferred_pram_node_policy[MAX_NUMNODES];
 //>>>
 struct mempolicy *get_pram_policy(struct task_struct *p)
 {
-	struct mempolicy *pol = p->mempolicy;
+	struct mempolicy *pol = p->prampolicy;
 	int node;
 
 	if (pol)
@@ -957,6 +957,29 @@ out:
  *
  * Called with task's alloc_lock held
  */
+static void get_pram_policy_nodemask(struct mempolicy *p, nodemask_t *nodes)
+{
+	nodes_clear(*nodes);
+	if (p == &default_pram_policy)
+		return;
+
+	switch (p->mode) {
+	case MPOL_BIND:
+		/* Fall through */
+	case MPOL_INTERLEAVE:
+		*nodes = p->v.nodes;
+		break;
+	case MPOL_PREFERRED:
+		if (!(p->flags & MPOL_F_LOCAL))
+			node_set(p->v.preferred_node, *nodes);
+		/* else return empty node mask for local allocation */
+		break;
+	default:
+		BUG();
+	}
+}
+
+
 static void get_policy_nodemask(struct mempolicy *p, nodemask_t *nodes)
 {
 	nodes_clear(*nodes);
@@ -1150,13 +1173,13 @@ static long do_get_prampolicy(int *policy, nodemask_t *nmask,
 			*nmask = pol->w.user_nodemask;
 		} else {
 			task_lock(current);
-			get_policy_nodemask(pol, nmask);
+			get_pram_policy_nodemask(pol, nmask);
 			task_unlock(current);
 		}
 	}
 
  out:
-	mpol_cond_put(pol);
+	mpol_cond_put_pram(pol);
 	if (vma)
 		up_read(&current->mm->mmap_sem);
 	return err;
