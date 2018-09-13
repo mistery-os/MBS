@@ -186,9 +186,9 @@ struct mempolicy *mpol_mbsfs_policy_lookup(struct mbsfs_policy *sp,
 struct mempolicy *get_pram_policy(struct task_struct *p);
 
 extern void numa_default_policy(void);
-//extern void nusa_default_policy(void);
 extern void numa_policy_init(void);
-//extern void nusa_policy_init(void);
+extern void nusa_default_policy(void);
+extern void nusa_policy_init(void);
 extern void mpol_rebind_task(struct task_struct *tsk, const nodemask_t *new);
 extern void mpol_rebind_mm(struct mm_struct *mm, nodemask_t *new);
 
@@ -314,6 +314,15 @@ static inline void numa_policy_init(void)
 static inline void numa_default_policy(void)
 {
 }
+
+static inline void nusa_policy_init(void)
+{
+}
+
+static inline void nusa_default_policy(void)
+{
+}
+
 
 static inline void mpol_rebind_task(struct task_struct *tsk,
 				const nodemask_t *new)

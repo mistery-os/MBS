@@ -355,7 +355,7 @@ static struct mempolicy *mpol_new_pram(unsigned short mode, unsigned short flags
 {
 	struct mempolicy *policy;
 
-	pr_debug("setting mode(PRAM) %d flags %d nodes[0] %lx\n",
+	pr_info("setting mode(PRAM) %d flags %d nodes[0] %lx\n",
 		 mode, flags, nodes ? nodes_addr(*nodes)[0] : NUMA_NO_NODE);
 
 	if (mode == MPOL_DEFAULT) {
@@ -3318,7 +3318,7 @@ void __init numa_policy_init(void)
 	policy_cache = kmem_cache_create("numa_policy",
 					 sizeof(struct mempolicy),
 					 0, SLAB_PANIC, NULL);
-
+/*
 	pram_policy_cache = kmem_cache_create("nusa_policy",
 					 sizeof(struct mempolicy),
 					 0, SLAB_PANIC, NULL);
@@ -3326,7 +3326,7 @@ void __init numa_policy_init(void)
 	sn_pram_cache = kmem_cache_create("mbsfs_policy_node",
 				     sizeof(struct sp_pram_node),
 				     0, SLAB_PANIC, NULL);
-
+*/
 	sn_cache = kmem_cache_create("shared_policy_node",
 				     sizeof(struct sp_node),
 				     0, SLAB_PANIC, NULL);
@@ -3338,6 +3338,7 @@ void __init numa_policy_init(void)
 			.flags = MPOL_F_MOF | MPOL_F_MORON,
 			.v = { .preferred_node = nid, },
 		};
+/*
 		//<<<2018.05.31 Yongseob
 		preferred_pram_node_policy[nid] = (struct mempolicy) {
 			.refcnt = ATOMIC_INIT(1),
@@ -3348,6 +3349,7 @@ void __init numa_policy_init(void)
 			//. v = { .nodes = ,},
 		};
 		//>>>
+*/
 	}
 
 	/*
@@ -3388,11 +3390,82 @@ void __init numa_policy_init(void)
 		//>>>
 	}
 	*/
+	/*
 	if (do_set_prampolicy(MPOL_INTERLEAVE, 0, &interleave_nodes))
 		pr_err("%s: interleaving failed\n", __func__);
+	*/
 	check_numabalancing_enable();
 }
 
+void __init nusa_policy_init(void)
+{
+	nodemask_t interleave_nodes;
+	unsigned long largest = 0;
+	int nid, prefer = 0;
+
+	pram_policy_cache = kmem_cache_create("nusa_policy",
+					 sizeof(struct mempolicy),
+					 0, SLAB_PANIC, NULL);
+
+	sn_pram_cache = kmem_cache_create("mbsfs_policy_node",
+				     sizeof(struct sp_pram_node),
+				     0, SLAB_PANIC, NULL);
+
+	for_each_node(nid) {
+		//<<<2018.05.31 Yongseob
+		preferred_pram_node_policy[nid] = (struct mempolicy) {
+			.refcnt = ATOMIC_INIT(1),
+			.mode = MPOL_LOCAL,
+			.flags = MPOL_F_LOCAL,
+			//.mode = MPOL_INTERLEAVE,
+			//.flags = MPOL_F_LOCAL| MPOL_F_MOF | MPOL_F_MORON,
+			//. v = { .nodes = ,},
+		};
+		//>>>
+	}
+
+	/*
+	 * Set interleaving policy for system init. Interleaving is only
+	 * enabled across suitably sized nodes (default is >= 16MB), or
+	 * fall back to the largest node if they're all smaller.
+	 */
+	nodes_clear(interleave_nodes);
+	for_each_node_state(nid, N_MEMORY) {
+		unsigned long total_pages = node_present_pages(nid);
+
+		/* Preserve the largest node */
+		if (largest < total_pages) {
+			largest = total_pages;
+			prefer = nid;
+		}
+
+		/* Interleave this node? */
+		if ((total_pages << PAGE_SHIFT) >= (16 << 20))
+			node_set(nid, interleave_nodes);
+	}
+
+	/* All too small, use the largest */
+	if (unlikely(nodes_empty(interleave_nodes)))
+		node_set(prefer, interleave_nodes);
+
+	/*
+	for_each_node(nid) {
+		//<<<2018.05.31 Yongseob
+		preferred_pram_node_policy[nid] = (struct mempolicy) {
+			.refcnt = ATOMIC_INIT(1),
+			.mode = MPOL_INTERLEAVE,
+			//.flags = MPOL_F_LOCAL| MPOL_F_MOF | MPOL_F_MORON,
+			. v = { .nodes = interleave_nodes,},
+		};
+		//>>>
+	}
+	*/
+	//if (do_set_prampolicy(MPOL_INTERLEAVE, 0, &interleave_nodes))
+//		pr_err("%s: interleaving failed\n", __func__);
+	if (do_set_prampolicy(MPOL_LOCAL, 0, NULL))
+		pr_err("%s: LOCAL failed\n", __func__);
+	//check_numabalancing_enable();
+}
 /* Reset policy of current process to default */
 void numa_default_policy(void)
 {
