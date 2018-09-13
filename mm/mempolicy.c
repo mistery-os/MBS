@@ -143,7 +143,8 @@ static struct mempolicy preferred_pram_node_policy[MAX_NUMNODES];
 //>>>
 struct mempolicy *get_pram_policy(struct task_struct *p)
 {
-	struct mempolicy *pol = p->prampolicy;
+	//struct mempolicy *pol = p->prampolicy;
+	struct mempolicy *pol = p->mempolicy;
 	int node;
 
 	if (pol)
@@ -940,8 +941,10 @@ static long do_set_prampolicy(unsigned short mode, unsigned short flags,
 		mpol_put_pram(new);
 		goto out;
 	}
-	old = current->prampolicy;
-	current->prampolicy = new;
+	//old = current->prampolicy;
+	//current->prampolicy = new;
+	old = current->mempolicy;
+	current->mempolicy = new;
 	if (new && new->mode == MPOL_INTERLEAVE)
 		current->il_prev = MAX_NUMNODES-1;
 	task_unlock(current);
@@ -1106,7 +1109,8 @@ static long do_get_prampolicy(int *policy, nodemask_t *nmask,
 	int err;
 	struct mm_struct *mm = current->mm;
 	struct vm_area_struct *vma = NULL;
-	struct mempolicy *pol = current->prampolicy;
+	//struct mempolicy *pol = current->prampolicy;
+	struct mempolicy *pol = current->mempolicy;
 
 	if (flags &
 		~(unsigned long)(MPOL_F_NODE|MPOL_F_ADDR|MPOL_F_MEMS_ALLOWED))
@@ -1150,7 +1154,8 @@ static long do_get_prampolicy(int *policy, nodemask_t *nmask,
 			if (err < 0)
 				goto out;
 			*policy = err;
-		} else if (pol == current->prampolicy &&
+		//} else if (pol == current->prampolicy &&
+		} else if (pol == current->mempolicy &&
 				pol->mode == MPOL_INTERLEAVE) {
 			*policy = next_node_in(current->il_prev, pol->v.nodes);
 		} else {
@@ -2593,7 +2598,8 @@ struct mempolicy *__mpol_dup_pram(struct mempolicy *old)
 		return ERR_PTR(-ENOMEM);
 
 	/* task's mempolicy is protected by alloc_lock */
-	if (old == current->prampolicy) {
+	//if (old == current->prampolicy) {
+	if (old == current->mempolicy) {
 		task_lock(current);
 		*new = *old;
 		task_unlock(current);
