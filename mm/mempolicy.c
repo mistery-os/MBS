@@ -3346,7 +3346,7 @@ void __init numa_policy_init(void)
 			.flags = MPOL_F_LOCAL,
 			//.mode = MPOL_INTERLEAVE,
 			//.flags = MPOL_F_LOCAL| MPOL_F_MOF | MPOL_F_MORON,
-			.v = { .nodes = NULL,},
+			//.v = { .nodes = NULL,},
 		};
 		//>>>
 
@@ -3393,9 +3393,9 @@ void __init numa_policy_init(void)
 	/*
 	if (do_set_prampolicy(MPOL_INTERLEAVE, 0, &interleave_nodes))
 		pr_err("%s: interleaving failed\n", __func__);
-	*/
 	if (do_set_prampolicy(MPOL_LOCAL, 0, NULL))
 		pr_err("%s: LOCAL failed\n", __func__);
+	*/
 	check_numabalancing_enable();
 }
 #if 0
@@ -3474,13 +3474,12 @@ void numa_default_policy(void)
 {
 	do_set_mempolicy(MPOL_DEFAULT, 0, NULL);
 }
-/*
+
 void nusa_default_policy(void)
 {
-	do_set_prampolicy(MPOL_LOCAL, 0, NULL);
+	do_set_prampolicy(MPOL_DEFAULT, 0, NULL);
 //	do_set_prampolicy(MPOL_INTERLEAVE, 0, NULL);
 }
-*/
 
 /*
  * Parse and format mempolicy from/to strings
