@@ -670,7 +670,6 @@ asmlinkage __visible void __init start_kernel(void)
 	debug_objects_mem_init();
 	setup_per_cpu_pageset();	/* mm/page_alloc.c */
 	numa_policy_init();		/* mm/mempolicy.c */
-	nusa_policy_init();		/* mm/mempolicy.c */
 	if (late_time_init)
 		late_time_init();
 	calibrate_delay();

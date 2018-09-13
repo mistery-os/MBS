@@ -3318,7 +3318,7 @@ void __init numa_policy_init(void)
 	policy_cache = kmem_cache_create("numa_policy",
 					 sizeof(struct mempolicy),
 					 0, SLAB_PANIC, NULL);
-/*
+
 	pram_policy_cache = kmem_cache_create("nusa_policy",
 					 sizeof(struct mempolicy),
 					 0, SLAB_PANIC, NULL);
@@ -3326,7 +3326,7 @@ void __init numa_policy_init(void)
 	sn_pram_cache = kmem_cache_create("mbsfs_policy_node",
 				     sizeof(struct sp_pram_node),
 				     0, SLAB_PANIC, NULL);
-*/
+
 	sn_cache = kmem_cache_create("shared_policy_node",
 				     sizeof(struct sp_node),
 				     0, SLAB_PANIC, NULL);
@@ -3338,7 +3338,7 @@ void __init numa_policy_init(void)
 			.flags = MPOL_F_MOF | MPOL_F_MORON,
 			.v = { .preferred_node = nid, },
 		};
-/*
+
 		//<<<2018.05.31 Yongseob
 		preferred_pram_node_policy[nid] = (struct mempolicy) {
 			.refcnt = ATOMIC_INIT(1),
@@ -3349,7 +3349,7 @@ void __init numa_policy_init(void)
 			//. v = { .nodes = ,},
 		};
 		//>>>
-*/
+
 	}
 
 	/*
@@ -3393,10 +3393,12 @@ void __init numa_policy_init(void)
 	/*
 	if (do_set_prampolicy(MPOL_INTERLEAVE, 0, &interleave_nodes))
 		pr_err("%s: interleaving failed\n", __func__);
+	if (do_set_prampolicy(MPOL_LOCAL, 0, NULL))
+		pr_err("%s: LOCAL failed\n", __func__);
 	*/
 	check_numabalancing_enable();
 }
-
+#if 0
 void __init nusa_policy_init(void)
 {
 	nodemask_t interleave_nodes;
@@ -3466,6 +3468,7 @@ void __init nusa_policy_init(void)
 		pr_err("%s: LOCAL failed\n", __func__);
 	//check_numabalancing_enable();
 }
+#endif
 /* Reset policy of current process to default */
 void numa_default_policy(void)
 {
