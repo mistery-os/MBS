@@ -3319,6 +3319,7 @@ void __init numa_policy_init(void)
 		preferred_pram_node_policy[nid] = (struct mempolicy) {
 			.refcnt = ATOMIC_INIT(1),
 			.mode = MPOL_LOCAL,
+			.flags = MPOL_F_LOCAL,
 			//.mode = MPOL_INTERLEAVE,
 			//.flags = MPOL_F_LOCAL| MPOL_F_MOF | MPOL_F_MORON,
 			//. v = { .nodes = ,},
