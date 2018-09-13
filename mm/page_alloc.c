@@ -5524,7 +5524,7 @@ void __ref build_all_zonelists(pg_data_t *pgdat)
 #ifdef CONFIG_NUMA
 	pr_info("Policy zone: %s\n", zone_names[policy_zone]);
 #endif
-	pr_info("Policy zone_pram: %s\n", zone_names[policy_zone_pram]);
+	pr_info("Policy zone_pram: %s\n", zone_names[pram_policy_zone]);
 }
 
 /*

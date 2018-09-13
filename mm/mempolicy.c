@@ -130,11 +130,11 @@ static struct mempolicy default_policy = {
 	.flags = MPOL_F_LOCAL,
 };
 //<<<2018.06.04 Yongseob
-enum zone_type policy_zone_pram = 0;
+enum zone_type pram_policy_zone = 0;
 static struct mempolicy default_pram_policy = {
 	.refcnt = ATOMIC_INIT(1), /* never free it */
 	.mode = MPOL_LOCAL,
-	.flags = MPOL_F_LOCAL,
+//	.flags = MPOL_F_LOCAL,
 };
 //>>>
 static struct mempolicy preferred_node_policy[MAX_NUMNODES];
@@ -2036,6 +2036,26 @@ static int apply_policy_zone(struct mempolicy *policy, enum zone_type zone)
 
 	return zone >= dynamic_policy_zone;
 }
+static int apply_pram_policy_zone(struct mempolicy *policy, enum zone_type zone)
+{
+	enum zone_type dynamic_policy_zone = pram_policy_zone;
+
+	BUG_ON(dynamic_policy_zone == ZONE_MOVABLE);
+
+	/*
+	 * if policy->v.nodes has movable memory only,
+	 * we apply policy when gfp_zone(gfp) = ZONE_MOVABLE only.
+	 *
+	 * policy->v.nodes is intersect with node_states[N_MEMORY].
+	 * so if the following test faile, it implies
+	 * policy->v.nodes has movable memory only.
+	 */
+	if (!nodes_intersects(policy->v.nodes, node_states[N_HIGH_MEMORY]))
+		dynamic_policy_zone = ZONE_MOVABLE;
+
+	return zone >= dynamic_policy_zone;
+}
+
 
 /*
  * Return a nodemask representing a mempolicy for filtering nodes for
@@ -2051,6 +2071,17 @@ static nodemask_t *policy_nodemask(gfp_t gfp, struct mempolicy *policy)
 
 	return NULL;
 }
+static nodemask_t *pram_policy_nodemask(gfp_t gfp, struct mempolicy *policy)
+{
+	/* Lower zones don't get a nodemask applied for MPOL_BIND */
+	if (unlikely(policy->mode == MPOL_BIND) &&
+			apply_pram_policy_zone(policy, gfp_zone(gfp)) &&
+			cpuset_nodemask_valid_mems_allowed(&policy->v.nodes))
+		return &policy->v.nodes;
+
+	return NULL;
+}
+
 
 /* Return the node id preferred by the given mempolicy, or the given id */
 static int policy_node(gfp_t gfp, struct mempolicy *policy,
@@ -2410,7 +2441,7 @@ alloc_pages_vma_pram(gfp_t gfp, int order, struct vm_area_struct *vma,
 		unsigned nid;
 
 		nid = interleave_nid(pol, vma, addr, PAGE_SHIFT + order);
-		mpol_cond_put(pol);
+		mpol_cond_put_pram(pol);
 		page = alloc_page_interleave(gfp, order, nid);
 		goto out;
 	}
@@ -2432,19 +2463,19 @@ alloc_pages_vma_pram(gfp_t gfp, int order, struct vm_area_struct *vma,
 						!(pol->flags & MPOL_F_LOCAL))
 			hpage_node = pol->v.preferred_node;
 
-		nmask = policy_nodemask(gfp, pol);
+		nmask = pram_policy_nodemask(gfp, pol);
 		if (!nmask || node_isset(hpage_node, *nmask)) {
-			mpol_cond_put(pol);
+			mpol_cond_put_pram(pol);
 			page = __alloc_pages_node(hpage_node,
 						gfp | __GFP_THISNODE, order);
 			goto out;
 		}
 	}
 
-	nmask = policy_nodemask(gfp, pol);
+	nmask = pram_policy_nodemask(gfp, pol);
 	preferred_nid = policy_node(gfp, pol, node);
 	page = __alloc_pages_nodemask(gfp, order, preferred_nid, nmask);
-	mpol_cond_put(pol);
+	mpol_cond_put_pram(pol);
 out:
 	return page;
 }
@@ -2482,7 +2513,7 @@ struct page *alloc_prams_current(gfp_t gfp, unsigned order)
 	else
 		page = __alloc_pages_nodemask(gfp, order,
 				policy_node(gfp, pol, numa_node_id()),
-				policy_nodemask(gfp, pol));
+				pram_policy_nodemask(gfp, pol));
 
 	return page;
 }
@@ -2645,13 +2676,13 @@ sp_lookup(struct shared_policy *sp, unsigned long start, unsigned long end)
 	return rb_entry(n, struct sp_node, nd);
 }
 
-static struct sp_pram_node *
+static struct mbsfs_pram_node *
 sp_pram_lookup(struct mbsfs_policy *sp, unsigned long start, unsigned long end)
 {
 	struct rb_node *n = sp->root.rb_node;
 
 	while (n) {
-		struct sp_pram_node *p = rb_entry(n, struct sp_pram_node, nd);
+		struct mbsfs_pram_node *p = rb_entry(n, struct mbsfs_pram_node, nd);
 
 		if (start >= p->end)
 			n = n->rb_right;
@@ -2663,16 +2694,16 @@ sp_pram_lookup(struct mbsfs_policy *sp, unsigned long start, unsigned long end)
 	if (!n)
 		return NULL;
 	for (;;) {
-		struct sp_pram_node *w = NULL;
+		struct mbsfs_pram_node *w = NULL;
 		struct rb_node *prev = rb_prev(n);
 		if (!prev)
 			break;
-		w = rb_entry(prev, struct sp_pram_node, nd);
+		w = rb_entry(prev, struct mbsfs_pram_node, nd);
 		if (w->end <= start)
 			break;
 		n = prev;
 	}
-	return rb_entry(n, struct sp_pram_node, nd);
+	return rb_entry(n, struct mbsfs_pram_node, nd);
 }
 /*
  * Insert a new shared policy into the list.  Caller holds sp->lock for
@@ -2699,15 +2730,15 @@ static void sp_insert(struct shared_policy *sp, struct sp_node *new)
 	pr_debug("inserting %lx-%lx: %d\n", new->start, new->end,
 		 new->policy ? new->policy->mode : 0);
 }
-static void sp_pram_insert(struct mbsfs_policy *sp, struct sp_pram_node *new)
+static void sp_pram_insert(struct mbsfs_policy *sp, struct mbsfs_pram_node *new)
 {
 	struct rb_node **p = &sp->root.rb_node;
 	struct rb_node *parent = NULL;
-	struct sp_pram_node *nd;
+	struct mbsfs_pram_node *nd;
 
 	while (*p) {
 		parent = *p;
-		nd = rb_entry(parent, struct sp_pram_node, nd);
+		nd = rb_entry(parent, struct mbsfs_pram_node, nd);
 		if (new->start < nd->start)
 			p = &(*p)->rb_left;
 		else if (new->end > nd->end)
@@ -2746,7 +2777,7 @@ struct mempolicy *
 mpol_mbsfs_policy_lookup(struct mbsfs_policy *sp, unsigned long idx)
 {
 	struct mempolicy *pol = NULL;
-	struct sp_pram_node *sn;
+	struct mbsfs_pram_node *sn;
 
 	if (!sp->root.rb_node)
 		return NULL;
@@ -2768,7 +2799,7 @@ static void sp_free(struct sp_node *n)
 	mpol_put(n->policy);
 	kmem_cache_free(sn_cache, n);
 }
-static void sp_pram_free(struct sp_pram_node *n)
+static void mbsfs_pram_free(struct mbsfs_pram_node *n)
 {
 	mpol_put_pram(n->policy);
 	kmem_cache_free(sn_pram_cache, n);
@@ -2909,25 +2940,25 @@ static struct sp_node *sp_alloc(unsigned long start, unsigned long end,
 	return n;
 }
 
-static void sp_pram_delete(struct mbsfs_policy *sp, struct sp_pram_node *n)
+static void sp_pram_delete(struct mbsfs_policy *sp, struct mbsfs_pram_node *n)
 {
 	pr_debug("deleting %lx-l%lx\n", n->start, n->end);
 	rb_erase(&n->nd, &sp->root);
-	sp_pram_free(n);
+	mbsfs_pram_free(n);
 }
 
 
-static void sp_pram_node_init(struct sp_pram_node *node, unsigned long start,
+static void sp_pram_node_init(struct mbsfs_pram_node *node, unsigned long start,
 			unsigned long end, struct mempolicy *pol)
 {
 	node->start = start;
 	node->end = end;
 	node->policy = pol;
 }
-static struct sp_pram_node *sp_pram_alloc(unsigned long start, unsigned long end,
+static struct mbsfs_pram_node *mbsfs_pram_alloc(unsigned long start, unsigned long end,
 				struct mempolicy *pol)
 {
-	struct sp_pram_node *n;
+	struct mbsfs_pram_node *n;
 	struct mempolicy *newpol;
 
 	n = kmem_cache_alloc(sn_pram_cache, GFP_KERNEL);
@@ -3010,10 +3041,10 @@ alloc_new:
 	goto restart;
 }
 static int mbsfs_pram_policy_replace(struct mbsfs_policy *sp, unsigned long start,
-				 unsigned long end, struct sp_pram_node *new)
+				 unsigned long end, struct mbsfs_pram_node *new)
 {
-	struct sp_pram_node *n;
-	struct sp_pram_node *n_new = NULL;
+	struct mbsfs_pram_node *n;
+	struct mbsfs_pram_node *n_new = NULL;
 	struct mempolicy *mpol_new = NULL;
 	int ret = 0;
 
@@ -3047,7 +3078,7 @@ restart:
 		}
 		if (!next)
 			break;
-		n = rb_entry(next, struct sp_pram_node, nd);
+		n = rb_entry(next, struct mbsfs_pram_node, nd);
 	}
 	if (new)
 		sp_pram_insert(sp, new);
@@ -3198,23 +3229,23 @@ int mpol_set_mbsfs_policy(struct mbsfs_policy *info,
 			struct vm_area_struct *vma, struct mempolicy *npol)
 {
 	int err;
-	struct sp_pram_node *new = NULL;
+	struct mbsfs_pram_node *new = NULL;
 	unsigned long sz = vma_pages(vma);
 
-	pr_debug("set_mbsfs_pram_policy %lx sz %lu %d %d %lx\n",
+	pr_info("set_mbsfs_pram_policy %lx sz %lu %d %d %lx\n",
 		 vma->vm_pgoff,
 		 sz, npol ? npol->mode : -1,
 		 npol ? npol->flags : -1,
 		 npol ? nodes_addr(npol->v.nodes)[0] : NUMA_NO_NODE);
 
 	if (npol) {
-		new = sp_pram_alloc(vma->vm_pgoff, vma->vm_pgoff + sz, npol);
+		new = mbsfs_pram_alloc(vma->vm_pgoff, vma->vm_pgoff + sz, npol);
 		if (!new)
 			return -ENOMEM;
 	}
 	err = mbsfs_pram_policy_replace(info, vma->vm_pgoff, vma->vm_pgoff+sz, new);
 	if (err && new)
-		sp_pram_free(new);
+		mbsfs_pram_free(new);
 	return err;
 }
 //<<<2018.05.17 Yongseob
@@ -3244,7 +3275,7 @@ EXPORT_SYMBOL_GPL(mpol_free_shared_policy);
 //>>>
 void mpol_free_mbsfs_policy(struct mbsfs_policy *p)
 {
-	struct sp_pram_node *n;
+	struct mbsfs_pram_node *n;
 	struct rb_node *next;
 
 	if (!p->root.rb_node)
@@ -3252,7 +3283,7 @@ void mpol_free_mbsfs_policy(struct mbsfs_policy *p)
 	write_lock(&p->lock);
 	next = rb_first(&p->root);
 	while (next) {
-		n = rb_entry(next, struct sp_pram_node, nd);
+		n = rb_entry(next, struct mbsfs_pram_node, nd);
 		next = rb_next(&n->nd);
 		sp_pram_delete(p, n);
 	}
@@ -3324,7 +3355,7 @@ void __init numa_policy_init(void)
 					 0, SLAB_PANIC, NULL);
 
 	sn_pram_cache = kmem_cache_create("mbsfs_policy_node",
-				     sizeof(struct sp_pram_node),
+				     sizeof(struct mbsfs_pram_node),
 				     0, SLAB_PANIC, NULL);
 
 	sn_cache = kmem_cache_create("shared_policy_node",
@@ -3410,7 +3441,7 @@ void __init nusa_policy_init(void)
 					 0, SLAB_PANIC, NULL);
 
 	sn_pram_cache = kmem_cache_create("mbsfs_policy_node",
-				     sizeof(struct sp_pram_node),
+				     sizeof(struct mbsfs_pram_node),
 				     0, SLAB_PANIC, NULL);
 
 	for_each_node(nid) {

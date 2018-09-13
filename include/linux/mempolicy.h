@@ -149,7 +149,7 @@ struct shared_policy {
 	rwlock_t lock;
 };
 
-struct sp_pram_node {
+struct mbsfs_pram_node {
 	struct rb_node nd;
 	unsigned long start, end;
 	struct mempolicy *policy;
@@ -187,7 +187,7 @@ struct mempolicy *get_pram_policy(struct task_struct *p);
 
 extern void numa_default_policy(void);
 extern void numa_policy_init(void);
-//extern void nusa_default_policy(void);
+extern void nusa_default_policy(void);
 //extern void nusa_policy_init(void);
 extern void mpol_rebind_task(struct task_struct *tsk, const nodemask_t *new);
 extern void mpol_rebind_mm(struct mm_struct *mm, nodemask_t *new);
@@ -201,7 +201,7 @@ extern bool mempolicy_nodemask_intersects(struct task_struct *tsk,
 extern unsigned int mempolicy_slab_node(void);
 
 extern enum zone_type policy_zone;
-extern enum zone_type policy_zone_pram;
+extern enum zone_type pram_policy_zone;
 
 static inline void check_highest_zone(enum zone_type k)
 {
@@ -211,8 +211,8 @@ static inline void check_highest_zone(enum zone_type k)
 #endif
 		if (k > policy_zone && k != ZONE_MOVABLE && k !=ZONE_PRAM)
 		policy_zone = k;
-		if (k > policy_zone_pram && k != ZONE_MOVABLE)
-		policy_zone_pram = k;
+		if (k > pram_policy_zone && k != ZONE_MOVABLE)
+		pram_policy_zone = k;
 	//>>>
 }
 
@@ -318,10 +318,10 @@ static inline void numa_default_policy(void)
 static inline void nusa_policy_init(void)
 {
 }
+*/
 static inline void nusa_default_policy(void)
 {
 }
-*/
 
 static inline void mpol_rebind_task(struct task_struct *tsk,
 				const nodemask_t *new)
