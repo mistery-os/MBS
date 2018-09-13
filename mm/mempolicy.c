@@ -3362,10 +3362,10 @@ void __init numa_policy_init(void)
 			. v = { .nodes = interleave_nodes,},
 		};
 		//>>>
+	}
 	*/
 	if (do_set_prampolicy(MPOL_INTERLEAVE, 0, &interleave_nodes))
 		pr_err("%s: interleaving failed\n", __func__);
-	}
 	check_numabalancing_enable();
 }
 
