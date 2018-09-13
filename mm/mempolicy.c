@@ -3316,15 +3316,13 @@ void __init numa_policy_init(void)
 			.v = { .preferred_node = nid, },
 		};
 		//<<<2018.05.31 Yongseob
-		/*
 		preferred_pram_node_policy[nid] = (struct mempolicy) {
 			.refcnt = ATOMIC_INIT(1),
 			.mode = MPOL_LOCAL,
 			//.mode = MPOL_INTERLEAVE,
-			.flags = MPOL_F_LOCAL| MPOL_F_MOF | MPOL_F_MORON,
+			//.flags = MPOL_F_LOCAL| MPOL_F_MOF | MPOL_F_MORON,
 			//. v = { .nodes = ,},
 		};
-		*/
 		//>>>
 	}
 
@@ -3354,6 +3352,7 @@ void __init numa_policy_init(void)
 
 	if (do_set_mempolicy(MPOL_INTERLEAVE, 0, &interleave_nodes))
 		pr_err("%s: interleaving failed\n", __func__);
+	/*
 	for_each_node(nid) {
 		//<<<2018.05.31 Yongseob
 		preferred_pram_node_policy[nid] = (struct mempolicy) {
@@ -3363,6 +3362,7 @@ void __init numa_policy_init(void)
 			. v = { .nodes = interleave_nodes,},
 		};
 		//>>>
+	*/
 	if (do_set_prampolicy(MPOL_INTERLEAVE, 0, &interleave_nodes))
 		pr_err("%s: interleaving failed\n", __func__);
 	}
