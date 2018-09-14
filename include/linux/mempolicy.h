@@ -198,6 +198,10 @@ extern void mpol_rebind_task_pram(struct task_struct *tsk, const nodemask_t *new
 extern int huge_node(struct vm_area_struct *vma,
 				unsigned long addr, gfp_t gfp_flags,
 				struct mempolicy **mpol, nodemask_t **nodemask);
+extern int huge_pram_node(struct vm_area_struct *vma,
+				unsigned long addr, gfp_t gfp_flags,
+				struct mempolicy **mpol, nodemask_t **nodemask);
+
 extern bool init_nodemask_of_mempolicy(nodemask_t *mask);
 extern bool mempolicy_nodemask_intersects(struct task_struct *tsk,
 				const nodemask_t *mask);
@@ -353,7 +357,14 @@ static inline int huge_node(struct vm_area_struct *vma,
 	*nodemask = NULL;
 	return 0;
 }
-
+static inline int huge_pram_node(struct vm_area_struct *vma,
+				unsigned long addr, gfp_t gfp_flags,
+				struct mempolicy **mpol, nodemask_t **nodemask)
+{
+	*mpol = NULL;
+	*nodemask = NULL;
+	return 0;
+}
 static inline bool init_nodemask_of_mempolicy(nodemask_t *m)
 {
 	return false;
