@@ -131,7 +131,7 @@ static struct mempolicy default_policy = {
 };
 //<<<2018.06.04 Yongseob
 enum zone_type pram_policy_zone = 0;
-static struct mempolicy default_pram_policy = {
+static struct mempolicy pram_default_policy = {
 	.refcnt = ATOMIC_INIT(1), /* never free it */
 	.mode = MPOL_PREFERRED,
 	.flags = MPOL_F_LOCAL,
@@ -158,7 +158,7 @@ struct mempolicy *get_pram_policy(struct task_struct *p)
 			return pol;
 	}
 
-	return &default_pram_policy;
+	return &pram_default_policy;
 }
 struct mempolicy *get_task_policy(struct task_struct *p)
 {
@@ -967,7 +967,7 @@ out:
 static void get_pram_policy_nodemask(struct mempolicy *p, nodemask_t *nodes)
 {
 	nodes_clear(*nodes);
-	if (p == &default_pram_policy)
+	if (p == &pram_default_policy)
 		return;
 
 	switch (p->mode) {
@@ -1149,7 +1149,7 @@ static long do_get_prampolicy(int *policy, nodemask_t *nmask,
 		return -EINVAL;
 
 	if (!pol)
-		pol = &default_pram_policy;	/* indicates default behavior */
+		pol = &pram_default_policy;	/* indicates default behavior */
 
 	if (flags & MPOL_F_NODE) {
 		if (flags & MPOL_F_ADDR) {
@@ -1165,7 +1165,7 @@ static long do_get_prampolicy(int *policy, nodemask_t *nmask,
 			goto out;
 		}
 	} else {
-		*policy = pol == &default_pram_policy ? MPOL_DEFAULT :
+		*policy = pol == &pram_default_policy ? MPOL_DEFAULT :
 						pol->mode;
 		/*
 		 * Internal mempolicy flags must be masked off before exposing
@@ -2060,7 +2060,7 @@ static int apply_pram_policy_zone(struct mempolicy *policy, enum zone_type zone)
 	if (!nodes_intersects(policy->v.nodes, node_states[N_HIGH_MEMORY]))
 		dynamic_policy_zone = ZONE_MOVABLE;
 
-	return zone >= dynamic_policy_zone;
+	return zone <= dynamic_policy_zone;
 }
 
 
@@ -2572,7 +2572,7 @@ EXPORT_SYMBOL_GPL(alloc_pages_vma_pram);
  */
 struct page *alloc_prams_current(gfp_t gfp, unsigned order)
 {
-	struct mempolicy *pol = &default_pram_policy;
+	struct mempolicy *pol = &pram_default_policy;
 	struct page *page;
 
 	if (!in_interrupt() && !(gfp & __GFP_THISNODE))
@@ -2580,7 +2580,7 @@ struct page *alloc_prams_current(gfp_t gfp, unsigned order)
 
 	/*
 	 * No reference counting needed for current-prampolicy
-	 * nor system default_pram_policy
+	 * nor system pram_default_policy
 	 */
 	if (pol->mode == MPOL_INTERLEAVE)
 		page = alloc_page_interleave(gfp, order, interleave_nodes(pol));
@@ -4070,7 +4070,7 @@ void mpol_to_str_pram(char *buffer, int maxlen, struct mempolicy *pol)
 	unsigned short mode = MPOL_DEFAULT;
 	unsigned short flags = 0;
 
-	if (pol && pol != &default_pram_policy && !(pol->flags & MPOL_F_MORON)) {
+	if (pol && pol != &pram_default_policy && !(pol->flags & MPOL_F_MORON)) {
 		mode = pol->mode;
 		flags = pol->flags;
 	}
