@@ -192,11 +192,17 @@ extern void nusa_default_policy(void);
 extern void mpol_rebind_task(struct task_struct *tsk, const nodemask_t *new);
 extern void mpol_rebind_mm(struct mm_struct *mm, nodemask_t *new);
 
+extern void mpol_rebind_task_pram(struct task_struct *tsk, const nodemask_t *new);
+//extern void mpol_rebind_mm(struct mm_struct *mm, nodemask_t *new);
+
 extern int huge_node(struct vm_area_struct *vma,
 				unsigned long addr, gfp_t gfp_flags,
 				struct mempolicy **mpol, nodemask_t **nodemask);
 extern bool init_nodemask_of_mempolicy(nodemask_t *mask);
 extern bool mempolicy_nodemask_intersects(struct task_struct *tsk,
+				const nodemask_t *mask);
+extern bool init_nodemask_of_prampolicy(nodemask_t *mask);
+extern bool prampolicy_nodemask_intersects(struct task_struct *tsk,
 				const nodemask_t *mask);
 extern unsigned int mempolicy_slab_node(void);
 
@@ -260,6 +266,7 @@ static inline bool vma_migratable(struct vm_area_struct *vma)
 
 extern int mpol_misplaced(struct page *, struct vm_area_struct *, unsigned long);
 extern void mpol_put_task_policy(struct task_struct *);
+extern void mpol_put_pram_policy(struct task_struct *);
 
 #else
 
@@ -328,6 +335,12 @@ static inline void mpol_rebind_task(struct task_struct *tsk,
 {
 }
 
+static inline void mpol_rebind_task_pram(struct task_struct *tsk,
+				const nodemask_t *new)
+{
+}
+
+
 static inline void mpol_rebind_mm(struct mm_struct *mm, nodemask_t *new)
 {
 }
@@ -345,6 +358,12 @@ static inline bool init_nodemask_of_mempolicy(nodemask_t *m)
 {
 	return false;
 }
+
+static inline bool init_nodemask_of_prampolicy(nodemask_t *m)
+{
+	return false;
+}
+
 
 static inline int do_migrate_pages(struct mm_struct *mm, const nodemask_t *from,
 				   const nodemask_t *to, int flags)
@@ -373,6 +392,9 @@ static inline int mpol_misplaced(struct page *page, struct vm_area_struct *vma,
 }
 
 static inline void mpol_put_task_policy(struct task_struct *task)
+{
+}
+static inline void mpol_put_pram_policy(struct task_struct *task)
 {
 }
 #endif /* CONFIG_NUMA */

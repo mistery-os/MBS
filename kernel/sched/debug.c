@@ -896,6 +896,7 @@ static void sched_show_numa(struct task_struct *p, struct seq_file *m)
 {
 #ifdef CONFIG_NUMA_BALANCING
 	struct mempolicy *pol;
+	struct mempolicy *prampol;
 
 	if (p->mm)
 		P(mm->numa_scan_seq);
@@ -905,6 +906,10 @@ static void sched_show_numa(struct task_struct *p, struct seq_file *m)
 	if (pol && !(pol->flags & MPOL_F_MORON))
 		pol = NULL;
 	mpol_get(pol);
+	prampol = p->prampolicy;
+	if (prampol && !(prampol->flags & MPOL_F_MORON))
+		prampol = NULL;
+	mpol_get(prampol);
 	task_unlock(p);
 
 	P(numa_pages_migrated);

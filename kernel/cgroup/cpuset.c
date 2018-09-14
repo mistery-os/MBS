@@ -157,8 +157,16 @@ static inline bool task_has_mempolicy(struct task_struct *task)
 {
 	return task->mempolicy;
 }
+static inline bool task_has_prampolicy(struct task_struct *task)
+{
+	return task->prampolicy;
+}
 #else
 static inline bool task_has_mempolicy(struct task_struct *task)
+{
+	return false;
+}
+static inline bool task_has_prampolicy(struct task_struct *task)
 {
 	return false;
 }

@@ -139,6 +139,13 @@ static inline int numa_mem_id(void)
 	return raw_cpu_read(_numa_mem_);
 }
 #endif
+#ifndef nusa_pram_id
+/* Returns the number of the nearest Node with PRAM(MBS) */
+static inline int nusa_pram_id(void)
+{
+	return raw_cpu_read(_nusa_pram_);
+}
+#endif
 
 #ifndef cpu_to_mem
 static inline int cpu_to_mem(int cpu)

@@ -93,6 +93,10 @@ EXPORT_PER_CPU_SYMBOL(numa_node);
 DEFINE_PER_CPU(int, _numa_mem_);		/* Kernel "local memory" node */
 EXPORT_PER_CPU_SYMBOL(_numa_mem_);
 int _node_numa_mem_[MAX_NUMNODES];
+DEFINE_PER_CPU(int, _nsma_pram_);		/* Kernel "local memory" node */
+EXPORT_PER_CPU_SYMBOL(_nusa_pram_);
+int _node_nusa_pram_[MAX_NUMNODES];
+
 #endif
 
 /* work_structs for global per-cpu drains */

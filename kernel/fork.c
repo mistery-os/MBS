@@ -1683,6 +1683,12 @@ static __latent_entropy struct task_struct *copy_process(
 		p->mempolicy = NULL;
 		goto bad_fork_cleanup_threadgroup_lock;
 	}
+	p->prampolicy = mpol_dup_pram(p->prampolicy);
+	if (IS_ERR(p->prampolicy)) {
+		retval = PTR_ERR(p->prampolicy);
+		p->prampolicy = NULL;
+		goto bad_fork_cleanup_threadgroup_lock;
+	}
 #endif
 #ifdef CONFIG_CPUSETS
 	p->cpuset_mem_spread_rotor = NUMA_NO_NODE;
@@ -1973,6 +1979,7 @@ bad_fork_cleanup_policy:
 	lockdep_free_task(p);
 #ifdef CONFIG_NUMA
 	mpol_put(p->mempolicy);
+	mpol_put_pram(p->prampolicy);
 bad_fork_cleanup_threadgroup_lock:
 #endif
 	delayacct_tsk_free(p);

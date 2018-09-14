@@ -143,8 +143,7 @@ static struct mempolicy preferred_pram_node_policy[MAX_NUMNODES];
 //>>>
 struct mempolicy *get_pram_policy(struct task_struct *p)
 {
-	//struct mempolicy *pol = p->prampolicy;
-	struct mempolicy *pol = p->mempolicy;
+	struct mempolicy *pol = p->prampolicy;
 	int node;
 
 	if (pol)
@@ -491,6 +490,12 @@ void mpol_rebind_task(struct task_struct *tsk, const nodemask_t *new)
 {
 	mpol_rebind_policy(tsk->mempolicy, new);
 }
+
+void mpol_rebind_task_pram(struct task_struct *tsk, const nodemask_t *new)
+{
+	mpol_rebind_policy(tsk->prampolicy, new);
+}
+
 
 /*
  * Rebind each vma in mm to new nodemask.
@@ -941,10 +946,8 @@ static long do_set_prampolicy(unsigned short mode, unsigned short flags,
 		mpol_put_pram(new);
 		goto out;
 	}
-	//old = current->prampolicy;
-	//current->prampolicy = new;
-	old = current->mempolicy;
-	current->mempolicy = new;
+	old = current->prampolicy;
+	current->prampolicy = new;
 	if (new && new->mode == MPOL_INTERLEAVE)
 		current->il_prev = MAX_NUMNODES-1;
 	task_unlock(current);
@@ -1109,8 +1112,7 @@ static long do_get_prampolicy(int *policy, nodemask_t *nmask,
 	int err;
 	struct mm_struct *mm = current->mm;
 	struct vm_area_struct *vma = NULL;
-	//struct mempolicy *pol = current->prampolicy;
-	struct mempolicy *pol = current->mempolicy;
+	struct mempolicy *pol = current->prampolicy;
 
 	if (flags &
 		~(unsigned long)(MPOL_F_NODE|MPOL_F_ADDR|MPOL_F_MEMS_ALLOWED))
@@ -1154,8 +1156,7 @@ static long do_get_prampolicy(int *policy, nodemask_t *nmask,
 			if (err < 0)
 				goto out;
 			*policy = err;
-		//} else if (pol == current->prampolicy &&
-		} else if (pol == current->mempolicy &&
+		} else if (pol == current->prampolicy &&
 				pol->mode == MPOL_INTERLEAVE) {
 			*policy = next_node_in(current->il_prev, pol->v.nodes);
 		} else {
@@ -2290,6 +2291,38 @@ bool init_nodemask_of_mempolicy(nodemask_t *mask)
 
 	return true;
 }
+bool init_nodemask_of_prampolicy(nodemask_t *mask)
+{
+	struct mempolicy *mempolicy;
+	int nid;
+
+	if (!(mask && current->prampolicy))
+		return false;
+
+	task_lock(current);
+	mempolicy = current->prampolicy;
+	switch (mempolicy->mode) {
+	case MPOL_PREFERRED:
+		if (mempolicy->flags & MPOL_F_LOCAL)
+			nid = numa_node_id();
+		else
+			nid = mempolicy->v.preferred_node;
+		init_nodemask_of_node(mask, nid);
+		break;
+
+	case MPOL_BIND:
+		/* Fall through */
+	case MPOL_INTERLEAVE:
+		*mask =  mempolicy->v.nodes;
+		break;
+
+	default:
+		BUG();
+	}
+	task_unlock(current);
+
+	return true;
+}
 #endif
 
 /*
@@ -2335,6 +2368,41 @@ out:
 	task_unlock(tsk);
 	return ret;
 }
+bool prampolicy_nodemask_intersects(struct task_struct *tsk,
+					const nodemask_t *mask)
+{
+	struct mempolicy *mempolicy;
+	bool ret = true;
+
+	if (!mask)
+		return ret;
+	task_lock(tsk);
+	mempolicy = tsk->prampolicy;
+	if (!mempolicy)
+		goto out;
+
+	switch (mempolicy->mode) {
+	case MPOL_PREFERRED:
+		/*
+		 * MPOL_PREFERRED and MPOL_F_LOCAL are only preferred nodes to
+		 * allocate from, they may fallback to other nodes when oom.
+		 * Thus, it's possible for tsk to have allocated memory from
+		 * nodes in mask.
+		 */
+		break;
+	case MPOL_BIND:
+	case MPOL_INTERLEAVE:
+		ret = nodes_intersects(mempolicy->v.nodes, *mask);
+		break;
+	default:
+		BUG();
+	}
+out:
+	task_unlock(tsk);
+	return ret;
+}
+
+
 
 /* Allocate a page in interleaved policy.
    Own path because it needs to do special accounting. */
@@ -2510,8 +2578,8 @@ struct page *alloc_prams_current(gfp_t gfp, unsigned order)
 		pol = get_pram_policy(current);
 
 	/*
-	 * No reference counting needed for current->mempolicy
-	 * nor system default_policy
+	 * No reference counting needed for current-prampolicy
+	 * nor system default_pram_policy
 	 */
 	if (pol->mode == MPOL_INTERLEAVE)
 		page = alloc_page_interleave(gfp, order, interleave_nodes(pol));
@@ -2598,8 +2666,7 @@ struct mempolicy *__mpol_dup_pram(struct mempolicy *old)
 		return ERR_PTR(-ENOMEM);
 
 	/* task's mempolicy is protected by alloc_lock */
-	//if (old == current->prampolicy) {
-	if (old == current->mempolicy) {
+	if (old == current->prampolicy) {
 		task_lock(current);
 		*new = *old;
 		task_unlock(current);
@@ -2908,6 +2975,17 @@ void mpol_put_task_policy(struct task_struct *task)
 	task->mempolicy = NULL;
 	task_unlock(task);
 	mpol_put(pol);
+}
+
+void mpol_put_pram_policy(struct task_struct *task)
+{
+	struct mempolicy *pol;
+
+	task_lock(task);
+	pol = task->prampolicy;
+	task->prampolicy = NULL;
+	task_unlock(task);
+	mpol_put_pram(pol);
 }
 
 static void sp_delete(struct shared_policy *sp, struct sp_node *n)
