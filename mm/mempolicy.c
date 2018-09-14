@@ -135,7 +135,6 @@ static struct mempolicy default_pram_policy = {
 	.refcnt = ATOMIC_INIT(1), /* never free it */
 	.mode = MPOL_PREFERRED,
 	.flags = MPOL_F_LOCAL,
-	//.mode = MPOL_LOCAL,
 };
 //>>>
 static struct mempolicy preferred_node_policy[MAX_NUMNODES];
@@ -2567,9 +2566,11 @@ alloc_prams_vma(gfp_t gfp, int order, struct vm_area_struct *vma,
 #endif
 	nmask = pram_policy_nodemask(gfp, pol);
 	preferred_nid = policy_node(gfp, pol, node);
-	pr_info("preferred_nid=%d, node=%d\n",preferred_nid,node);
+	pr_debug("preferred_nid=%d, node=%d\n",preferred_nid,node);
+#if 0
 	preferred_nid = policy_node(gfp, pol, numa_node_id());
-	pr_info("preferred_nid=%d, numa_node_id=%d\n",preferred_nid,numa_node_id());
+	pr_debug("preferred_nid=%d, numa_node_id=%d\n",preferred_nid,numa_node_id());
+#endif
 	page = __alloc_pages_nodemask(gfp, order, preferred_nid, nmask);
 	mpol_cond_put_pram(pol);
 out:
@@ -3339,7 +3340,7 @@ int mpol_set_mbsfs_policy(struct mbsfs_policy *info,
 	struct mbsfs_pram_node *new = NULL;
 	unsigned long sz = vma_pages(vma);
 
-	pr_info("set_mbsfs_pram_policy %lx sz %lu %d %d %lx\n",
+	pr_info("mpol_set_mbsfs_policy %lx sz %lu %d %d %lx\n",
 		 vma->vm_pgoff,
 		 sz, npol ? npol->mode : -1,
 		 npol ? npol->flags : -1,
@@ -3481,12 +3482,9 @@ void __init numa_policy_init(void)
 		preferred_node_pram_policy[nid] = (struct mempolicy) {
 			.refcnt = ATOMIC_INIT(1),
 			.mode = MPOL_PREFERRED,
-			.flags = MPOL_F_MOF | MPOL_F_MORON,
-			//.flags = MPOL_F_LOCAL,
-			//.mode = MPOL_LOCAL,
-			//.mode = MPOL_INTERLEAVE,
-			//.flags = MPOL_F_LOCAL| MPOL_F_MOF | MPOL_F_MORON,
-			//.v = { .nodes = NULL,},
+			.flags = MPOL_F_LOCAL,
+			.v = { .preferred_node = nid, },
+			//.flags = MPOL_F_MOF | MPOL_F_MORON,
 		};
 		//>>>
 
