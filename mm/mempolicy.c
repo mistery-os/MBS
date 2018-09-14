@@ -2538,7 +2538,7 @@ alloc_prams_vma(gfp_t gfp, int order, struct vm_area_struct *vma,
 		page = alloc_page_interleave(gfp, order, nid);
 		goto out;
 	}
-
+#if 0
 	if (unlikely(IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE) && hugepage)) {
 		int hpage_node = node;
 
@@ -2564,9 +2564,12 @@ alloc_prams_vma(gfp_t gfp, int order, struct vm_area_struct *vma,
 			goto out;
 		}
 	}
-
+#endif
 	nmask = pram_policy_nodemask(gfp, pol);
 	preferred_nid = policy_node(gfp, pol, node);
+	pr_info("preferred_nid=%d, node=%d\n",preferred_nid,node);
+	preferred_nid = policy_node(gfp, pol, numa_node_id());
+	pr_info("preferred_nid=%d, numa_node_id=%d\n",preferred_nid,numa_node_id());
 	page = __alloc_pages_nodemask(gfp, order, preferred_nid, nmask);
 	mpol_cond_put_pram(pol);
 out:
