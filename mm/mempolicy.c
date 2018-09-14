@@ -133,8 +133,9 @@ static struct mempolicy default_policy = {
 enum zone_type pram_policy_zone = 0;
 static struct mempolicy default_pram_policy = {
 	.refcnt = ATOMIC_INIT(1), /* never free it */
-	.mode = MPOL_LOCAL,
-//	.flags = MPOL_F_LOCAL,
+	.mode = MPOL_PREFERRED,
+	.flags = MPOL_F_LOCAL,
+	//.mode = MPOL_LOCAL,
 };
 //>>>
 static struct mempolicy preferred_node_policy[MAX_NUMNODES];
@@ -949,7 +950,7 @@ static long do_set_prampolicy(unsigned short mode, unsigned short flags,
 	old = current->prampolicy;
 	current->prampolicy = new;
 	if (new && new->mode == MPOL_INTERLEAVE)
-		current->il_prev = MAX_NUMNODES-1;
+		current->il_prev_pram = MAX_NUMNODES-1;
 	task_unlock(current);
 	mpol_put_pram(old);
 	ret = 0;
@@ -1158,7 +1159,7 @@ static long do_get_prampolicy(int *policy, nodemask_t *nmask,
 			*policy = err;
 		} else if (pol == current->prampolicy &&
 				pol->mode == MPOL_INTERLEAVE) {
-			*policy = next_node_in(current->il_prev, pol->v.nodes);
+			*policy = next_node_in(current->il_prev_pram, pol->v.nodes);
 		} else {
 			err = -EINVAL;
 			goto out;

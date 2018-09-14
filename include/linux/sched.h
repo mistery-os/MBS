@@ -931,9 +931,11 @@ struct task_struct {
 #ifdef CONFIG_NUMA
 	/* Protected by alloc_lock: */
 	struct mempolicy		*mempolicy;
-	struct mempolicy		*prampolicy;
 	short				il_prev;
 	short				pref_node_fork;
+	struct mempolicy		*prampolicy;
+	short				il_prev_pram;
+	short				pref_node_fork_pram;
 #endif
 #ifdef CONFIG_NUMA_BALANCING
 	int				numa_scan_seq;
