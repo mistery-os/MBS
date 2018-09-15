@@ -181,6 +181,8 @@ enum node_stat_item {
 	NR_DIRTIED,		/* page dirtyings since bootup */
 	NR_WRITTEN,		/* page writings since bootup */
 	NR_MBSFS,		/* mbsfs pages (included mbsfs/GEM pages) */
+	NR_MBSFS_THPS,
+	NR_MBSFS_PMDMAPPED,
 	NR_VM_NODE_STAT_ITEMS
 };
 

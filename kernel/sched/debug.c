@@ -22,6 +22,11 @@
 #include "sched.h"
 
 static DEFINE_SPINLOCK(sched_debug_lock);
+#ifndef CONFIG_MBSFS_POLICY
+#	define POLICY	mempolicy
+#else
+#	define POLICY	prampolicy
+#endif
 
 /*
  * This allows printing both to /proc/sched_debug and
@@ -906,7 +911,7 @@ static void sched_show_numa(struct task_struct *p, struct seq_file *m)
 	if (pol && !(pol->flags & MPOL_F_MORON))
 		pol = NULL;
 	mpol_get(pol);
-	prampol = p->prampolicy;
+	prampol = p->POLICY;
 	if (prampol && !(prampol->flags & MPOL_F_MORON))
 		prampol = NULL;
 	mpol_get(prampol);

@@ -110,6 +110,11 @@
 /* Internal flags */
 #define MPOL_MF_DISCONTIG_OK (MPOL_MF_INTERNAL << 0)	/* Skip checks for continuous vmas */
 #define MPOL_MF_INVERT (MPOL_MF_INTERNAL << 1)		/* Invert check for nodemask */
+#ifndef CONFIG_MBSFS_POLICY
+#	define POLICY	mempolicy
+#else
+#	define POLICY	prampolicy
+#endif
 
 static struct kmem_cache *policy_cache;
 //<<<2018.05.23 Yongseob
@@ -143,7 +148,7 @@ static struct mempolicy preferred_node_pram_policy[MAX_NUMNODES];
 //>>>
 struct mempolicy *get_pram_policy(struct task_struct *p)
 {
-	struct mempolicy *pol = p->prampolicy;
+	struct mempolicy *pol = p->POLICY;
 	int node;
 
 	if (pol)
@@ -493,7 +498,7 @@ void mpol_rebind_task(struct task_struct *tsk, const nodemask_t *new)
 
 void mpol_rebind_task_pram(struct task_struct *tsk, const nodemask_t *new)
 {
-	mpol_rebind_policy(tsk->prampolicy, new);
+	mpol_rebind_policy(tsk->POLICY, new);
 }
 
 
@@ -946,8 +951,8 @@ static long do_set_prampolicy(unsigned short mode, unsigned short flags,
 		mpol_put_pram(new);
 		goto out;
 	}
-	old = current->prampolicy;
-	current->prampolicy = new;
+	old = current->POLICY;
+	current->POLICY = new;
 	if (new && new->mode == MPOL_INTERLEAVE)
 		current->il_prev_pram = MAX_NUMNODES-1;
 	task_unlock(current);
@@ -1112,7 +1117,7 @@ static long do_get_prampolicy(int *policy, nodemask_t *nmask,
 	int err;
 	struct mm_struct *mm = current->mm;
 	struct vm_area_struct *vma = NULL;
-	struct mempolicy *pol = current->prampolicy;
+	struct mempolicy *pol = current->POLICY;
 
 	if (flags &
 		~(unsigned long)(MPOL_F_NODE|MPOL_F_ADDR|MPOL_F_MEMS_ALLOWED))
@@ -1156,7 +1161,7 @@ static long do_get_prampolicy(int *policy, nodemask_t *nmask,
 			if (err < 0)
 				goto out;
 			*policy = err;
-		} else if (pol == current->prampolicy &&
+		} else if (pol == current->POLICY &&
 				pol->mode == MPOL_INTERLEAVE) {
 			*policy = next_node_in(current->il_prev_pram, pol->v.nodes);
 		} else {
@@ -2315,11 +2320,11 @@ bool init_nodemask_of_prampolicy(nodemask_t *mask)
 	struct mempolicy *mempolicy;
 	int nid;
 
-	if (!(mask && current->prampolicy))
+	if (!(mask && current->POLICY))
 		return false;
 
 	task_lock(current);
-	mempolicy = current->prampolicy;
+	mempolicy = current->POLICY;
 	switch (mempolicy->mode) {
 	case MPOL_PREFERRED:
 		if (mempolicy->flags & MPOL_F_LOCAL)
@@ -2396,7 +2401,7 @@ bool prampolicy_nodemask_intersects(struct task_struct *tsk,
 	if (!mask)
 		return ret;
 	task_lock(tsk);
-	mempolicy = tsk->prampolicy;
+	mempolicy = tsk->POLICY;
 	if (!mempolicy)
 		goto out;
 
@@ -2690,7 +2695,7 @@ struct mempolicy *__mpol_dup_pram(struct mempolicy *old)
 		return ERR_PTR(-ENOMEM);
 
 	/* task's mempolicy is protected by alloc_lock */
-	if (old == current->prampolicy) {
+	if (old == current->POLICY) {
 		task_lock(current);
 		*new = *old;
 		task_unlock(current);
@@ -3006,8 +3011,8 @@ void mpol_put_pram_policy(struct task_struct *task)
 	struct mempolicy *pol;
 
 	task_lock(task);
-	pol = task->prampolicy;
-	task->prampolicy = NULL;
+	pol = task->POLICY;
+	task->POLICY = NULL;
 	task_unlock(task);
 	mpol_put_pram(pol);
 }
