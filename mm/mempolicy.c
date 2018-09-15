@@ -356,7 +356,7 @@ static struct mempolicy *mpol_new_pram(unsigned short mode, unsigned short flags
 {
 	struct mempolicy *policy;
 
-	pr_info("setting mode(PRAM) %d flags %d nodes[0] %lx\n",
+	pr_debug("setting mode(PRAM) %d flags %d nodes[0] %lx\n",
 		 mode, flags, nodes ? nodes_addr(*nodes)[0] : NUMA_NO_NODE);
 
 	if (mode == MPOL_DEFAULT) {
@@ -3341,7 +3341,7 @@ int mpol_set_mbsfs_policy(struct mbsfs_policy *info,
 	struct mbsfs_pram_node *new = NULL;
 	unsigned long sz = vma_pages(vma);
 
-	pr_info("mpol_set_mbsfs_policy %lx sz %lu %d %d %lx\n",
+	pr_debug("mpol_set_mbsfs_policy %lx sz %lu %d %d %lx\n",
 		 vma->vm_pgoff,
 		 sz, npol ? npol->mode : -1,
 		 npol ? npol->flags : -1,
@@ -3532,9 +3532,11 @@ void __init numa_policy_init(void)
 	/*
 	if (do_set_prampolicy(MPOL_INTERLEAVE, 0, &interleave_nodes))
 		pr_err("%s: interleaving failed\n", __func__);
+	if (do_set_prampolicy(MPOL_PREFERRED, 0, NULL))
+		pr_err("%s: PREFERRED failed\n", __func__);
+	*/
 	if (do_set_prampolicy(MPOL_LOCAL, 0, NULL))
 		pr_err("%s: LOCAL failed\n", __func__);
-	*/
 	check_numabalancing_enable();
 }
 #if 0
