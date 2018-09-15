@@ -3530,13 +3530,13 @@ void __init numa_policy_init(void)
 	}
 	*/
 	/*
+	if (do_set_prampolicy(MPOL_LOCAL, 0, NULL)) // boot stop
+		pr_err("%s: LOCAL failed\n", __func__);
 	if (do_set_prampolicy(MPOL_INTERLEAVE, 0, &interleave_nodes))
 		pr_err("%s: interleaving failed\n", __func__);
+	*/
 	if (do_set_prampolicy(MPOL_PREFERRED, 0, NULL))
 		pr_err("%s: PREFERRED failed\n", __func__);
-	*/
-	if (do_set_prampolicy(MPOL_LOCAL, 0, NULL))
-		pr_err("%s: LOCAL failed\n", __func__);
 	check_numabalancing_enable();
 }
 #if 0
