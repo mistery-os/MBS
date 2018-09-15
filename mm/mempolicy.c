@@ -144,7 +144,8 @@ static struct mempolicy preferred_node_pram_policy[MAX_NUMNODES];
 //>>>
 struct mempolicy *get_pram_policy(struct task_struct *p)
 {
-	struct mempolicy *pol = p->prampolicy;
+	//struct mempolicy *pol = p->prampolicy;
+	struct mempolicy *pol = p->mempolicy;
 	int node;
 
 	if (pol)
@@ -1993,7 +1994,8 @@ static struct mempolicy *get_vma_policy(struct vm_area_struct *vma,
 static struct mempolicy *get_vma_pram_policy(struct vm_area_struct *vma,
 						unsigned long addr)
 {
-	struct mempolicy *pol = __get_vma_pram_policy(vma, addr);
+	//struct mempolicy *pol = __get_vma_pram_policy(vma, addr);
+	struct mempolicy *pol = __get_vma_policy(vma, addr);
 
 	if (!pol)
 		pol = get_pram_policy(current);
@@ -2528,8 +2530,8 @@ alloc_prams_vma(gfp_t gfp, int order, struct vm_area_struct *vma,
 	int preferred_nid;
 	nodemask_t *nmask;
 
-	//pol = get_vma_pram_policy(vma, addr);
-	pol = get_vma_policy(vma, addr);
+	pol = get_vma_pram_policy(vma, addr);
+	//pol = get_vma_policy(vma, addr);
 
 	if (pol->mode == MPOL_INTERLEAVE) {
 		unsigned nid;
@@ -2570,8 +2572,8 @@ alloc_prams_vma(gfp_t gfp, int order, struct vm_area_struct *vma,
 	nmask = policy_nodemask(gfp, pol);
 	//nmask = pram_policy_nodemask(gfp, pol);
 	preferred_nid = policy_node(gfp, pol, node);
-#if 0
 	pr_debug("preferred_nid=%d, node=%d\n",preferred_nid,node);
+#if 0
 	preferred_nid = policy_node(gfp, pol, numa_node_id());
 	pr_debug("preferred_nid=%d, numa_node_id=%d\n",preferred_nid,numa_node_id());
 #endif
@@ -3482,18 +3484,16 @@ void __init numa_policy_init(void)
 			.flags = MPOL_F_MOF | MPOL_F_MORON,
 			.v = { .preferred_node = nid, },
 		};
-#if 0
 //mbs_brd is local
 		//<<<2018.05.31 Yongseob
 		preferred_node_pram_policy[nid] = (struct mempolicy) {
 			.refcnt = ATOMIC_INIT(1),
 			.mode = MPOL_PREFERRED,
-			.flags = MPOL_F_LOCAL,
+			.flags = MPOL_F_MOF | MPOL_F_MORON,
 			.v = { .preferred_node = nid, },
-			//.flags = MPOL_F_MOF | MPOL_F_MORON,
 		};
+#if 0
 		//>>>
-#endif
 		preferred_node_pram_policy[nid] = (struct mempolicy) {
 			.refcnt = ATOMIC_INIT(1),
 			.mode = MPOL_LOCAL,
@@ -3502,6 +3502,7 @@ void __init numa_policy_init(void)
 			//.flags = MPOL_F_LOCAL| MPOL_F_MOF | MPOL_F_MORON,
 			//. v = { .nodes = ,},
 		};
+#endif
 
 	}
 
@@ -3544,9 +3545,9 @@ void __init numa_policy_init(void)
 	}
 	*/
 	/*
-	if (do_set_prampolicy(MPOL_LOCAL, 0, NULL)) // boot stop
+	if (do_set_prampolicy(MPOL_LOCAL, 0, NULL)) // boot stop:ee8f138c
 		pr_err("%s: LOCAL failed\n", __func__);
-	if (do_set_prampolicy(MPOL_PREFERRED, 0, NULL)) //boot stop
+	if (do_set_prampolicy(MPOL_PREFERRED, 0, NULL)) //boot stop:bdad2a92
 		pr_err("%s: PREFERRED failed\n", __func__);
 	*/
 	//if (do_set_prampolicy(MPOL_INTERLEAVE, 0, &interleave_nodes))

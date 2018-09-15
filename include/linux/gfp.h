@@ -608,6 +608,7 @@ extern struct page *alloc_prams_vma(gfp_t gfp_mask, int order,
 #define alloc_hugepage_vma(gfp_mask, vma, addr, order)	\
 	alloc_pages(gfp_mask, order)
 #endif
+//$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 #define alloc_page(gfp_mask) alloc_pages(gfp_mask, 0)
 #define alloc_pram(gfp_mask) alloc_prams(gfp_mask, 0)
 #define alloc_page_vma(gfp_mask, vma, addr)			\
