@@ -66,11 +66,6 @@
 
 DEFINE_STATIC_KEY_FALSE(cpusets_pre_enable_key);
 DEFINE_STATIC_KEY_FALSE(cpusets_enabled_key);
-#ifndef CONFIG_MBSFS_POLICY
-#	define POLICY	mempolicy
-#else
-#	define POLICY	prampolicy
-#endif
 
 /* See "Frequency meter" comments, below. */
 
@@ -164,7 +159,7 @@ static inline bool task_has_mempolicy(struct task_struct *task)
 }
 static inline bool task_has_prampolicy(struct task_struct *task)
 {
-	return task->POLICY;
+	return task->prampolicy;
 }
 #else
 static inline bool task_has_mempolicy(struct task_struct *task)

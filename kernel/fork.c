@@ -103,13 +103,6 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/task.h>
 
-#ifndef CONFIG_MBSFS_POLICY
-#	define POLICY	mempolicy
-#else
-#	define POLICY	prampolicy
-#endif
-
-
 /*
  * Minimum number of threads to boot the kernel
  */
@@ -1690,10 +1683,10 @@ static __latent_entropy struct task_struct *copy_process(
 		p->mempolicy = NULL;
 		goto bad_fork_cleanup_threadgroup_lock;
 	}
-	p->POLICY = mpol_dup_pram(p->POLICY);
-	if (IS_ERR(p->POLICY)) {
-		retval = PTR_ERR(p->POLICY);
-		p->POLICY = NULL;
+	p->prampolicy = mpol_dup_pram(p->prampolicy);
+	if (IS_ERR(p->prampolicy)) {
+		retval = PTR_ERR(p->prampolicy);
+		p->prampolicy = NULL;
 		goto bad_fork_cleanup_threadgroup_lock;
 	}
 #endif
@@ -1986,7 +1979,7 @@ bad_fork_cleanup_policy:
 	lockdep_free_task(p);
 #ifdef CONFIG_NUMA
 	mpol_put(p->mempolicy);
-	mpol_put_pram(p->POLICY);
+	mpol_put_pram(p->prampolicy);
 bad_fork_cleanup_threadgroup_lock:
 #endif
 	delayacct_tsk_free(p);

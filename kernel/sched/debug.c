@@ -911,10 +911,6 @@ static void sched_show_numa(struct task_struct *p, struct seq_file *m)
 	if (pol && !(pol->flags & MPOL_F_MORON))
 		pol = NULL;
 	mpol_get(pol);
-	prampol = p->POLICY;
-	if (prampol && !(prampol->flags & MPOL_F_MORON))
-		prampol = NULL;
-	mpol_get(prampol);
 	task_unlock(p);
 
 	P(numa_pages_migrated);
@@ -924,6 +920,22 @@ static void sched_show_numa(struct task_struct *p, struct seq_file *m)
 			task_node(p), task_numa_group_id(p));
 	show_numa_stats(p, m);
 	mpol_put(pol);
+	
+	task_lock(p);
+	prampol = p->prampolicy;
+	if (prampol && !(prampol->flags & MPOL_F_MORON))
+		prampol = NULL;
+	mpol_get(prampol);
+	task_unlock(p);
+
+	P(nusa_pages_migrated);
+	P(numa_preferred_nid);
+	P(total_numa_faults);
+	SEQ_printf(m, "current_node=%d, numa_group_id=%d\n",
+			task_node(p), task_numa_group_id(p));
+	show_numa_stats(p, m);
+	mpol_put_pram(polpram);
+
 #endif
 }
 

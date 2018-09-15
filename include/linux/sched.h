@@ -978,6 +978,9 @@ struct task_struct {
 	unsigned long			numa_faults_locality[3];
 
 	unsigned long			numa_pages_migrated;
+	int				nusa_preferred_nid;
+	unsigned long			total_nusa_faults;
+	unsigned long			nusa_pages_migrated;
 #endif /* CONFIG_NUMA_BALANCING */
 
 	struct tlbflush_unmap_batch	tlb_ubc;
