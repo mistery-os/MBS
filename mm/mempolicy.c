@@ -2528,13 +2528,15 @@ alloc_prams_vma(gfp_t gfp, int order, struct vm_area_struct *vma,
 	int preferred_nid;
 	nodemask_t *nmask;
 
-	pol = get_vma_pram_policy(vma, addr);
+	//pol = get_vma_pram_policy(vma, addr);
+	pol = get_vma_policy(vma, addr);
 
 	if (pol->mode == MPOL_INTERLEAVE) {
 		unsigned nid;
 
 		nid = interleave_nid(pol, vma, addr, PAGE_SHIFT + order);
-		mpol_cond_put_pram(pol);
+		//mpol_cond_put_pram(pol);
+		mpol_cond_put(pol);
 		page = alloc_page_interleave(gfp, order, nid);
 		goto out;
 	}
@@ -2565,15 +2567,17 @@ alloc_prams_vma(gfp_t gfp, int order, struct vm_area_struct *vma,
 		}
 	}
 #endif
-	nmask = pram_policy_nodemask(gfp, pol);
+	nmask = policy_nodemask(gfp, pol);
+	//nmask = pram_policy_nodemask(gfp, pol);
 	preferred_nid = policy_node(gfp, pol, node);
-	pr_debug("preferred_nid=%d, node=%d\n",preferred_nid,node);
 #if 0
+	pr_debug("preferred_nid=%d, node=%d\n",preferred_nid,node);
 	preferred_nid = policy_node(gfp, pol, numa_node_id());
 	pr_debug("preferred_nid=%d, numa_node_id=%d\n",preferred_nid,numa_node_id());
 #endif
 	page = __alloc_pages_nodemask(gfp, order, preferred_nid, nmask);
-	mpol_cond_put_pram(pol);
+	mpol_cond_put(pol);
+	//mpol_cond_put_pram(pol);
 out:
 	return page;
 }
