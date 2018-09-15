@@ -141,6 +141,7 @@ static struct mempolicy default_pram_policy = {
 	.mode = MPOL_PREFERRED,
 	.flags = MPOL_F_LOCAL,
 };
+EXPORT_SYMBOL_GPL(default_pram_policy);
 //>>>
 static struct mempolicy preferred_node_policy[MAX_NUMNODES];
 //<<<2018.05.31 Yongseob
