@@ -22,11 +22,6 @@
 #include "sched.h"
 
 static DEFINE_SPINLOCK(sched_debug_lock);
-#ifndef CONFIG_MBSFS_POLICY
-#	define POLICY	mempolicy
-#else
-#	define POLICY	prampolicy
-#endif
 
 /*
  * This allows printing both to /proc/sched_debug and
@@ -934,7 +929,7 @@ static void sched_show_numa(struct task_struct *p, struct seq_file *m)
 	SEQ_printf(m, "current_node=%d, numa_group_id=%d\n",
 			task_node(p), task_numa_group_id(p));
 	show_numa_stats(p, m);
-	mpol_put_pram(polpram);
+	mpol_put_pram(prampol);
 
 #endif
 }

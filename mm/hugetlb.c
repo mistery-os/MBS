@@ -970,7 +970,7 @@ static struct page *dequeue_huge_page_vma(struct hstate *h,
 err:
 	return NULL;
 }
-
+#if 0
 static struct page *dequeue_huge_pram_vma(struct hstate *h,
 				struct vm_area_struct *vma,
 				unsigned long address, int avoid_reserve,
@@ -1009,6 +1009,7 @@ static struct page *dequeue_huge_pram_vma(struct hstate *h,
 err:
 	return NULL;
 }
+#endif
 /*
  * common helper functions for hstate_next_node_to_{alloc|free}.
  * We may have allocated or freed a huge page based on a different

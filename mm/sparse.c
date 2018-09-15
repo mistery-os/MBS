@@ -486,6 +486,7 @@ void __init sparse_mem_maps_populate_node(struct page **map_map,
 #endif /* !CONFIG_SPARSEMEM_VMEMMAP */
 
 #ifdef CONFIG_SPARSEMEM_ALLOC_MEM_MAP_TOGETHER
+#if 0
 static void __init sparse_early_mem_maps_alloc_node_pram(void *data,
 				 unsigned long pnum_begin,
 				 unsigned long pnum_end,
@@ -495,6 +496,7 @@ static void __init sparse_early_mem_maps_alloc_node_pram(void *data,
 	sparse_mem_maps_populate_node_pram(map_map, pnum_begin, pnum_end,
 					 map_count, nodeid);
 }
+#endif
 static void __init sparse_early_mem_maps_alloc_node(void *data,
 				 unsigned long pnum_begin,
 				 unsigned long pnum_end,
@@ -530,6 +532,7 @@ void __weak __meminit vmemmap_populate_print_last(void)
  *  alloc_usemap_and_memmap - memory alloction for pageblock flags and vmemmap
  *  @map: usemap_map for pageblock flags or mmap_map for vmemmap
  */
+#if 0
 static void __init alloc_usemap_and_memmap_pram(void (*alloc_func)
 					(void *, unsigned long, unsigned long,
 					unsigned long, int), void *data)
@@ -570,6 +573,7 @@ static void __init alloc_usemap_and_memmap_pram(void (*alloc_func)
 	alloc_func(data, pnum_begin, NR_MEM_SECTIONS,
 						map_count, nodeid_begin);
 }
+#endif
 static void __init alloc_usemap_and_memmap(void (*alloc_func)
 					(void *, unsigned long, unsigned long,
 					unsigned long, int), void *data)

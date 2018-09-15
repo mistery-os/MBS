@@ -41,7 +41,7 @@ static void * __ref __earlyonly_bootmem_alloc_pram(int node,
 				unsigned long align,
 				unsigned long goal)
 {
-	pr_info("__earlyonly_bootmem_alloc_pram : size=%#016llx\n",size);
+	pr_debug("__earlyonly_bootmem_alloc_pram : size=%#016lx\n",size);
 	return memblock_virt_alloc_try_nid_pram(size, align, goal,
 					    BOOTMEM_ALLOC_ACCESSIBLE, node);
 }
@@ -50,7 +50,7 @@ static void * __ref __earlyonly_bootmem_alloc(int node,
 				unsigned long align,
 				unsigned long goal)
 {
-	pr_info("__earlyonly_bootmem_alloc : size=%#016llx\n",size);
+	pr_debug("__earlyonly_bootmem_alloc : size=%#016lx\n",size);
 	return memblock_virt_alloc_try_nid(size, align, goal,
 					    BOOTMEM_ALLOC_ACCESSIBLE, node);
 }

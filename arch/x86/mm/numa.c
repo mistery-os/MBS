@@ -38,7 +38,7 @@ __initdata
 #endif
 ;
 //<<<2018.03.05 Yongseob
-static struct numa_meminfo numa_meminfo_pram
+//static struct numa_meminfo numa_meminfo_pram
 //>>>
 #ifndef CONFIG_MEMORY_HOTPLUG
 __initdata
@@ -636,7 +636,7 @@ static void __init numa_clear_kernel_node_hotplug(void)
 		memblock_clear_hotplug(mb->start, mb->end - mb->start);
 	}
 }
-
+#if 0
 static int __init nusa_register_memblks(struct numa_meminfo *mi)
 {
 	unsigned long uninitialized_var(pfn_align);
@@ -708,7 +708,7 @@ static int __init nusa_register_memblks(struct numa_meminfo *mi)
 	memblock_dump_all();
 	return 0;
 }
-
+#endif
 
 static int __init numa_register_memblks(struct numa_meminfo *mi)
 {
@@ -818,7 +818,8 @@ static void __init numa_init_array(void)
 static int __init numa_init(int (*init_func)(void))
 {
 	int i;
-	int ret, ret2;
+	int ret;
+	//int ret2;
 
 	for (i = 0; i < MAX_LOCAL_APIC; i++)
 		set_apicid_to_node(i, NUMA_NO_NODE);

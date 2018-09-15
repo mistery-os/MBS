@@ -5161,6 +5161,7 @@ static int build_zonerefs_node(pg_data_t *pgdat, struct zoneref *zonerefs)
  *
  * Add all populated zones of a node to the zonelist.
  */
+#if 0
 static int build_zonerefs_node_MBS(pg_data_t *pgdat, struct zoneref *zonerefs)
 {
 	struct zone *zone;
@@ -5180,6 +5181,7 @@ static int build_zonerefs_node_MBS(pg_data_t *pgdat, struct zoneref *zonerefs)
 
 	return nr_zones;
 }
+#endif
 
 #ifdef CONFIG_NUMA
 
@@ -6075,11 +6077,13 @@ void __init sparse_memory_present_with_active_regions(int nid)
 {
 	unsigned long start_pfn, end_pfn;
 	int i, this_nid;
-	for_each_mem_pfn_range(i, nid, &start_pfn, &end_pfn, &this_nid)
-		memory_present(this_nid, start_pfn, end_pfn);
 	
 	unsigned long start_pfn_pram, end_pfn_pram;
 	int i_pram, this_nid_pram;
+	
+	for_each_mem_pfn_range(i, nid, &start_pfn, &end_pfn, &this_nid)
+		memory_present(this_nid, start_pfn, end_pfn);
+	
 	for_each_pram_pfn_range(i_pram, nid, &start_pfn_pram, &end_pfn_pram, &this_nid_pram)
 		memory_present(this_nid_pram, start_pfn_pram, end_pfn_pram);
 
@@ -6374,7 +6378,7 @@ static inline unsigned long __meminit zone_absent_pages_in_node(int nid,
 	return zholes_size[zone_type];
 }
 #endif /* CONFIG_HAVE_MEMBLOCK_NODE_MAP */
-
+#if 0
 static void __meminit calculate_node_totalpages(struct pglist_data *pgdat,
 		unsigned long node_start_pfn,
 		unsigned long node_end_pfn,
@@ -6414,6 +6418,7 @@ static void __meminit calculate_node_totalpages(struct pglist_data *pgdat,
 	printk(KERN_DEBUG "On node %d totalpages: %lu\n", pgdat->node_id,
 			realtotalpages);
 }
+#endif
 //<<<2018.02.14 Yongseob
 static void __meminit calculate_node_totalpages_pram(struct pglist_data *pgdat,
 		unsigned long node_start_pfn,
