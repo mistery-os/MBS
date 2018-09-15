@@ -3478,7 +3478,8 @@ void __init numa_policy_init(void)
 			.flags = MPOL_F_MOF | MPOL_F_MORON,
 			.v = { .preferred_node = nid, },
 		};
-
+#if 0
+//mbs_brd is local
 		//<<<2018.05.31 Yongseob
 		preferred_node_pram_policy[nid] = (struct mempolicy) {
 			.refcnt = ATOMIC_INIT(1),
@@ -3488,6 +3489,15 @@ void __init numa_policy_init(void)
 			//.flags = MPOL_F_MOF | MPOL_F_MORON,
 		};
 		//>>>
+#endif
+		preferred_node_pram_policy[nid] = (struct mempolicy) {
+			.refcnt = ATOMIC_INIT(1),
+			.mode = MPOL_LOCAL,
+			.flags = MPOL_F_LOCAL,
+			//.mode = MPOL_INTERLEAVE,
+			//.flags = MPOL_F_LOCAL| MPOL_F_MOF | MPOL_F_MORON,
+			//. v = { .nodes = ,},
+		};
 
 	}
 
@@ -3535,8 +3545,8 @@ void __init numa_policy_init(void)
 	if (do_set_prampolicy(MPOL_PREFERRED, 0, NULL)) //boot stop
 		pr_err("%s: PREFERRED failed\n", __func__);
 	*/
-	if (do_set_prampolicy(MPOL_INTERLEAVE, 0, &interleave_nodes))
-		pr_err("%s: interleaving failed\n", __func__);
+	//if (do_set_prampolicy(MPOL_INTERLEAVE, 0, &interleave_nodes))
+	//	pr_err("%s: interleaving failed\n", __func__);
 	check_numabalancing_enable();
 }
 #if 0
