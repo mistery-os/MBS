@@ -220,6 +220,7 @@ static inline int page_cache_add_speculative(struct page *page, int count)
 
 #ifdef CONFIG_NUMA
 extern struct page *__page_cache_alloc(gfp_t gfp);
+extern struct page *mbsfs__page_cache_alloc(gfp_t gfp);
 #else
 static inline struct page *__page_cache_alloc(gfp_t gfp)
 {
