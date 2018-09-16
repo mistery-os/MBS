@@ -144,8 +144,7 @@ static struct mempolicy preferred_node_pram_policy[MAX_NUMNODES];
 //>>>
 struct mempolicy *get_pram_policy(struct task_struct *p)
 {
-	//struct mempolicy *pol = p->prampolicy;
-	struct mempolicy *pol = p->mempolicy;
+	struct mempolicy *pol = p->prampolicy;
 	int node;
 
 	if (pol)
@@ -1994,8 +1993,7 @@ static struct mempolicy *get_vma_policy(struct vm_area_struct *vma,
 static struct mempolicy *get_vma_pram_policy(struct vm_area_struct *vma,
 						unsigned long addr)
 {
-	//struct mempolicy *pol = __get_vma_pram_policy(vma, addr);
-	struct mempolicy *pol = __get_vma_policy(vma, addr);
+	struct mempolicy *pol = __get_vma_pram_policy(vma, addr);
 
 	if (!pol)
 		pol = get_pram_policy(current);
@@ -2530,15 +2528,15 @@ alloc_prams_vma(gfp_t gfp, int order, struct vm_area_struct *vma,
 	int preferred_nid;
 	nodemask_t *nmask;
 
-	pol = get_vma_pram_policy(vma, addr);
 	//pol = get_vma_policy(vma, addr);
+	pol = get_vma_pram_policy(vma, addr);
 
 	if (pol->mode == MPOL_INTERLEAVE) {
 		unsigned nid;
 
 		nid = interleave_nid(pol, vma, addr, PAGE_SHIFT + order);
-		//mpol_cond_put_pram(pol);
-		mpol_cond_put(pol);
+		//mpol_cond_put(pol);
+		mpol_cond_put_pram(pol);
 		page = alloc_page_interleave(gfp, order, nid);
 		goto out;
 	}
@@ -2569,17 +2567,18 @@ alloc_prams_vma(gfp_t gfp, int order, struct vm_area_struct *vma,
 		}
 	}
 #endif
-	nmask = policy_nodemask(gfp, pol);
-	//nmask = pram_policy_nodemask(gfp, pol);
+	//nmask = policy_nodemask(gfp, pol);
+	nmask = pram_policy_nodemask(gfp, pol);
 	preferred_nid = policy_node(gfp, pol, node);
-	pr_debug("preferred_nid=%d, node=%d\n",preferred_nid,node);
+	pr_info("preferred_nid=%d, node=%d\n",preferred_nid,node);
+	preferred_nid=node;
 #if 0
 	preferred_nid = policy_node(gfp, pol, numa_node_id());
 	pr_debug("preferred_nid=%d, numa_node_id=%d\n",preferred_nid,numa_node_id());
 #endif
 	page = __alloc_pages_nodemask(gfp, order, preferred_nid, nmask);
-	mpol_cond_put(pol);
-	//mpol_cond_put_pram(pol);
+	//mpol_cond_put(pol);
+	mpol_cond_put_pram(pol);
 out:
 	return page;
 }
@@ -3489,7 +3488,7 @@ void __init numa_policy_init(void)
 		preferred_node_pram_policy[nid] = (struct mempolicy) {
 			.refcnt = ATOMIC_INIT(1),
 			.mode = MPOL_PREFERRED,
-			.flags = MPOL_F_MOF | MPOL_F_MORON,
+			.flags = MPOL_F_MOF | MPOL_F_MORON | MPOL_F_LOCAL,
 			.v = { .preferred_node = nid, },
 		};
 #if 0
