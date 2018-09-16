@@ -134,7 +134,7 @@ enum zone_type pram_policy_zone = 0;
 static struct mempolicy default_pram_policy = {
 	.refcnt = ATOMIC_INIT(1), /* never free it */
 	.mode = MPOL_PREFERRED,
-	.flags = MPOL_F_LOCAL,
+	//.flags = MPOL_F_LOCAL,
 };
 EXPORT_SYMBOL_GPL(default_pram_policy);
 //>>>
@@ -3347,7 +3347,7 @@ int mpol_set_mbsfs_policy(struct mbsfs_policy *info,
 	struct mbsfs_pram_node *new = NULL;
 	unsigned long sz = vma_pages(vma);
 
-	pr_debug("mpol_set_mbsfs_policy %lx sz %lu %d %d %lx\n",
+	pr_info("mpol_set_mbsfs_policy %lx sz %lu %d %d %lx\n",
 			vma->vm_pgoff,
 			sz, npol ? npol->mode : -1,
 			npol ? npol->flags : -1,

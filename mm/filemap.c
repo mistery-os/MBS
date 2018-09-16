@@ -2198,7 +2198,7 @@ out:
 	file_accessed(filp);
 	return written ? written : error;
 }
-
+EXPORT_SYMBOL(generic_file_buffered_read);
 /**
  * generic_file_read_iter - generic filesystem read routine
  * @iocb:	kernel I/O control block
