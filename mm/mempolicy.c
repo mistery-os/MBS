@@ -2570,8 +2570,8 @@ alloc_prams_vma(gfp_t gfp, int order, struct vm_area_struct *vma,
 	//nmask = policy_nodemask(gfp, pol);
 	nmask = pram_policy_nodemask(gfp, pol);
 	preferred_nid = policy_node(gfp, pol, node);
-	pr_info("preferred_nid=%d, node=%d\n",preferred_nid,node);
-	preferred_nid=node;
+	if ( preferred_nid != node )
+		pr_info("preferred_nid=%d, node=%d\n",preferred_nid,node);
 #if 0
 	preferred_nid = policy_node(gfp, pol, numa_node_id());
 	pr_debug("preferred_nid=%d, numa_node_id=%d\n",preferred_nid,numa_node_id());
@@ -2724,15 +2724,15 @@ bool __mpol_equal(struct mempolicy *a, struct mempolicy *b)
 			return false;
 
 	switch (a->mode) {
-	case MPOL_BIND:
-		/* Fall through */
-	case MPOL_INTERLEAVE:
-		return !!nodes_equal(a->v.nodes, b->v.nodes);
-	case MPOL_PREFERRED:
-		return a->v.preferred_node == b->v.preferred_node;
-	default:
-		BUG();
-		return false;
+		case MPOL_BIND:
+			/* Fall through */
+		case MPOL_INTERLEAVE:
+			return !!nodes_equal(a->v.nodes, b->v.nodes);
+		case MPOL_PREFERRED:
+			return a->v.preferred_node == b->v.preferred_node;
+		default:
+			BUG();
+			return false;
 	}
 }
 
@@ -2749,7 +2749,7 @@ bool __mpol_equal(struct mempolicy *a, struct mempolicy *b)
  * lookup first element intersecting start-end.  Caller holds sp->lock for
  * reading or for writing
  */
-static struct sp_node *
+	static struct sp_node *
 sp_lookup(struct shared_policy *sp, unsigned long start, unsigned long end)
 {
 	struct rb_node *n = sp->root.rb_node;
@@ -2779,7 +2779,7 @@ sp_lookup(struct shared_policy *sp, unsigned long start, unsigned long end)
 	return rb_entry(n, struct sp_node, nd);
 }
 
-static struct mbsfs_pram_node *
+	static struct mbsfs_pram_node *
 sp_pram_lookup(struct mbsfs_policy *sp, unsigned long start, unsigned long end)
 {
 	struct rb_node *n = sp->root.rb_node;
@@ -2831,7 +2831,7 @@ static void sp_insert(struct shared_policy *sp, struct sp_node *new)
 	rb_link_node(&new->nd, parent, p);
 	rb_insert_color(&new->nd, &sp->root);
 	pr_debug("inserting %lx-%lx: %d\n", new->start, new->end,
-		 new->policy ? new->policy->mode : 0);
+			new->policy ? new->policy->mode : 0);
 }
 static void sp_pram_insert(struct mbsfs_policy *sp, struct mbsfs_pram_node *new)
 {
@@ -2852,11 +2852,11 @@ static void sp_pram_insert(struct mbsfs_policy *sp, struct mbsfs_pram_node *new)
 	rb_link_node(&new->nd, parent, p);
 	rb_insert_color(&new->nd, &sp->root);
 	pr_debug("inserting %lx-%lx: %d\n", new->start, new->end,
-		 new->policy ? new->policy->mode : 0);
+			new->policy ? new->policy->mode : 0);
 }
 
 /* Find shared policy intersecting idx */
-struct mempolicy *
+	struct mempolicy *
 mpol_shared_policy_lookup(struct shared_policy *sp, unsigned long idx)
 {
 	struct mempolicy *pol = NULL;
@@ -2876,7 +2876,7 @@ mpol_shared_policy_lookup(struct shared_policy *sp, unsigned long idx)
 //<<<2018.05.17 Yongseob
 EXPORT_SYMBOL_GPL(mpol_shared_policy_lookup);
 //>>>
-struct mempolicy *
+	struct mempolicy *
 mpol_mbsfs_policy_lookup(struct mbsfs_policy *sp, unsigned long idx)
 {
 	struct mempolicy *pol = NULL;
@@ -2940,38 +2940,38 @@ int mpol_misplaced(struct page *page, struct vm_area_struct *vma, unsigned long 
 		goto out;
 
 	switch (pol->mode) {
-	case MPOL_INTERLEAVE:
-		pgoff = vma->vm_pgoff;
-		pgoff += (addr - vma->vm_start) >> PAGE_SHIFT;
-		polnid = offset_il_node(pol, pgoff);
-		break;
+		case MPOL_INTERLEAVE:
+			pgoff = vma->vm_pgoff;
+			pgoff += (addr - vma->vm_start) >> PAGE_SHIFT;
+			polnid = offset_il_node(pol, pgoff);
+			break;
 
-	case MPOL_PREFERRED:
-		if (pol->flags & MPOL_F_LOCAL)
-			polnid = numa_node_id();
-		else
-			polnid = pol->v.preferred_node;
-		break;
+		case MPOL_PREFERRED:
+			if (pol->flags & MPOL_F_LOCAL)
+				polnid = numa_node_id();
+			else
+				polnid = pol->v.preferred_node;
+			break;
 
-	case MPOL_BIND:
+		case MPOL_BIND:
 
-		/*
-		 * allows binding to multiple nodes.
-		 * use current page if in policy nodemask,
-		 * else select nearest allowed node, if any.
-		 * If no allowed nodes, use current [!misplaced].
-		 */
-		if (node_isset(curnid, pol->v.nodes))
-			goto out;
-		z = first_zones_zonelist(
-				node_zonelist(numa_node_id(), GFP_HIGHUSER),
-				gfp_zone(GFP_HIGHUSER),
-				&pol->v.nodes);
-		polnid = z->zone->node;
-		break;
+			/*
+			 * allows binding to multiple nodes.
+			 * use current page if in policy nodemask,
+			 * else select nearest allowed node, if any.
+			 * If no allowed nodes, use current [!misplaced].
+			 */
+			if (node_isset(curnid, pol->v.nodes))
+				goto out;
+			z = first_zones_zonelist(
+					node_zonelist(numa_node_id(), GFP_HIGHUSER),
+					gfp_zone(GFP_HIGHUSER),
+					&pol->v.nodes);
+			polnid = z->zone->node;
+			break;
 
-	default:
-		BUG();
+		default:
+			BUG();
 	}
 
 	/* Migrate the page towards the node whose CPU is referencing it */
@@ -3026,7 +3026,7 @@ static void sp_delete(struct shared_policy *sp, struct sp_node *n)
 }
 
 static void sp_node_init(struct sp_node *node, unsigned long start,
-			unsigned long end, struct mempolicy *pol)
+		unsigned long end, struct mempolicy *pol)
 {
 	node->start = start;
 	node->end = end;
@@ -3034,7 +3034,7 @@ static void sp_node_init(struct sp_node *node, unsigned long start,
 }
 
 static struct sp_node *sp_alloc(unsigned long start, unsigned long end,
-				struct mempolicy *pol)
+		struct mempolicy *pol)
 {
 	struct sp_node *n;
 	struct mempolicy *newpol;
@@ -3063,14 +3063,14 @@ static void sp_pram_delete(struct mbsfs_policy *sp, struct mbsfs_pram_node *n)
 
 
 static void sp_pram_node_init(struct mbsfs_pram_node *node, unsigned long start,
-			unsigned long end, struct mempolicy *pol)
+		unsigned long end, struct mempolicy *pol)
 {
 	node->start = start;
 	node->end = end;
 	node->policy = pol;
 }
 static struct mbsfs_pram_node *mbsfs_pram_alloc(unsigned long start, unsigned long end,
-				struct mempolicy *pol)
+		struct mempolicy *pol)
 {
 	struct mbsfs_pram_node *n;
 	struct mempolicy *newpol;
@@ -3091,7 +3091,7 @@ static struct mbsfs_pram_node *mbsfs_pram_alloc(unsigned long start, unsigned lo
 }
 /* Replace a policy range. */
 static int shared_policy_replace(struct shared_policy *sp, unsigned long start,
-				 unsigned long end, struct sp_node *new)
+		unsigned long end, struct sp_node *new)
 {
 	struct sp_node *n;
 	struct sp_node *n_new = NULL;
@@ -3155,7 +3155,7 @@ alloc_new:
 	goto restart;
 }
 static int mbsfs_pram_policy_replace(struct mbsfs_policy *sp, unsigned long start,
-				 unsigned long end, struct mbsfs_pram_node *new)
+		unsigned long end, struct mbsfs_pram_node *new)
 {
 	struct mbsfs_pram_node *n;
 	struct mbsfs_pram_node *n_new = NULL;
@@ -3313,17 +3313,17 @@ EXPORT_SYMBOL_GPL(mpol_mbsfs_policy_init);
 
 
 int mpol_set_shared_policy(struct shared_policy *info,
-			struct vm_area_struct *vma, struct mempolicy *npol)
+		struct vm_area_struct *vma, struct mempolicy *npol)
 {
 	int err;
 	struct sp_node *new = NULL;
 	unsigned long sz = vma_pages(vma);
 
 	pr_debug("set_shared_policy %lx sz %lu %d %d %lx\n",
-		 vma->vm_pgoff,
-		 sz, npol ? npol->mode : -1,
-		 npol ? npol->flags : -1,
-		 npol ? nodes_addr(npol->v.nodes)[0] : NUMA_NO_NODE);
+			vma->vm_pgoff,
+			sz, npol ? npol->mode : -1,
+			npol ? npol->flags : -1,
+			npol ? nodes_addr(npol->v.nodes)[0] : NUMA_NO_NODE);
 
 	if (npol) {
 		new = sp_alloc(vma->vm_pgoff, vma->vm_pgoff + sz, npol);
@@ -3340,17 +3340,17 @@ EXPORT_SYMBOL_GPL(mpol_set_shared_policy);
 //>>>
 
 int mpol_set_mbsfs_policy(struct mbsfs_policy *info,
-			struct vm_area_struct *vma, struct mempolicy *npol)
+		struct vm_area_struct *vma, struct mempolicy *npol)
 {
 	int err;
 	struct mbsfs_pram_node *new = NULL;
 	unsigned long sz = vma_pages(vma);
 
 	pr_debug("mpol_set_mbsfs_policy %lx sz %lu %d %d %lx\n",
-		 vma->vm_pgoff,
-		 sz, npol ? npol->mode : -1,
-		 npol ? npol->flags : -1,
-		 npol ? nodes_addr(npol->v.nodes)[0] : NUMA_NO_NODE);
+			vma->vm_pgoff,
+			sz, npol ? npol->mode : -1,
+			npol ? npol->flags : -1,
+			npol ? nodes_addr(npol->v.nodes)[0] : NUMA_NO_NODE);
 
 	if (npol) {
 		new = mbsfs_pram_alloc(vma->vm_pgoff, vma->vm_pgoff + sz, npol);
@@ -3422,7 +3422,7 @@ static void __init check_numabalancing_enable(void)
 
 	if (num_online_nodes() > 1 && !numabalancing_override) {
 		pr_info("%s automatic NUMA balancing. Configure with numa_balancing= or the kernel.numa_balancing sysctl\n",
-			numabalancing_default ? "Enabling" : "Disabling");
+				numabalancing_default ? "Enabling" : "Disabling");
 		set_numabalancing_state(numabalancing_default);/*kernel/sched/core.c */
 	}
 }
@@ -3461,45 +3461,45 @@ void __init numa_policy_init(void)
 	int nid, prefer = 0;
 
 	policy_cache = kmem_cache_create("numa_policy",
-					 sizeof(struct mempolicy),
-					 0, SLAB_PANIC, NULL);
+			sizeof(struct mempolicy),
+			0, SLAB_PANIC, NULL);
 
 	pram_policy_cache = kmem_cache_create("nusa_policy",
-					 sizeof(struct mempolicy),
-					 0, SLAB_PANIC, NULL);
+			sizeof(struct mempolicy),
+			0, SLAB_PANIC, NULL);
 
 	mbsfs_pram_cache = kmem_cache_create("mbsfs_policy_node",
-				     sizeof(struct mbsfs_pram_node),
-				     0, SLAB_PANIC, NULL);
+			sizeof(struct mbsfs_pram_node),
+			0, SLAB_PANIC, NULL);
 
 	sn_cache = kmem_cache_create("shared_policy_node",
-				     sizeof(struct sp_node),
-				     0, SLAB_PANIC, NULL);
+			sizeof(struct sp_node),
+			0, SLAB_PANIC, NULL);
 
 	for_each_node(nid) {
 		preferred_node_policy[nid] = (struct mempolicy) {
 			.refcnt = ATOMIC_INIT(1),
-			.mode = MPOL_PREFERRED,
-			.flags = MPOL_F_MOF | MPOL_F_MORON,
-			.v = { .preferred_node = nid, },
+				.mode = MPOL_PREFERRED,
+				.flags = MPOL_F_MOF | MPOL_F_MORON,
+				.v = { .preferred_node = nid, },
 		};
-//mbs_brd is local
+		//mbs_brd is local
 		//<<<2018.05.31 Yongseob
 		preferred_node_pram_policy[nid] = (struct mempolicy) {
 			.refcnt = ATOMIC_INIT(1),
-			.mode = MPOL_PREFERRED,
-			.flags = MPOL_F_MOF | MPOL_F_MORON | MPOL_F_LOCAL,
-			.v = { .preferred_node = nid, },
+				.mode = MPOL_PREFERRED,
+				.flags = MPOL_F_MOF | MPOL_F_MORON | MPOL_F_LOCAL,
+				.v = { .preferred_node = nid, },
 		};
 #if 0
 		//>>>
 		preferred_node_pram_policy[nid] = (struct mempolicy) {
 			.refcnt = ATOMIC_INIT(1),
-			.mode = MPOL_LOCAL,
-			.flags = MPOL_F_LOCAL,
-			//.mode = MPOL_INTERLEAVE,
-			//.flags = MPOL_F_LOCAL| MPOL_F_MOF | MPOL_F_MORON,
-			//. v = { .nodes = ,},
+				.mode = MPOL_LOCAL,
+				.flags = MPOL_F_LOCAL,
+				//.mode = MPOL_INTERLEAVE,
+				//.flags = MPOL_F_LOCAL| MPOL_F_MOF | MPOL_F_MORON,
+				//. v = { .nodes = ,},
 		};
 #endif
 
@@ -3532,23 +3532,23 @@ void __init numa_policy_init(void)
 	if (do_set_mempolicy(MPOL_INTERLEAVE, 0, &interleave_nodes))
 		pr_err("%s: interleaving failed\n", __func__);
 	/*
-	for_each_node(nid) {
-		//<<<2018.05.31 Yongseob
-		preferred_node_pram_policy[nid] = (struct mempolicy) {
-			.refcnt = ATOMIC_INIT(1),
-			.mode = MPOL_INTERLEAVE,
-			//.flags = MPOL_F_LOCAL| MPOL_F_MOF | MPOL_F_MORON,
-			. v = { .nodes = interleave_nodes,},
-		};
-		//>>>
+	   for_each_node(nid) {
+	//<<<2018.05.31 Yongseob
+	preferred_node_pram_policy[nid] = (struct mempolicy) {
+	.refcnt = ATOMIC_INIT(1),
+	.mode = MPOL_INTERLEAVE,
+	//.flags = MPOL_F_LOCAL| MPOL_F_MOF | MPOL_F_MORON,
+	. v = { .nodes = interleave_nodes,},
+	};
+	//>>>
 	}
 	*/
 	/*
-	if (do_set_prampolicy(MPOL_LOCAL, 0, NULL)) // boot stop:ee8f138c
-		pr_err("%s: LOCAL failed\n", __func__);
-	if (do_set_prampolicy(MPOL_PREFERRED, 0, NULL)) //boot stop:bdad2a92
-		pr_err("%s: PREFERRED failed\n", __func__);
-	*/
+	   if (do_set_prampolicy(MPOL_LOCAL, 0, NULL)) // boot stop:ee8f138c
+	   pr_err("%s: LOCAL failed\n", __func__);
+	   if (do_set_prampolicy(MPOL_PREFERRED, 0, NULL)) //boot stop:bdad2a92
+	   pr_err("%s: PREFERRED failed\n", __func__);
+	   */
 	//if (do_set_prampolicy(MPOL_INTERLEAVE, 0, &interleave_nodes))
 	//	pr_err("%s: interleaving failed\n", __func__);
 	check_numabalancing_enable();
@@ -3561,22 +3561,22 @@ void __init nusa_policy_init(void)
 	int nid, prefer = 0;
 
 	pram_policy_cache = kmem_cache_create("nusa_policy",
-					 sizeof(struct mempolicy),
-					 0, SLAB_PANIC, NULL);
+			sizeof(struct mempolicy),
+			0, SLAB_PANIC, NULL);
 
 	mbsfs_pram_cache = kmem_cache_create("mbsfs_policy_node",
-				     sizeof(struct mbsfs_pram_node),
-				     0, SLAB_PANIC, NULL);
+			sizeof(struct mbsfs_pram_node),
+			0, SLAB_PANIC, NULL);
 
 	for_each_node(nid) {
 		//<<<2018.05.31 Yongseob
 		preferred_node_pram_policy[nid] = (struct mempolicy) {
 			.refcnt = ATOMIC_INIT(1),
-			.mode = MPOL_LOCAL,
-			.flags = MPOL_F_LOCAL,
-			//.mode = MPOL_INTERLEAVE,
-			//.flags = MPOL_F_LOCAL| MPOL_F_MOF | MPOL_F_MORON,
-			//. v = { .nodes = ,},
+				.mode = MPOL_LOCAL,
+				.flags = MPOL_F_LOCAL,
+				//.mode = MPOL_INTERLEAVE,
+				//.flags = MPOL_F_LOCAL| MPOL_F_MOF | MPOL_F_MORON,
+				//. v = { .nodes = ,},
 		};
 		//>>>
 	}
@@ -3606,19 +3606,19 @@ void __init nusa_policy_init(void)
 		node_set(prefer, interleave_nodes);
 
 	/*
-	for_each_node(nid) {
-		//<<<2018.05.31 Yongseob
-		preferred_node_pram_policy[nid] = (struct mempolicy) {
-			.refcnt = ATOMIC_INIT(1),
-			.mode = MPOL_INTERLEAVE,
-			//.flags = MPOL_F_LOCAL| MPOL_F_MOF | MPOL_F_MORON,
-			. v = { .nodes = interleave_nodes,},
-		};
-		//>>>
+	   for_each_node(nid) {
+	//<<<2018.05.31 Yongseob
+	preferred_node_pram_policy[nid] = (struct mempolicy) {
+	.refcnt = ATOMIC_INIT(1),
+	.mode = MPOL_INTERLEAVE,
+	//.flags = MPOL_F_LOCAL| MPOL_F_MOF | MPOL_F_MORON,
+	. v = { .nodes = interleave_nodes,},
+	};
+	//>>>
 	}
 	*/
 	//if (do_set_prampolicy(MPOL_INTERLEAVE, 0, &interleave_nodes))
-//		pr_err("%s: interleaving failed\n", __func__);
+	//		pr_err("%s: interleaving failed\n", __func__);
 	if (do_set_prampolicy(MPOL_LOCAL, 0, NULL))
 		pr_err("%s: LOCAL failed\n", __func__);
 	//check_numabalancing_enable();
@@ -3633,7 +3633,7 @@ void numa_default_policy(void)
 void nusa_default_policy(void)
 {
 	do_set_prampolicy(MPOL_DEFAULT, 0, NULL);
-//	do_set_prampolicy(MPOL_INTERLEAVE, 0, NULL);
+	//	do_set_prampolicy(MPOL_INTERLEAVE, 0, NULL);
 }
 
 /*
@@ -3963,7 +3963,7 @@ int mpol_parse_pram(char *str, struct mempolicy **mpol)
 			 */
 			if (!nodelist)
 				nodes = node_states[N_MEMORY];
-				//nodes = node_states[N_PRAM];
+			//nodes = node_states[N_PRAM];
 			break;
 		case MPOL_LOCAL:
 			/*
