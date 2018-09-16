@@ -2780,7 +2780,7 @@ sp_lookup(struct shared_policy *sp, unsigned long start, unsigned long end)
 }
 
 	static struct mbsfs_pram_node *
-sp_pram_lookup(struct mbsfs_policy *sp, unsigned long start, unsigned long end)
+mbsfs_lookup(struct mbsfs_policy *sp, unsigned long start, unsigned long end)
 {
 	struct rb_node *n = sp->root.rb_node;
 
@@ -2833,7 +2833,7 @@ static void sp_insert(struct shared_policy *sp, struct sp_node *new)
 	pr_debug("inserting %lx-%lx: %d\n", new->start, new->end,
 			new->policy ? new->policy->mode : 0);
 }
-static void sp_pram_insert(struct mbsfs_policy *sp, struct mbsfs_pram_node *new)
+static void mbsfs_insert(struct mbsfs_policy *sp, struct mbsfs_pram_node *new)
 {
 	struct rb_node **p = &sp->root.rb_node;
 	struct rb_node *parent = NULL;
@@ -2885,7 +2885,7 @@ mpol_mbsfs_policy_lookup(struct mbsfs_policy *sp, unsigned long idx)
 	if (!sp->root.rb_node)
 		return NULL;
 	read_lock(&sp->lock);
-	sn = sp_pram_lookup(sp, idx, idx+1);
+	sn = mbsfs_lookup(sp, idx, idx+1);
 	if (sn) {
 		mpol_get(sn->policy);
 		pol = sn->policy;
@@ -3054,7 +3054,7 @@ static struct sp_node *sp_alloc(unsigned long start, unsigned long end,
 	return n;
 }
 
-static void sp_pram_delete(struct mbsfs_policy *sp, struct mbsfs_pram_node *n)
+static void mbsfs_delete(struct mbsfs_policy *sp, struct mbsfs_pram_node *n)
 {
 	pr_debug("deleting %lx-l%lx\n", n->start, n->end);
 	rb_erase(&n->nd, &sp->root);
@@ -3062,7 +3062,7 @@ static void sp_pram_delete(struct mbsfs_policy *sp, struct mbsfs_pram_node *n)
 }
 
 
-static void sp_pram_node_init(struct mbsfs_pram_node *node, unsigned long start,
+static void mbsfs_node_init(struct mbsfs_pram_node *node, unsigned long start,
 		unsigned long end, struct mempolicy *pol)
 {
 	node->start = start;
@@ -3085,7 +3085,7 @@ static struct mbsfs_pram_node *mbsfs_pram_alloc(unsigned long start, unsigned lo
 		return NULL;
 	}
 	newpol->flags |= MPOL_F_SHARED;
-	sp_pram_node_init(n, start, end, newpol);
+	mbsfs_node_init(n, start, end, newpol);
 
 	return n;
 }
@@ -3164,13 +3164,13 @@ static int mbsfs_pram_policy_replace(struct mbsfs_policy *sp, unsigned long star
 
 restart:
 	write_lock(&sp->lock);
-	n = sp_pram_lookup(sp, start, end);
+	n = mbsfs_lookup(sp, start, end);
 	/* Take care of old policies in the same range. */
 	while (n && n->start < end) {
 		struct rb_node *next = rb_next(&n->nd);
 		if (n->start >= start) {
 			if (n->end <= end)
-				sp_pram_delete(sp, n);
+				mbsfs_delete(sp, n);
 			else
 				n->start = end;
 		} else {
@@ -3181,9 +3181,9 @@ restart:
 
 				*mpol_new = *n->policy;
 				atomic_set(&mpol_new->refcnt, 1);
-				sp_pram_node_init(n_new, end, n->end, mpol_new);
+				mbsfs_node_init(n_new, end, n->end, mpol_new);
 				n->end = start;
-				sp_pram_insert(sp, n_new);
+				mbsfs_insert(sp, n_new);
 				n_new = NULL;
 				mpol_new = NULL;
 				break;
@@ -3195,7 +3195,7 @@ restart:
 		n = rb_entry(next, struct mbsfs_pram_node, nd);
 	}
 	if (new)
-		sp_pram_insert(sp, new);
+		mbsfs_insert(sp, new);
 	write_unlock(&sp->lock);
 	ret = 0;
 
@@ -3297,7 +3297,8 @@ void mpol_mbsfs_policy_init(struct mbsfs_policy *sp, struct mempolicy *mpol)
 
 		/* Create pseudo-vma that contains just the policy */
 		memset(&pvma, 0, sizeof(struct vm_area_struct));
-		pvma.vm_end = TASK_SIZE;	/* policy covers entire file */
+		//pvma.vm_end = TASK_SIZE;	/* policy covers entire file */
+		pvma.vm_end = pvma.vm_start + PAGE_SIZE;	/* policy covers entire file */
 		mpol_set_mbsfs_policy(sp, &pvma, new); /* adds ref */
 
 put_new:
@@ -3399,7 +3400,7 @@ void mpol_free_mbsfs_policy(struct mbsfs_policy *p)
 	while (next) {
 		n = rb_entry(next, struct mbsfs_pram_node, nd);
 		next = rb_next(&n->nd);
-		sp_pram_delete(p, n);
+		mbsfs_delete(p, n);
 	}
 	write_unlock(&p->lock);
 }
