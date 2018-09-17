@@ -134,7 +134,7 @@ enum zone_type pram_policy_zone = 0;
 static struct mempolicy default_pram_policy = {
 	.refcnt = ATOMIC_INIT(1), /* never free it */
 	.mode = MPOL_PREFERRED,
-	//.flags = MPOL_F_LOCAL,
+	.flags = MPOL_F_LOCAL,
 };
 EXPORT_SYMBOL_GPL(default_pram_policy);
 //>>>
@@ -3489,7 +3489,7 @@ void __init numa_policy_init(void)
 		preferred_node_pram_policy[nid] = (struct mempolicy) {
 			.refcnt = ATOMIC_INIT(1),
 				.mode = MPOL_PREFERRED,
-				.flags = MPOL_F_MOF | MPOL_F_MORON | MPOL_F_LOCAL,
+				.flags = MPOL_F_MOF | MPOL_F_MORON,
 				.v = { .preferred_node = nid, },
 		};
 #if 0
@@ -3530,8 +3530,10 @@ void __init numa_policy_init(void)
 	if (unlikely(nodes_empty(interleave_nodes)))
 		node_set(prefer, interleave_nodes);
 
+#if 0
 	if (do_set_mempolicy(MPOL_INTERLEAVE, 0, &interleave_nodes))
 		pr_err("%s: interleaving failed\n", __func__);
+#endif
 	/*
 	   for_each_node(nid) {
 	//<<<2018.05.31 Yongseob
