@@ -134,13 +134,15 @@ enum zone_type pram_policy_zone = 0;
 static struct mempolicy default_pram_policy = {
 	.refcnt = ATOMIC_INIT(1), /* never free it */
 	.mode = MPOL_PREFERRED,
-	.flags = MPOL_F_LOCAL,
+	//.flags = MPOL_F_LOCAL, /* out of memory?? */
+	.flags = MPOL_F_MOF | MPOL_F_MORON,
 };
 EXPORT_SYMBOL_GPL(default_pram_policy);
 //>>>
 static struct mempolicy preferred_node_policy[MAX_NUMNODES];
 //<<<2018.05.31 Yongseob
 static struct mempolicy preferred_node_pram_policy[MAX_NUMNODES];
+EXPORT_SYMBOL_GPL(preferred_node_pram_policy);
 //>>>
 struct mempolicy *get_pram_policy(struct task_struct *p)
 {
@@ -2570,9 +2572,9 @@ alloc_prams_vma(gfp_t gfp, int order, struct vm_area_struct *vma,
 	//nmask = policy_nodemask(gfp, pol);
 	nmask = pram_policy_nodemask(gfp, pol);
 	preferred_nid = policy_node(gfp, pol, node);
+#if 0
 	if ( preferred_nid != node )
 		pr_info("preferred_nid=%d, node=%d\n",preferred_nid,node);
-#if 0
 	preferred_nid = policy_node(gfp, pol, numa_node_id());
 	pr_debug("preferred_nid=%d, numa_node_id=%d\n",preferred_nid,numa_node_id());
 #endif
@@ -2584,6 +2586,81 @@ out:
 }
 //<<<2018.05.18 Yongseob
 EXPORT_SYMBOL_GPL(alloc_prams_vma);
+struct page *
+alloc_prams_vma2(gfp_t gfp, int order, struct vm_area_struct *vma,
+		unsigned long addr, int node, bool hugepage)
+{
+	struct mempolicy *pol;
+	struct page *page;
+	int preferred_nid;
+	nodemask_t *nmask;
+#if 0
+	//pol = get_vma_policy(vma, addr);
+	pol = get_vma_pram_policy(vma, addr);
+
+	if (pol->mode == MPOL_INTERLEAVE) {
+#endif
+		if ( hugepage == false ) {
+		unsigned nid;
+
+		nid = interleave_nid(pol, vma, addr, PAGE_SHIFT + order);
+#if 0
+		//mpol_cond_put(pol);
+		mpol_cond_put_pram(pol);
+#endif
+		page = alloc_page_interleave(gfp, order, nid);
+		goto out;
+	}
+#if 0
+	if (unlikely(IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE) && hugepage)) {
+		int hpage_node = node;
+
+		/*
+		 * For hugepage allocation and non-interleave policy which
+		 * allows the current node (or other explicitly preferred
+		 * node) we only try to allocate from the current/preferred
+		 * node and don't fall back to other nodes, as the cost of
+		 * remote accesses would likely offset THP benefits.
+		 *
+		 * If the policy is interleave, or does not allow the current
+		 * node in its nodemask, we allocate the standard way.
+		 */
+		if (pol->mode == MPOL_PREFERRED &&
+						!(pol->flags & MPOL_F_LOCAL))
+			hpage_node = pol->v.preferred_node;
+
+		nmask = pram_policy_nodemask(gfp, pol);
+		if (!nmask || node_isset(hpage_node, *nmask)) {
+			mpol_cond_put_pram(pol);
+			page = __alloc_pages_node(hpage_node,
+						gfp | __GFP_THISNODE, order);
+			goto out;
+		}
+	}
+#endif
+	//nmask = policy_nodemask(gfp, pol);
+#if 0
+	nmask = pram_policy_nodemask(gfp, pol);
+	preferred_nid = policy_node(gfp, pol, node);
+#endif
+#if 0
+	if ( preferred_nid != node )
+		pr_info("preferred_nid=%d, node=%d\n",preferred_nid,node);
+	preferred_nid = policy_node(gfp, pol, numa_node_id());
+	pr_debug("preferred_nid=%d, numa_node_id=%d\n",preferred_nid,numa_node_id());
+#endif
+	preferred_nid = numa_node_id();
+	page = __alloc_pages_nodemask(gfp, order, preferred_nid, nmask);
+	//mpol_cond_put(pol);
+#if 0
+	mpol_cond_put_pram(pol);
+#endif
+out:
+	return page;
+}
+//<<<2018.05.18 Yongseob
+EXPORT_SYMBOL_GPL(alloc_prams_vma2);
+
 /**
  * 	alloc_pages_current - Allocate pages.
  *
@@ -3284,7 +3361,7 @@ void mpol_mbsfs_policy_init(struct mbsfs_policy *sp, struct mempolicy *mpol)
 
 		if (!scratch)
 			goto put_mpol;
-		/* contextualize the tmpfs mount point mempolicy */
+		/* contextualize the mbsfs mount point mempolicy */
 		new = mpol_new_pram(mpol->mode, mpol->flags, &mpol->w.user_nodemask);
 		if (IS_ERR(new))
 			goto free_scratch; /* no valid nodemask intersection */
@@ -3297,8 +3374,8 @@ void mpol_mbsfs_policy_init(struct mbsfs_policy *sp, struct mempolicy *mpol)
 
 		/* Create pseudo-vma that contains just the policy */
 		memset(&pvma, 0, sizeof(struct vm_area_struct));
-		//pvma.vm_end = TASK_SIZE;	/* policy covers entire file */
-		pvma.vm_end = pvma.vm_start + PAGE_SIZE;	/* policy covers entire file */
+		pvma.vm_end = TASK_SIZE;	/* policy covers entire file */
+		//pvma.vm_end = pvma.vm_start + PAGE_SIZE;	/* policy covers entire file */
 		mpol_set_mbsfs_policy(sp, &pvma, new); /* adds ref */
 
 put_new:
