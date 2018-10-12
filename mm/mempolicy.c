@@ -106,47 +106,6 @@
 #include <linux/uaccess.h>
 
 #include "internal.h"
-/**************************************/
-/**************************************/
-nodemask_t candidate_nodes;
-nodemask_t fat_nodes;
-//nodes_setall(candidate_nodes);
-void init_pram_policy_var(void)
-{
-	nodes_clear(candidate_nodes);
-	nodes_clear(fat_nodes);
-	for_each_node(nid){
-		node_set(nid, candidate_nodes);
-	}
-}
-void changeI_pram_policy(int nid)
-{
-	node_clear(nid, candidate_nodes);
-	node_set(nid, fat_nodes);
-	preferred_node_pram_policy[nid] = (struct mempolicy) {
-	.refcnt = ATOMIC_INIT(1),
-	.mode = MPOL_INTERLEAVE,
-	. v = { .nodes = candidate_nodes,},
-	};
-}
-EXPORT_SYMBOL_GPL(changeI_pram_policy);
-void restore_pram_policy(int nid)
-{
-	preferred_node_pram_policy[nid] = (struct mempolicy) {
-		.refcnt = ATOMIC_INIT(1),
-		.mode = MPOL_PREFERRED,
-		.flags = MPOL_F_MOF | MPOL_F_MORON,
-		.v = { .preferred_node = nid, },
-	};
-	node_set(nid, candidate_nodes);
-	node_clear(nid, fat_nodes);
-}
-EXPORT_SYMBOL_GPL(restore_pram_policy);
-/**************************************/
-/**************************************/
-/**************************************/
-/**************************************/
-
 /* Internal flags */
 #define MPOL_MF_DISCONTIG_OK (MPOL_MF_INTERNAL << 0)	/* Skip checks for continuous vmas */
 #define MPOL_MF_INVERT (MPOL_MF_INTERNAL << 1)		/* Invert check for nodemask */
@@ -184,6 +143,49 @@ static struct mempolicy preferred_node_policy[MAX_NUMNODES];
 static struct mempolicy preferred_node_pram_policy[MAX_NUMNODES];
 EXPORT_SYMBOL_GPL(preferred_node_pram_policy);
 //>>>
+/**************************************/
+/**************************************/
+nodemask_t candidate_nodes;
+nodemask_t fat_nodes;
+//nodes_setall(candidate_nodes);
+void init_pram_policy_var(void)
+{
+	int nid;
+	nodes_clear(candidate_nodes);
+	nodes_clear(fat_nodes);
+	for_each_node(nid){
+		node_set(nid, candidate_nodes);
+	}
+}
+void changeI_pram_policy(int nid)
+{
+	node_clear(nid, candidate_nodes);
+	node_set(nid, fat_nodes);
+	preferred_node_pram_policy[nid] = (struct mempolicy) {
+	.refcnt = ATOMIC_INIT(1),
+	.mode = MPOL_INTERLEAVE,
+	. v = { .nodes = candidate_nodes,},
+	};
+}
+EXPORT_SYMBOL_GPL(changeI_pram_policy);
+void restore_pram_policy(int nid)
+{
+	preferred_node_pram_policy[nid] = (struct mempolicy) {
+		.refcnt = ATOMIC_INIT(1),
+		.mode = MPOL_PREFERRED,
+		.flags = MPOL_F_MOF | MPOL_F_MORON,
+		.v = { .preferred_node = nid, },
+	};
+	node_set(nid, candidate_nodes);
+	node_clear(nid, fat_nodes);
+}
+EXPORT_SYMBOL_GPL(restore_pram_policy);
+/**************************************/
+/**************************************/
+/**************************************/
+/**************************************/
+
+
 struct mempolicy *get_pram_policy(struct task_struct *p)
 {
 	//struct mempolicy *pol = p->prampolicy;
