@@ -287,7 +287,7 @@ static unsigned long node_dirtyable_pram(struct pglist_data *pgdat)
 		struct zone *zone = pgdat->node_zones + z;
 
 		if (!populated_zone(zone))
-			continue;
+			return 0; //continue;
 
 		nr_pages += zone_page_state(zone, NR_FREE_PAGES);
 	}
@@ -297,7 +297,7 @@ static unsigned long node_dirtyable_pram(struct pglist_data *pgdat)
 	 * dirtyable, to prevent a situation where reclaim has to
 	 * clean pages in order to balance the zones.
 	 */
-	//nr_pages -= min(nr_pages, pgdat->totalreserve_prams);
+	//nr_pages -= min(nr_pages, pgdat->totalreserve_pram_pages);
 			/* no reserved prams for user space */
 /*   We do not RECLAIM on the ZONE_PRAM
 	nr_pages += node_page_state(pgdat, NR_PRAM_INACTIVE_FILE);
@@ -401,7 +401,7 @@ static unsigned long pram_global_dirtyable_memory(void)
 	 * dirtyable, to prevent a situation where reclaim has to
 	 * clean pages in order to balance the zones.
 	 */
-	x -= min(x, totalreserve_prams);
+	x -= min(x, totalreserve_pram_pages);
 
 	x += global_node_page_state(NR_PRAM_INACTIVE_FILE);
 	x += global_node_page_state(NR_PRAM_ACTIVE_FILE);

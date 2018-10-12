@@ -140,6 +140,10 @@ static DEFINE_SPINLOCK(managed_page_count_lock);
 unsigned long totalram_pages __read_mostly;
 unsigned long totalreserve_pages __read_mostly;
 unsigned long totalcma_pages __read_mostly;
+/**********************************************/
+unsigned long totalram_pram_pages __read_mostly;
+unsigned long totalreserve_pram_pages __read_mostly;
+unsigned long totalcma_pram_pages __read_mostly;
 
 int percpu_pagelist_fraction;
 gfp_t gfp_allowed_mask __read_mostly = GFP_BOOT_MASK;

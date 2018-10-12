@@ -195,7 +195,7 @@ enum node_stat_item {
 	//NR_PRAM_LRU_BASE,
 	//NR_PRAM_INACTIVE_ANON = NR_PRAM_LRU_BASE, /* must match order of LRU_[IN]ACTIVE */
 	//NR_PRAM_ACTIVE_ANON,		/*  "     "     "   "       "         */
-	//NR_PRAM_INACTIVE_FILE,	/*  "     "     "   "       "         */
+	NR_PRAM_INACTIVE_FILE,	/*  "     "     "   "       "         */
 	NR_PRAM_ACTIVE_FILE,		/*  "     "     "   "       "         */
 	NR_PRAM_UNEVICTABLE,		/*  "     "     "   "       "         */
 	//NR_PRAM_SLAB_RECLAIMABLE,
@@ -755,7 +755,7 @@ typedef struct pglist_data {
 	 * to userspace allocations.
 	 */
 	unsigned long		totalreserve_pages;
-	unsigned long		totalreserve_prams;
+	unsigned long		totalreserve_pram_pages;
 
 #ifdef CONFIG_NUMA
 	/*
