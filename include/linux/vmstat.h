@@ -253,6 +253,7 @@ static inline unsigned long node_page_state_snapshot(pg_data_t *pgdat,
 
 #ifdef CONFIG_NUMA
 extern void __inc_numa_state(struct zone *zone, enum numa_stat_item item);
+extern void __inc_nusa_state(struct zone *zone, enum nusa_stat_item item);
 extern unsigned long sum_zone_node_page_state(int node,
 					      enum zone_stat_item item);
 extern unsigned long sum_zone_numa_state(int node, enum numa_stat_item item);
