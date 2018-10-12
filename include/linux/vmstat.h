@@ -103,6 +103,8 @@ static inline void vm_events_fold_cpu(int cpu)
 
 #define __count_zid_vm_events(item, zid, delta) \
 	__count_vm_events(item##_NORMAL - ZONE_NORMAL + zid, delta)
+#define __count_zid_pram_vm_events(item, zid, delta) \
+	__count_vm_events(item##_PRAM - ZONE_PRAM + zid, delta)
 
 /*
  * Zone and node-based page accounting with per cpu differentials.
@@ -110,8 +112,34 @@ static inline void vm_events_fold_cpu(int cpu)
 extern atomic_long_t vm_zone_stat[NR_VM_ZONE_STAT_ITEMS];
 extern atomic_long_t vm_numa_stat[NR_VM_NUMA_STAT_ITEMS];
 extern atomic_long_t vm_node_stat[NR_VM_NODE_STAT_ITEMS];
+extern atomic_long_t vm_nusa_stat[NR_VM_NUSA_STAT_ITEMS];
 
 #ifdef CONFIG_NUMA
+static inline void zone_nusa_state_add(long x, struct zone *zone,
+				 enum nusa_stat_item item)
+{
+	atomic_long_add(x, &zone->vm_nusa_stat[item]);
+	atomic_long_add(x, &vm_nusa_stat[item]);
+}
+
+static inline unsigned long global_nusa_state(enum nusa_stat_item item)
+{
+	long x = atomic_long_read(&vm_nusa_stat[item]);
+
+	return x;
+}
+
+static inline unsigned long zone_nusa_state_snapshot(struct zone *zone,
+					enum rusa_stat_item item)
+{
+	long x = atomic_long_read(&zone->vm_nusa_stat[item]);
+	int cpu;
+
+	for_each_online_cpu(cpu)
+		x += per_cpu_ptr(zone->pageset, cpu)->vm_nusa_stat_diff[item];
+
+	return x;
+}
 static inline void zone_numa_state_add(long x, struct zone *zone,
 				 enum numa_stat_item item)
 {

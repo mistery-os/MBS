@@ -12,17 +12,22 @@ extern int sysctl_overcommit_memory;
 extern int sysctl_overcommit_ratio;
 extern unsigned long sysctl_overcommit_kbytes;
 extern struct percpu_counter vm_committed_as;
+extern struct percpu_counter pram_vm_committed_as;
 
 #ifdef CONFIG_SMP
 extern s32 vm_committed_as_batch;
+extern s32 pram_vm_committed_as_batch;
 #else
 #define vm_committed_as_batch 0
+#define pram_vm_committed_as_batch 0
 //<<<2018.05.18 Yongseob
 EXPORT_SYMBOL_GPL(vm_committed_as_batch);
+EXPORT_SYMBOL_GPL(pram_vm_committed_as_batch);
 //>>>
 #endif
 
 unsigned long vm_memory_committed(void);
+unsigned long pram_vm_memory_committed(void);
 
 static inline void vm_acct_memory(long pages)
 {
@@ -33,7 +38,15 @@ static inline void vm_unacct_memory(long pages)
 {
 	vm_acct_memory(-pages);
 }
+static inline void pram_vm_acct_memory(long pages)
+{
+	percpu_counter_add_batch(&pram_vm_committed_as, pages, pram_vm_committed_as_batch);
+}
 
+static inline void pram_vm_unacct_memory(long pages)
+{
+	pram_vm_acct_memory(-pages);
+}
 /*
  * Allow architectures to handle additional protection bits
  */

@@ -569,6 +569,11 @@ struct percpu_counter vm_committed_as ____cacheline_aligned_in_smp;
 //<<<2018.05.18 Yongseob
 EXPORT_SYMBOL_GPL(vm_committed_as);
 //>>>
+struct percpu_counter pram_vm_committed_as ____cacheline_aligned_in_smp;
+//<<<2018.05.18 Yongseob
+EXPORT_SYMBOL_GPL(pram_vm_committed_as);
+//>>>
+
 
 /*
  * The global memory commitment made in the system can be a metric
@@ -583,7 +588,11 @@ unsigned long vm_memory_committed(void)
 	return percpu_counter_read_positive(&vm_committed_as);
 }
 EXPORT_SYMBOL_GPL(vm_memory_committed);
-
+unsigned long pram_vm_memory_committed(void)
+{
+	return percpu_counter_read_positive(&pram_vm_committed_as);
+}
+EXPORT_SYMBOL_GPL(pram_vm_memory_committed);
 /*
  * Check that a process has enough memory to allocate a new virtual
  * mapping. 0 means there is enough memory for the allocation to
@@ -680,7 +689,86 @@ error:
 
 	return -ENOMEM;
 }
+int __pram_vm_enough_memory(struct mm_struct *mm, long pages, int cap_sys_admin)
+{
+	long free, allowed, reserve;
 
+	VM_WARN_ONCE(percpu_counter_read(&pram_vm_committed_as) <
+			-(s64)pram_vm_committed_as_batch * num_online_cpus(),
+			"memory commitment underflow");
+
+	pram_vm_acct_memory(pages);
+
+	/*
+	 * Sometimes we want to use more memory than we have
+	 */
+	if (sysctl_overcommit_memory == OVERCOMMIT_ALWAYS)
+		return 0;
+
+	if (sysctl_overcommit_memory == OVERCOMMIT_GUESS) {
+		free = global_zone_page_state(NR_FREE_PAGES);
+		free += global_node_page_state(NR_FILE_PAGES);
+
+		/*
+		 * shmem pages shouldn't be counted as free in this
+		 * case, they can't be purged, only swapped out, and
+		 * that won't affect the overall amount of available
+		 * memory in the system.
+		 */
+		free -= global_node_page_state(NR_SHMEM);
+
+		free += get_nr_swap_pages();
+
+		/*
+		 * Any slabs which are created with the
+		 * SLAB_RECLAIM_ACCOUNT flag claim to have contents
+		 * which are reclaimable, under pressure.  The dentry
+		 * cache and most inode caches should fall into this
+		 */
+		free += global_node_page_state(NR_SLAB_RECLAIMABLE);
+
+		/*
+		 * Leave reserved pages. The pages are not for anonymous pages.
+		 */
+		if (free <= totalreserve_pages)
+			goto error;
+		else
+			free -= totalreserve_pages;
+
+		/*
+		 * Reserve some for root
+		 */
+		if (!cap_sys_admin)
+			free -= sysctl_admin_reserve_kbytes >> (PAGE_SHIFT - 10);
+
+		if (free > pages)
+			return 0;
+
+		goto error;
+	}
+
+	allowed = vm_commit_limit();
+	/*
+	 * Reserve some for root
+	 */
+	if (!cap_sys_admin)
+		allowed -= sysctl_admin_reserve_kbytes >> (PAGE_SHIFT - 10);
+
+	/*
+	 * Don't let a single process grow so big a user can't recover
+	 */
+	if (mm) {
+		reserve = sysctl_user_reserve_kbytes >> (PAGE_SHIFT - 10);
+		allowed -= min_t(long, mm->total_vm / 32, reserve);
+	}
+
+	if (percpu_counter_read_positive(&vm_committed_as) < allowed)
+		return 0;
+error:
+	vm_unacct_memory(pages);
+
+	return -ENOMEM;
+}
 /**
  * get_cmdline() - copy the cmdline value to a buffer.
  * @task:     the task whose cmdline value to copy.

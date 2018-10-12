@@ -897,6 +897,7 @@ struct task_struct {
 #ifdef CONFIG_CPUSETS
 	/* Protected by ->alloc_lock: */
 	nodemask_t			mems_allowed;
+	nodemask_t			prams_allowed;
 	/* Seqence number to catch updates: */
 	seqcount_t			mems_allowed_seq;
 	int				cpuset_mem_spread_rotor;

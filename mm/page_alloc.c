@@ -74,6 +74,12 @@
 #include <asm/div64.h>
 #include "internal.h"
 
+/**************************************/
+/**************************************/
+extern nodemask_t candidate_nodes;
+extern nodemask_t fat_node;
+extern void changeI_pram_policy(int nid);
+extern void restore_pram_policy(int nid);
 /* prevent >1 _updater_ of zone percpu pageset ->high and ->batch fields */
 static DEFINE_MUTEX(pcp_batch_high_lock);
 #define MIN_PERCPU_PAGELIST_FRACTION	(8)
@@ -2933,6 +2939,25 @@ int __isolate_free_page(struct page *page, unsigned int order)
  *
  * Must be called with interrupts disabled.
  */
+static inline void zone_pram_statistics(struct zone *preferred_zone, struct zone *z)
+{
+#ifdef CONFIG_NUMA
+	enum nusa_stat_item local_stat = NUSA_LOCAL;
+
+	if (z->node != numa_node_id())
+		local_stat = NUSA_OTHER;
+
+	if (z->node == preferred_zone->node)
+		__inc_nusa_state(z, NUSA_HIT);
+	else {
+		__inc_nusa_state(z, NUSA_MISS);
+		__inc_nusa_state(preferred_zone, NUSA_FOREIGN);
+	}
+	__inc_nusa_state(z, local_stat);
+#endif
+}
+
+
 static inline void zone_statistics(struct zone *preferred_zone, struct zone *z)
 {
 #ifdef CONFIG_NUMA
@@ -2952,6 +2977,32 @@ static inline void zone_statistics(struct zone *preferred_zone, struct zone *z)
 }
 
 /* Remove page from the per-cpu list, caller must protect the list */
+static struct page *__rmqueue_pram_pcplist(struct zone *zone, int migratetype,
+			bool cold, struct per_cpu_pages *pcp,
+			struct list_head *list)
+{
+	struct page *page;
+
+	do {
+		if (list_empty(list)) {
+			pcp->count += rmqueue_bulk(zone, 0,
+					pcp->batch, list,
+					migratetype, cold);
+			if (unlikely(list_empty(list)))
+				return NULL;
+		}
+
+		if (cold)
+			page = list_last_entry(list, struct page, lru);
+		else
+			page = list_first_entry(list, struct page, lru);
+
+		list_del(&page->lru);
+		pcp->count--;
+	} while (check_new_pcp(page));
+
+	return page;
+}
 static struct page *__rmqueue_pcplist(struct zone *zone, int migratetype,
 			bool cold, struct per_cpu_pages *pcp,
 			struct list_head *list)
@@ -2980,6 +3031,27 @@ static struct page *__rmqueue_pcplist(struct zone *zone, int migratetype,
 }
 
 /* Lock and remove page from the per-cpu list */
+static struct page *rmqueue_pram_pcplist(struct zone *preferred_zone,
+			struct zone *zone, unsigned int order,
+			gfp_t gfp_flags, int migratetype)
+{
+	struct per_cpu_pages *pcp;
+	struct list_head *list;
+	bool cold = ((gfp_flags & __GFP_COLD) != 0);
+	struct page *page;
+	unsigned long flags;
+
+	local_irq_save(flags);
+	pcp = &this_cpu_ptr(zone->pageset)->pcp;
+	list = &pcp->lists[migratetype];
+	page = __rmqueue_pram_pcplist(zone,  migratetype, cold, pcp, list);
+	if (page) {
+		__count_zid_vm_events(PGALLOC, page_zonenum(page), 1 << order);
+		zone_statistics(preferred_zone, zone);
+	}
+	local_irq_restore(flags);
+	return page;
+}
 static struct page *rmqueue_pcplist(struct zone *preferred_zone,
 			struct zone *zone, unsigned int order,
 			gfp_t gfp_flags, int migratetype)
@@ -3005,6 +3077,56 @@ static struct page *rmqueue_pcplist(struct zone *preferred_zone,
 /*
  * Allocate a page from the given zone. Use pcplists for order-0 allocations.
  */
+static inline
+struct page *rmqueue_pram(struct zone *preferred_zone,
+			struct zone *zone, unsigned int order,
+			gfp_t gfp_flags, unsigned int alloc_flags,
+			int migratetype)
+{
+	unsigned long flags;
+	struct page *page;
+
+	if (likely(order == 0)) {
+		page = rmqueue_pram_pcplist(preferred_zone, zone, order,
+				gfp_flags, migratetype);
+		goto out;
+	}
+
+	/*
+	 * We most definitely don't want callers attempting to
+	 * allocate greater than order-1 page units with __GFP_NOFAIL.
+	 */
+	WARN_ON_ONCE((gfp_flags & __GFP_NOFAIL) && (order > 1));
+	spin_lock_irqsave(&zone->lock, flags);
+
+	do {
+		page = NULL;
+		if (alloc_flags & ALLOC_HARDER) {
+			page = __rmqueue_smallest(zone, order, MIGRATE_HIGHATOMIC);
+			if (page)
+				trace_mm_page_alloc_zone_locked(page, order, migratetype);
+		}
+		if (!page)
+			page = __rmqueue(zone, order, migratetype);
+	} while (page && check_new_pages(page, order));
+	spin_unlock(&zone->lock);
+	if (!page)
+		goto failed;
+	__mod_zone_freepage_state(zone, -(1 << order),
+				  get_pcppage_migratetype(page));
+
+	__count_zid_pram_vm_events(PGALLOC, page_zonenum(page), 1 << order);
+	zone_pram_statistics(preferred_zone, zone);
+	local_irq_restore(flags);
+
+out:
+	VM_BUG_ON_PAGE(page && bad_range(zone, page), page);
+	return page;
+
+failed:
+	local_irq_restore(flags);
+	return NULL;
+}
 static inline
 struct page *rmqueue(struct zone *preferred_zone,
 			struct zone *zone, unsigned int order,
@@ -3140,6 +3262,84 @@ static inline bool should_fail_alloc_page(gfp_t gfp_mask, unsigned int order)
  * one free page of a suitable size. Checking now avoids taking the zone lock
  * to check in the allocation paths if no pages are free.
  */
+bool __pram_zone_watermark_ok(struct zone *z, unsigned int order, unsigned long mark,
+			 int classzone_idx, unsigned int alloc_flags,
+			 long free_pages)
+{
+	long min = mark;
+	int o;
+	const bool alloc_harder = (alloc_flags & (ALLOC_HARDER|ALLOC_OOM));
+
+	/* free_pages may go negative - that's OK */
+	free_pages -= (1 << order) - 1;
+
+	if (alloc_flags & ALLOC_HIGH)
+		min -= min / 2;
+
+	/*
+	 * If the caller does not have rights to ALLOC_HARDER then subtract
+	 * the high-atomic reserves. This will over-estimate the size of the
+	 * atomic reserve but it avoids a search.
+	 */
+	if (likely(!alloc_harder)) {
+		free_pages -= z->nr_reserved_highatomic;
+	} else {
+		/*
+		 * OOM victims can try even harder than normal ALLOC_HARDER
+		 * users on the grounds that it's definitely going to be in
+		 * the exit path shortly and free memory. Any allocation it
+		 * makes during the free path will be small and short-lived.
+		 */
+		if (alloc_flags & ALLOC_OOM)
+			min -= min / 2;
+		else
+			min -= min / 4;
+	}
+
+
+#ifdef CONFIG_CMA
+	/* If allocation can't use CMA areas don't use free CMA pages */
+	if (!(alloc_flags & ALLOC_CMA))
+		free_pages -= zone_page_state(z, NR_FREE_CMA_PAGES);
+#endif
+
+	/*
+	 * Check watermarks for an order-0 allocation request. If these
+	 * are not met, then a high-order request also cannot go ahead
+	 * even if a suitable page happened to be free.
+	 */
+	if (free_pages <= min + z->lowmem_reserve[classzone_idx])
+		return false;
+
+	/* If this is an order-0 request then the watermark is fine */
+	if (!order)
+		return true;
+
+	/* For a high-order request, check at least one suitable page is free */
+	for (o = order; o < MAX_ORDER; o++) {
+		struct free_area *area = &z->free_area[o];
+		int mt;
+
+		if (!area->nr_free)
+			continue;
+
+		for (mt = 0; mt < MIGRATE_PCPTYPES; mt++) {
+			if (!list_empty(&area->free_list[mt]))
+				return true;
+		}
+
+#ifdef CONFIG_CMA
+		if ((alloc_flags & ALLOC_CMA) &&
+		    !list_empty(&area->free_list[MIGRATE_CMA])) {
+			return true;
+		}
+#endif
+		if (alloc_harder &&
+			!list_empty(&area->free_list[MIGRATE_HIGHATOMIC]))
+			return true;
+	}
+	return false;
+}
 bool __zone_watermark_ok(struct zone *z, unsigned int order, unsigned long mark,
 			 int classzone_idx, unsigned int alloc_flags,
 			 long free_pages)
@@ -3226,6 +3426,31 @@ bool zone_watermark_ok(struct zone *z, unsigned int order, unsigned long mark,
 					zone_page_state(z, NR_FREE_PAGES));
 }
 
+static inline bool pram_zone_watermark_fast(struct zone *z, unsigned int order,
+		unsigned long mark, int classzone_idx, unsigned int alloc_flags)
+{
+	long free_pages = zone_page_state(z, NR_FREE_PAGES);
+	long cma_pages = 0;
+
+#ifdef CONFIG_CMA
+	/* If allocation can't use CMA areas don't use free CMA pages */
+	if (!(alloc_flags & ALLOC_CMA))
+		cma_pages = zone_page_state(z, NR_FREE_CMA_PAGES);
+#endif
+
+	/*
+	 * Fast check for order-0 only. If this fails then the reserves
+	 * need to be calculated. There is a corner case where the check
+	 * passes but only the high-order atomic reserve are free. If
+	 * the caller is !atomic then it'll uselessly search the free
+	 * list. That corner case is then slower but it is harmless.
+	 */
+	if (!order && (free_pages - cma_pages) > mark + z->lowmem_reserve[classzone_idx])
+		return true;
+
+	return __pram_zone_watermark_ok(z, order, mark, classzone_idx, alloc_flags,
+					free_pages);
+}
 static inline bool zone_watermark_fast(struct zone *z, unsigned int order,
 		unsigned long mark, int classzone_idx, unsigned int alloc_flags)
 {
@@ -3281,6 +3506,114 @@ static bool zone_allows_reclaim(struct zone *local_zone, struct zone *zone)
  * get_page_from_freelist goes through the zonelist trying to allocate
  * a page.
  */
+static struct page *
+get_pram_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
+						const struct alloc_context *ac,
+					int nid)
+{
+	struct zoneref *z = ac->preferred_zoneref;
+	struct zone *zone;
+	struct pglist_data *last_pgdat_dirty_limit = NULL;
+
+	/*
+	 * Scan zonelist, looking for a zone with enough free.
+	 * See also __cpuset_node_allowed() comment in kernel/cpuset.c.
+	 */
+//	for_next_zone_zonelist_nodemask(zone, z, ac->zonelist, ac->high_zoneidx,
+//								ac->nodemask) {
+		struct page *page;
+		unsigned long mark;
+
+		if (cpusets_enabled() &&
+			(alloc_flags & ALLOC_CPUSET) &&
+			!__cpuset_zone_allowed(zone, gfp_mask))
+				continue;
+		/*
+		 * When allocating a page cache page for writing, we
+		 * want to get it from a node that is within its dirty
+		 * limit, such that no single node holds more than its
+		 * proportional share of globally allowed dirty pages.
+		 * The dirty limits take into account the node's
+		 * lowmem reserves and high watermark so that kswapd
+		 * should be able to balance it without having to
+		 * write pages from its LRU list.
+		 *
+		 * XXX: For now, allow allocations to potentially
+		 * exceed the per-node dirty limit in the slowpath
+		 * (spread_dirty_pages unset) before going into reclaim,
+		 * which is important when on a NUMA setup the allowed
+		 * nodes are together not big enough to reach the
+		 * global limit.  The proper fix for these situations
+		 * will require awareness of nodes in the
+		 * dirty-throttling and the flusher threads.
+		 */
+		if (ac->spread_dirty_pages) { //__GFP_WRITE
+			if (last_pgdat_dirty_limit == zone->zone_pgdat)
+				continue;
+
+			if (!pram_node_dirty_ok(zone->zone_pgdat)) {
+				last_pgdat_dirty_limit = zone->zone_pgdat;
+				continue;
+			}
+		}
+
+		mark = zone->watermark[alloc_flags & ALLOC_pram_MASK];
+		goto try_this_zone;
+		if (!pram_zone_watermark_fast(zone, order, mark,
+				       ac_classzone_idx(ac), alloc_flags)) {
+			int ret;
+			/************/
+		changeI_pram_policy(nid);
+				goto try_this_zone;
+
+			/************/
+
+			/* Checked here to keep the fast path fast */
+			BUILD_BUG_ON(ALLOC_NO_WATERMARKS < NR_pramWMARK);
+			if (alloc_flags & ALLOC_NO_WATERMARKS)
+				goto try_this_zone;
+
+			if (node_reclaim_mode == 0 ||
+			    !zone_allows_reclaim(ac->preferred_zoneref->zone, zone))
+				continue;
+
+			ret = node_reclaim(zone->zone_pgdat, gfp_mask, order);
+			switch (ret) {
+			case NODE_RECLAIM_NOSCAN:
+				/* did not scan */
+				continue;
+			case NODE_RECLAIM_FULL:
+				/* scanned but unreclaimable */
+				continue;
+			default:
+				/* did we reclaim enough */
+				if (zone_watermark_ok(zone, order, mark,
+						ac_classzone_idx(ac), alloc_flags))
+					goto try_this_zone;
+
+				continue;
+			}
+		}
+
+try_this_zone:
+		page = rmqueue_pram(ac->preferred_zoneref->zone, zone, order,
+				gfp_mask, alloc_flags, ac->migratetype);
+		if (page) {
+			prep_new_page(page, order, gfp_mask, alloc_flags);
+
+			/*
+			 * If this is a high-order atomic allocation then check
+			 * if the pageblock should be reserved for the future
+			 */
+			if (unlikely(order && (alloc_flags & ALLOC_HARDER)))
+				reserve_highatomic_pageblock(page, zone, order);
+
+			return page;
+		}
+//	}
+
+	return NULL;
+}
 static struct page *
 get_page_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
 						const struct alloc_context *ac)
@@ -4321,6 +4654,49 @@ got_pg:
 	return page;
 }
 
+static inline bool prepare_alloc_prams(gfp_t gfp_mask, unsigned int order,
+		int preferred_nid, nodemask_t *nodemask,
+		struct alloc_context *ac, gfp_t *alloc_mask,
+		unsigned int *alloc_flags)
+{
+	ac->high_zoneidx = gfp_zone(gfp_mask);
+#if 0
+	if ( ac->high_zoneidx & GFP_PRAM)
+		pr_info("GFP_PRAM requested\n");//works fine pr_info
+#endif
+	ac->zonelist = node_zonelist(preferred_nid, gfp_mask);
+	ac->nodemask = nodemask;
+	ac->migratetype = gfpflags_to_migratetype(gfp_mask);
+	//<<<2018.05.30 Yongseob
+#if 0   // 2018.06.07 temporaly disabled
+
+	if (ac->high_zoneidx & ZONE_PRAM ) //if ( gfp_mask & GFP_PRAM )
+		*alloc_flags |= ALLOC_NO_WATERMARKS;
+#endif  //>>>
+
+	if (cpusets_enabled()) {
+		*alloc_mask |= __GFP_HARDWALL;
+		if (!ac->nodemask)// nodemask=NULL
+			ac->nodemask = &cpuset_current_prams_allowed;
+		else
+			*alloc_flags |= ALLOC_CPUSET;
+	}
+
+	fs_reclaim_acquire(gfp_mask);//do nothing without CONFIG_LOCKDEP
+	fs_reclaim_release(gfp_mask);//same as 
+
+	might_sleep_if(gfp_mask & __GFP_DIRECT_RECLAIM);
+
+	if (should_fail_alloc_page(gfp_mask, order))//do nothing w/o CONFIG_FAIL_PAGE_ALLOC
+		return false;
+
+	if (IS_ENABLED(CONFIG_CMA) && ac->migratetype == MIGRATE_MOVABLE)
+		*alloc_flags |= ALLOC_CMA;
+
+	return true;
+}
+
+
 static inline bool prepare_alloc_pages(gfp_t gfp_mask, unsigned int order,
 		int preferred_nid, nodemask_t *nodemask,
 		struct alloc_context *ac, gfp_t *alloc_mask,
@@ -4382,25 +4758,26 @@ static inline void finalise_ac(gfp_t gfp_mask,
 /*
  * This is the 'heart' of the zoned buddy allocator.
  */
-#if 0
+//#if 0
 	struct page *
 __alloc_prams_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
 		nodemask_t *nodemask)
 {
 	struct page *page;
-	unsigned int alloc_flags = ALLOC_WMARK_LOW;
+	unsigned int alloc_flags = ALLOC_pram_LOW;/*ALLOC_WMARK_LOW; */
 	gfp_t alloc_mask; /* The gfp_t that was actually used for allocation */
 	struct alloc_context ac = { };
 
 	gfp_mask &= gfp_allowed_mask;
 	alloc_mask = gfp_mask;
-	if (!prepare_alloc_pages(gfp_mask, order, preferred_nid, nodemask, &ac, &alloc_mask, &alloc_flags))
+	if (!prepare_alloc_prams(gfp_mask, order, preferred_nid, nodemask, &ac, &alloc_mask, &alloc_flags))
 		return NULL;
 
 	finalise_ac(gfp_mask, order, &ac);
 
 	/* First allocation attempt */
-	page = get_page_from_freelist(alloc_mask, order, alloc_flags, &ac);
+	page = get_pram_from_freelist(alloc_mask, order, alloc_flags, &ac, 
+			preferred_nid);
 	if (likely(page))
 		goto out;
 	
@@ -4419,7 +4796,7 @@ __alloc_prams_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
 	 */
 	if (unlikely(ac.nodemask != nodemask))
 		ac.nodemask = nodemask;
-
+/* ZONE_PRAM no need to call kswapd */
 	page = __alloc_pages_slowpath(alloc_mask, order, &ac);
 
 out:
@@ -4436,7 +4813,7 @@ out:
 
 	return page;
 }
-#endif
+//#endif
 struct page *
 __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
 		nodemask_t *nodemask)

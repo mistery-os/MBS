@@ -476,9 +476,15 @@ unsigned long reclaim_clean_pages_from_list(struct zone *zone,
 #define ALLOC_WMARK_LOW		WMARK_LOW
 #define ALLOC_WMARK_HIGH	WMARK_HIGH
 #define ALLOC_NO_WATERMARKS	0x04 /* don't check watermarks at all */
-
 /* Mask to get the watermark bits */
 #define ALLOC_WMARK_MASK	(ALLOC_NO_WATERMARKS-1)
+
+#define ALLOC_pram_MIN		pram_MIN
+#define ALLOC_pram_LOW		pram_LOW
+#define ALLOC_pram_HIGH		pram_HIGH
+#define ALLOC_NO_pram_WATERMARKS	0x04 /* don't check watermarks at all */
+/* Mask to get the watermark bits */
+#define ALLOC_pram_MASK	(ALLOC_NO_pram_WATERMARKS-1)
 
 /*
  * Only MMU archs have async oom victim reclaim - aka oom_reaper so we

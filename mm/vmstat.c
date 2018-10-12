@@ -31,6 +31,7 @@
 #include "internal.h"
 
 #define NUMA_STATS_THRESHOLD (U16_MAX - 2)
+#define NUSA_STATS_THRESHOLD (U16_MAX - 2)
 
 #ifdef CONFIG_VM_EVENT_COUNTERS
 DEFINE_PER_CPU(struct vm_event_state, vm_event_states) = {{0}};
@@ -91,9 +92,11 @@ void vm_events_fold_cpu(int cpu)
 atomic_long_t vm_zone_stat[NR_VM_ZONE_STAT_ITEMS] __cacheline_aligned_in_smp;
 atomic_long_t vm_numa_stat[NR_VM_NUMA_STAT_ITEMS] __cacheline_aligned_in_smp;
 atomic_long_t vm_node_stat[NR_VM_NODE_STAT_ITEMS] __cacheline_aligned_in_smp;
+atomic_long_t vm_nusa_stat[NR_VM_NUSA_STAT_ITEMS] __cacheline_aligned_in_smp;
 EXPORT_SYMBOL(vm_zone_stat);
 EXPORT_SYMBOL(vm_numa_stat);
 EXPORT_SYMBOL(vm_node_stat);
+EXPORT_SYMBOL(vm_nusa_stat);
 
 #ifdef CONFIG_SMP
 
@@ -864,6 +867,22 @@ void drain_zonestat(struct zone *zone, struct per_cpu_pageset *pset)
 #endif
 
 #ifdef CONFIG_NUMA
+void __inc_nusa_state(struct zone *zone,
+				 enum nusa_stat_item item)
+{
+	struct per_cpu_pageset __percpu *pcp = zone->pageset;
+	u16 __percpu *p = pcp->vm_nusa_stat_diff + item;
+	u16 v;
+
+	v = __this_cpu_inc_return(*p);
+
+	if (unlikely(v > NUSA_STATS_THRESHOLD)) {
+		zone_nusa_state_add(v, zone, item);
+		__this_cpu_write(*p, 0);
+	}
+}
+
+
 void __inc_numa_state(struct zone *zone,
 				 enum numa_stat_item item)
 {
@@ -901,6 +920,20 @@ unsigned long sum_zone_node_page_state(int node,
  * Determine the per node value of a numa stat item. To avoid deviation,
  * the per cpu stat number in vm_numa_stat_diff[] is also included.
  */
+unsigned long sum_zone_nusa_state(int node,
+				 enum nusa_stat_item item)
+{
+	struct zone *zones = NODE_DATA(node)->node_zones;
+	int i;
+	unsigned long count = 0;
+
+	for (i = 0; i < MAX_NR_ZONES; i++)
+		count += zone_numa_state_snapshot(zones + i, item);
+
+	return count;
+}
+
+
 unsigned long sum_zone_numa_state(int node,
 				 enum numa_stat_item item)
 {

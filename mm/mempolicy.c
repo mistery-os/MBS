@@ -106,6 +106,46 @@
 #include <linux/uaccess.h>
 
 #include "internal.h"
+/**************************************/
+/**************************************/
+nodemask_t candidate_nodes;
+nodemask_t fat_nodes;
+//nodes_setall(candidate_nodes);
+void init_pram_policy_var(void)
+{
+	nodes_clear(candidate_nodes);
+	nodes_clear(fat_nodes);
+	for_each_node(nid){
+		node_set(nid, candidate_nodes);
+	}
+}
+void changeI_pram_policy(int nid)
+{
+	node_clear(nid, candidate_nodes);
+	node_set(nid, fat_nodes);
+	preferred_node_pram_policy[nid] = (struct mempolicy) {
+	.refcnt = ATOMIC_INIT(1),
+	.mode = MPOL_INTERLEAVE,
+	. v = { .nodes = candidate_nodes,},
+	};
+}
+EXPORT_SYMBOL_GPL(changeI_pram_policy);
+void restore_pram_policy(int nid)
+{
+	preferred_node_pram_policy[nid] = (struct mempolicy) {
+		.refcnt = ATOMIC_INIT(1),
+		.mode = MPOL_PREFERRED,
+		.flags = MPOL_F_MOF | MPOL_F_MORON,
+		.v = { .preferred_node = nid, },
+	};
+	node_set(nid, candidate_nodes);
+	node_clear(nid, fat_nodes);
+}
+EXPORT_SYMBOL_GPL(restore_pram_policy);
+/**************************************/
+/**************************************/
+/**************************************/
+/**************************************/
 
 /* Internal flags */
 #define MPOL_MF_DISCONTIG_OK (MPOL_MF_INTERNAL << 0)	/* Skip checks for continuous vmas */
@@ -134,8 +174,8 @@ enum zone_type pram_policy_zone = 0;
 static struct mempolicy default_pram_policy = {
 	.refcnt = ATOMIC_INIT(1), /* never free it */
 	.mode = MPOL_PREFERRED,
-	//.flags = MPOL_F_LOCAL, /* out of memory?? */
-	.flags = MPOL_F_MOF | MPOL_F_MORON,
+	.flags = MPOL_F_LOCAL, /* out of memory?? */
+	//.flags = MPOL_F_MOF | MPOL_F_MORON,
 };
 EXPORT_SYMBOL_GPL(default_pram_policy);
 //>>>
@@ -146,11 +186,12 @@ EXPORT_SYMBOL_GPL(preferred_node_pram_policy);
 //>>>
 struct mempolicy *get_pram_policy(struct task_struct *p)
 {
-	struct mempolicy *pol = p->prampolicy;
+	//struct mempolicy *pol = p->prampolicy;
+	struct mempolicy *pol = NULL;
 	int node;
 
-	if (pol)
-		return pol;
+	//if (pol)
+	//	return pol;
 
 	node = numa_node_id();
 	if (node != NUMA_NO_NODE) {
@@ -2428,6 +2469,21 @@ out:
 
 /* Allocate a page in interleaved policy.
    Own path because it needs to do special accounting. */
+static struct page *alloc_pram_interleave(gfp_t gfp, unsigned order,
+					unsigned nid)
+{
+	struct page *page;
+
+	page = __alloc_prams(gfp, order, nid);
+	if (page && page_to_nid(page) == nid) {
+		preempt_disable();
+		__inc_nusa_state(page_zone(page), NUSA_INTERLEAVE_HIT);
+		preempt_enable();
+	}
+	return page;
+}
+
+
 static struct page *alloc_page_interleave(gfp_t gfp, unsigned order,
 					unsigned nid)
 {
@@ -2689,9 +2745,9 @@ struct page *alloc_prams_current(gfp_t gfp, unsigned order)
 	 * nor system default_pram_policy
 	 */
 	if (pol->mode == MPOL_INTERLEAVE)
-		page = alloc_page_interleave(gfp, order, interleave_nodes(pol));
+		page = alloc_pram_interleave(gfp, order, interleave_nodes(pol));
 	else
-		page = __alloc_pages_nodemask(gfp, order,
+		page = __alloc_prams_nodemask(gfp, order,
 				policy_node(gfp, pol, numa_node_id()),
 				pram_policy_nodemask(gfp, pol));
 
@@ -3631,6 +3687,7 @@ void __init numa_policy_init(void)
 	   */
 	//if (do_set_prampolicy(MPOL_INTERLEAVE, 0, &interleave_nodes))
 	//	pr_err("%s: interleaving failed\n", __func__);
+	init_pram_policy_var();
 	check_numabalancing_enable();
 }
 #if 0

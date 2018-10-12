@@ -116,6 +116,16 @@ struct zone_padding {
 #endif
 
 #ifdef CONFIG_NUMA
+enum nusa_stat_item {
+	NUSA_HIT,		/* allocated in intended node */
+	NUSA_MISS,		/* allocated in non intended node */
+	NUSA_FOREIGN,		/* was intended here, hit elsewhere */
+	NUSA_INTERLEAVE_HIT,	/* interleaver preferred this zone */
+	NUSA_LOCAL,		/* allocation from local node */
+	NUSA_OTHER,		/* allocation from other node */
+	NR_VM_NUSA_STAT_ITEMS
+};
+
 enum numa_stat_item {
 	NUMA_HIT,		/* allocated in intended node */
 	NUMA_MISS,		/* allocated in non intended node */
@@ -127,6 +137,7 @@ enum numa_stat_item {
 };
 #else
 #define NR_VM_NUMA_STAT_ITEMS 0
+#define NR_VM_NUSA_STAT_ITEMS 0
 #endif
 
 enum zone_stat_item {
@@ -180,9 +191,37 @@ enum node_stat_item {
 	NR_VMSCAN_IMMEDIATE,	/* Prioritise for reclaim when writeback ends */
 	NR_DIRTIED,		/* page dirtyings since bootup */
 	NR_WRITTEN,		/* page writings since bootup */
-	NR_MBSFS,		/* mbsfs pages (included mbsfs/GEM pages) */
+	/**************************/
+	//NR_PRAM_LRU_BASE,
+	//NR_PRAM_INACTIVE_ANON = NR_PRAM_LRU_BASE, /* must match order of LRU_[IN]ACTIVE */
+	//NR_PRAM_ACTIVE_ANON,		/*  "     "     "   "       "         */
+	//NR_PRAM_INACTIVE_FILE,	/*  "     "     "   "       "         */
+	NR_PRAM_ACTIVE_FILE,		/*  "     "     "   "       "         */
+	NR_PRAM_UNEVICTABLE,		/*  "     "     "   "       "         */
+	//NR_PRAM_SLAB_RECLAIMABLE,
+	//NR_PRAM_SLAB_UNRECLAIMABLE,
+	//NR_PRAM_ISOLATED_ANON,	/* Temporary isolated pages from anon lru */
+	//NR_PRAM_ISOLATED_FILE,	/* Temporary isolated pages from file lru */
+	//PRAM_WORKINGSET_REFAULT,
+	//PRAM_WORKINGSET_ACTIVATE,
+	//PRAM_WORKINGSET_NODERECLAIM,
+	//NR_PRAM_ANON_MAPPED,	/* Mapped anonymous pages */
+	NR_PRAM_FILE_MAPPED,	/* pagecache pages mapped into pagetables.
+			   only modified from process context */
+	NR_PRAM_FILE_PAGES,
+	NR_PRAM_FILE_DIRTY,
+	NR_PRAM_WRITEBACK,
+	NR_PRAM_WRITEBACK_TEMP,	/* Writeback using temporary buffers */
+	NR_MBSFS,		/* mbsfs pages */
 	NR_MBSFS_THPS,
 	NR_MBSFS_PMDMAPPED,
+	NR_PRAM_ANON_THPS,
+	NR_PRAM_UNSTABLE_NFS,	/* NFS unstable pages */
+	NR_PRAM_VMSCAN_WRITE,
+	NR_PRAM_VMSCAN_IMMEDIATE,/* Prioritise for reclaim when writeback ends */
+	NR_PRAM_DIRTIED,	/* page dirtyings since bootup */
+	NR_PRAM_WRITTEN,	/* page writings since bootup */
+	/**************************/
 	NR_VM_NODE_STAT_ITEMS
 };
 
@@ -299,6 +338,7 @@ struct per_cpu_pageset {
 #ifdef CONFIG_NUMA
 	s8 expire;
 	u16 vm_numa_stat_diff[NR_VM_NUMA_STAT_ITEMS];
+	u16 vm_nusa_stat_diff[NR_VM_NUSA_STAT_ITEMS];
 #endif
 #ifdef CONFIG_SMP
 	s8 stat_threshold;
@@ -714,6 +754,7 @@ typedef struct pglist_data {
 	 * to userspace allocations.
 	 */
 	unsigned long		totalreserve_pages;
+	unsigned long		totalreserve_prams;
 
 #ifdef CONFIG_NUMA
 	/*
@@ -819,6 +860,9 @@ static inline bool is_pram_zone(const struct zone *zone)
 void build_all_zonelists(pg_data_t *pgdat);
 void wakeup_kswapd(struct zone *zone, int order, enum zone_type classzone_idx);
 bool __zone_watermark_ok(struct zone *z, unsigned int order, unsigned long mark,
+		int classzone_idx, unsigned int alloc_flags,
+		long free_pages);
+bool __pram_zone_watermark_ok(struct zone *z, unsigned int order, unsigned long mark,
 		int classzone_idx, unsigned int alloc_flags,
 		long free_pages);
 bool zone_watermark_ok(struct zone *z, unsigned int order,

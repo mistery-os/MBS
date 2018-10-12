@@ -1,7 +1,7 @@
 /*
  * Memory Bus Storage backed block device driver.
  *
- * Copyright (C) 2018 Yongseob Lee
+ * Copyright (C) 2018 Yongseob Lee -- try to multi-queue
  * Copyright (C) 2007 Nick Piggin
  * Copyright (C) 2007 Novell Inc.
  *
@@ -9,9 +9,17 @@
  * drivers/nvdimm/pmem.c, and drivers/block/loop.c, 
  * copyright of their respective owners.
  */
-
+#ifndef CONFIG_BLK_DEV_MBS_DAX
+#define CONFIG_BLK_DEV_MBS_DAX		1
+#endif
+#ifndef CONFIG_BLK_DEV_MBS_COUNT
+#define CONFIG_BLK_DEV_MBS_COUNT	1
+#endif
+#ifndef CONFIG_BLK_DEV_MBS_SIZE
+#define CONFIG_BLK_DEV_MBS_SIZE		67108864
+#endif
 #include <linux/init.h>
-#include <linux/initrd.h>
+//#include <linux/initrd.h>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 #include <linux/major.h>
@@ -22,6 +30,9 @@
 #include <linux/radix-tree.h>
 #include <linux/fs.h>
 #include <linux/slab.h>
+#include <asm/uaccess.h>
+#include <linux/blk-mq.h>
+#include <linux/nodemask.h>
 #ifdef CONFIG_BLK_DEV_MBS_DAX
 #include <linux/pfn_t.h>
 #include <linux/dax.h>
@@ -36,7 +47,20 @@
 #define PAGE_SECTORS		(1 << PAGE_SECTORS_SHIFT)
 
 extern struct memblock memblock;
-extern void *vmalloc_mbs(unsigned long size, int node, gfp_t flags);
+//extern void *vmalloc_mbs(unsigned long size, int node, gfp_t flags);
+/*
+ * Multi-queue 
+ */
+enum {
+	MBSDRV_IRQ_NONE		= 0,
+	MBSDRV_IRQ_SOFTIRQ	= 1,
+};
+
+struct mbs_hw_queue_private {
+	unsigned int index;
+	unsigned int queue_depth;
+	struct mbs_device *mbs;
+};
 
 /*
  * Each block ramdisk device has a radix_tree mbs_pages of pages that stores
@@ -61,7 +85,18 @@ struct mbs_device {
 	 */
 	spinlock_t		mbs_lock;
 	struct radix_tree_root	mbs_pages;
+
+	spinlock_t		mbs_queue_lock;
+	struct mbs_hw_queue_private *hw_queue_priv;
+	struct blk_mq_tag_set tag_set;
+	unsigned int queue_depth;
+
 };
+static int mbs_major;
+// sw submit queues for per-cpu or per-node
+static int nr_hw_queues = 1;
+static int hw_queue_depth = 64;
+
 
 /*
  * Look up and return a mbs's page for a given sector.
@@ -119,12 +154,12 @@ static struct page *mbs_insert_page(struct mbs_device *mbs, sector_t sector)
 	 */
 	gfp_flags = GFP_NOIO | __GFP_ZERO;
 	//gfp_flags = __GFP_PRAM | __GFP_THISNODE;
-	gfp_flags = __GFP_PRAM;
+	gfp_flags = GFP_PRAM;
 #ifndef CONFIG_BLK_DEV_MBS_DAX
-	gfp_flags |= __GFP_HIGHMEM;
+//	gfp_flags |= __GFP_HIGHMEM;
 #endif
-	//page = alloc_page(gfp_flags);
-	page = vmalloc_mbs(memblock.pram.total_size, NUMA_NO_NODE, gfp_flags);
+	page = alloc_page(gfp_flags);
+	//page = vmalloc_mbs(memblock.pram.total_size, NUMA_NO_NODE, gfp_flags);
 	if (!page)
 		return NULL;
 
@@ -419,6 +454,126 @@ __setup("mbsdisk_size=", mbsdisk_size);
  */
 static LIST_HEAD(mbs_devices);
 static DEFINE_MUTEX(mbs_devices_mutex);
+/******************************************************************************/
+/******************************************************************************/
+/******************************************************************************/
+static int irqmode = MBS_IRQ_NONE/* MBS_IRQ_SOFTIRQ */;
+
+static int mbs_prep_rq_fn(struct request_queue *q, struct request *req)
+{
+	struct mbs_device *mbs = q->queuedata;
+
+	if (req->special) {
+		return BLKPREP_KILL;
+	}
+
+	req->special = mbs;
+
+	return BLKPREP_OK;
+}
+
+static int _mbs_request_fn(struct request *req)
+{
+	struct bio_vec bvec;
+	struct req_iterator iter;
+	unsigned int len;
+	struct page *p;
+	unsigned int offset;
+	sector_t sector;
+	struct mbs_device *mbs = req->q->queuedata;
+	int err;
+
+	if (req->special != req->q->queuedata) {
+		goto io_error;
+	}
+
+	sector = blk_rq_pos(req); // initial sector
+
+	rq_for_each_segment(bvec, req, iter) {
+		len = bvec.bv_len;
+		p = bvec.bv_page;
+		offset = bvec.bv_offset;
+
+		if (rq_data_dir(req)) { // WRITE
+			flush_dcache_page(page);
+			err = copy_to_mbs(mbs,
+					p,
+					len,
+					offset,
+					sector);
+			if (err) {
+				goto io_error;
+			}
+		} else { // READ
+			err = copy_from_mbs(mbs,
+					p,
+					len,
+					offset,
+					sector);
+			if (err) {
+				goto io_error;
+			}
+			flush_dcache_page(page);
+		}
+		sector += (len >> 9);
+	}
+	return 0;
+io_error:
+	return -EIO;
+}
+
+static int mbs_queue_rq(struct blk_mq_hw_ctx *hctx,
+		const struct blk_mq_queue_data *bd)
+{
+	struct request *req = bd->rq;
+	struct mbs_hw_queue_private *priv = hctx->driver_data;
+	struct mbs_device *pdu_mbs = blk_mq_rq_to_pdu(bd->rq);
+
+	BUG_ON(irqmode != MBS_IRQ_NONE);
+
+	*pdu_mbs = *(priv->mbs); // example to use pdu area
+
+	blk_mq_start_request(req);
+
+	req->special = priv->mbs;
+	_mbs_request_fn(req);
+
+	blk_mq_end_request(req, 0);
+
+	return BLK_MQ_RQ_QUEUE_OK;
+}
+
+static int mbs_init_hctx(struct blk_mq_hw_ctx *hctx,
+		void *data,
+		unsigned int index)
+{
+	struct mbs_device *mbs = data;
+	struct mbs_hw_queue_private *priv = &mbs->hw_queue_priv[index];
+
+	BUG_ON(!mbs);
+	BUG_ON(!priv);
+
+	priv->index = index;
+	priv->queue_depth = mbs->queue_depth;
+	priv->mbs = mbs;
+	hctx->driver_data = priv;
+
+	return 0;
+}
+
+static void mbs_softirq_done_fn(struct request *req)
+{
+	list_del_init(&req->queuelist);
+	blk_end_request_all(req, 0);
+}
+
+
+static struct blk_mq_ops mbs_mq_ops = {
+	.queue_rq = mbs_queue_rq,
+	.map_queue = blk_mq_map_queue,
+	.init_hctx = mbs_init_hctx,
+	.complete = mbs_softirq_done_fn, // share mq-mode and request-mode
+};
 
 static struct mbs_device *mbs_alloc(int i)
 {
@@ -426,20 +581,59 @@ static struct mbs_device *mbs_alloc(int i)
 	struct gendisk *disk;
 
 	mbs_size = memblock.pram.total_size/1024;//convert to kbytes
-	mbs = kzalloc(sizeof(*mbs), __GFP_PRAM | __GFP_THISNODE);
+	//mbs = kzalloc(sizeof(*mbs), __GFP_PRAM | __GFP_THISNODE);
+	mbs = kzalloc(sizeof(*mbs), GFP_KERNEL);
 	if (!mbs)
 		goto out;
 	mbs->mbs_number		= i;
 	spin_lock_init(&mbs->mbs_lock);
+	spin_lock_init(&mbs->mbs_queue_lock);//for MQ
 	INIT_RADIX_TREE(&mbs->mbs_pages, GFP_ATOMIC);
-
-	mbs->mbs_queue = blk_alloc_queue(GFP_KERNEL);
+/*
+	mbs->mbs_queue = blk_alloc_queue(GFP_KERNEL);//for BIO
 	if (!mbs->mbs_queue)
 		goto out_free_dev;
 
 	blk_queue_make_request(mbs->mbs_queue, mbs_make_request);
 	blk_queue_max_hw_sectors(mbs->mbs_queue, 1024);
 	//blk_queue_bounce_limit(mbs->mbs_queue, BLK_BOUNCE_ANY);
+*/
+	{
+		mbs->hw_queue_priv = kzalloc(nr_hw_queues *
+				sizeof(struct mbs_hw_queue_private),
+				GFP_KERNEL);
+		if (!mbs->hw_queue_priv) {
+			goto out_free_dev;
+		}
+
+		mbs->queue_depth = hw_queue_depth;
+		mbs->tag_set.ops = &mbs_mq_ops;
+		mbs->tag_set.nr_hw_queues = nr_hw_queues;
+		mbs->tag_set.queue_depth = hw_queue_depth;
+		mbs->tag_set.numa_node = NUMA_NO_NODE;
+		mbs->tag_set.cmd_size = sizeof(struct mbs_device);
+		mbs->tag_set.flags = BLK_MQ_F_SHOULD_MERGE;
+		mbs->tag_set.driver_data = mbs;
+
+		ret = blk_mq_alloc_tag_set(&mbs->tag_set);
+		if (ret) {
+			goto out_free_queue;
+		}
+
+		mbs->mbs_queue = blk_mq_init_queue(&mbs->tag_set);
+		if (IS_ERR(mbs->mbs_queue)) {
+			goto out_free_tag;
+		}
+		mbs->mbs_queue->queuedata = mbs;
+		blk_queue_max_hw_sectors(mbs->mbs_queue, 1024);
+		blk_queue_bounce_limit(mbs->mbs_queue, BLK_BOUNCE_ANY);
+		blk_queue_physical_block_size(mbs->mbs_queue, PAGE_SIZE);
+		blk_queue_logical_block_size(mbs->mbs_queue, PAGE_SIZE);
+		mbs->mbs_queue->limits.discard_granularity = PAGE_SIZE;
+		blk_queue_max_discard_sectors(mbs->mbs_queue, UINT_MAX);
+		mbs->mbs_queue->limits.discard_zeroes_data = 1;
+		queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, mbs->mbs_queue);
+	}
 
 	/* This is so fdisk will align partitions on 4k, because of
 	 * direct_access API needing 4k alignment, returning a PFN
@@ -447,7 +641,7 @@ static struct mbs_device *mbs_alloc(int i)
 	 *  otherwise fdisk will align on 1M. Regardless this call
 	 *  is harmless)
 	 */
-	blk_queue_physical_block_size(mbs->mbs_queue, PAGE_SIZE);
+	//blk_queue_physical_block_size(mbs->mbs_queue, PAGE_SIZE);
 	disk = mbs->mbs_disk = alloc_disk(max_part);
 	if (!disk)
 		goto out_free_queue;
@@ -458,7 +652,7 @@ static struct mbs_device *mbs_alloc(int i)
 	disk->queue		= mbs->mbs_queue;
 	disk->flags		= GENHD_FL_EXT_DEVT;
 	sprintf(disk->disk_name, "mbs%d", i);
-	set_capacity(disk, mbs_size * 2);
+	set_capacity(disk, mbs_size * 2); // sector sized(512bytes) disk size
 
 #ifdef CONFIG_BLK_DEV_MBS_DAX
 	queue_flag_set_unlocked(QUEUE_FLAG_DAX, mbs->mbs_queue);
@@ -466,8 +660,6 @@ static struct mbs_device *mbs_alloc(int i)
 	if (!mbs->dax_dev)
 		goto out_free_inode;
 #endif
-
-
 	return mbs;
 
 #ifdef CONFIG_BLK_DEV_MBS_DAX
@@ -475,13 +667,22 @@ out_free_inode:
 	kill_dax(mbs->dax_dev);
 	put_dax(mbs->dax_dev);
 #endif
+out_free_tag:
+		blk_mq_free_tag_set(&mbs>tag_set);
+out_free_queue:
+		kfree(mbs->hw_queue_priv);
+/*
 out_free_queue:
 	blk_cleanup_queue(mbs->mbs_queue);
+*/
 out_free_dev:
 	kfree(mbs);
 out:
 	return NULL;
 }
+/******************************************************************************/
+/******************************************************************************/
+/******************************************************************************/
 
 static void mbs_free(struct mbs_device *mbs)
 {
@@ -578,11 +779,12 @@ static int __init mbs_init(void)
 		add_disk(mbs->mbs_disk);
 
 	blk_register_region(MKDEV(MBSDISK_MAJOR, 0), 1UL << MINORBITS,
-				  THIS_MODULE, mbs_probe, NULL, NULL);
+			THIS_MODULE, mbs_probe, NULL, NULL);
 
 	pr_info("mbs: module loaded\n");
 	pr_info("mbs zone total size : [ %#018Lx ]\n",
-			(u64)memblock.pram.total_size);
+			(u64)mbs_size);
+	//(u64)memblock.pram.total_size);
 	return 0;
 
 out_free:
@@ -590,7 +792,7 @@ out_free:
 		list_del(&mbs->mbs_list);
 		mbs_free(mbs);
 	}
-	unregister_blkdev(MBSDISK_MAJOR, "ramdisk");
+	unregister_blkdev(MBSDISK_MAJOR, "mbsdisk");
 
 	pr_info("mbs: module NOT loaded !!!\n");
 	return -ENOMEM;

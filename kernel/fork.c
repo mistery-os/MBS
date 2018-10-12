@@ -300,12 +300,15 @@ struct kmem_cache *files_cachep;
 
 /* SLAB cache for fs_struct structures (tsk->fs) */
 struct kmem_cache *fs_cachep;
+struct kmem_cache *pram_fs_cachep;
 
 /* SLAB cache for vm_area_struct structures */
 struct kmem_cache *vm_area_cachep;
+struct kmem_cache *pram_vm_area_cachep;
 
 /* SLAB cache for mm_struct structures (tsk->mm) */
 static struct kmem_cache *mm_cachep;
+static struct kmem_cache *pram_mm_cachep;
 
 static void account_kernel_stack(struct task_struct *tsk, int account)
 {

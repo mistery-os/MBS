@@ -95,6 +95,8 @@ int vm_dirty_ratio = 20;
  * vm_dirty_ratio * the amount of dirtyable memory
  */
 unsigned long vm_dirty_bytes;
+int pram_vm_dirty_ratio = 20;
+unsigned long pram_vm_dirty_bytes=0;
 
 /*
  * The interval between `kupdate'-style writebacks
@@ -274,6 +276,36 @@ static void wb_min_max_ratio(struct bdi_writeback *wb,
  * Returns the node's number of pages potentially available for dirty
  * page cache.  This is the base value for the per-node dirty limits.
  */
+static unsigned long node_dirtyable_pram(struct pglist_data *pgdat)
+{
+	unsigned long nr_pages = 0;
+	int z;
+
+	/* for (z = 0; z < MAX_NR_ZONES; z++) */
+       	{ 
+		z= ZONE_PRAM;
+		struct zone *zone = pgdat->node_zones + z;
+
+		if (!populated_zone(zone))
+			continue;
+
+		nr_pages += zone_page_state(zone, NR_FREE_PAGES);
+	}
+
+	/*
+	 * Pages reserved for the kernel should not be considered
+	 * dirtyable, to prevent a situation where reclaim has to
+	 * clean pages in order to balance the zones.
+	 */
+	//nr_pages -= min(nr_pages, pgdat->totalreserve_prams);
+			/* no reserved prams for user space */
+/*   We do not RECLAIM on the ZONE_PRAM
+	nr_pages += node_page_state(pgdat, NR_PRAM_INACTIVE_FILE);
+	nr_pages += node_page_state(pgdat, NR_PRAM_ACTIVE_FILE);
+*/
+	return nr_pages;
+}
+
 static unsigned long node_dirtyable_memory(struct pglist_data *pgdat)
 {
 	unsigned long nr_pages = 0;
@@ -359,6 +391,27 @@ static unsigned long highmem_dirtyable_memory(unsigned long total)
  * Returns the global number of pages potentially available for dirty
  * page cache.  This is the base value for the global dirty limits.
  */
+static unsigned long pram_global_dirtyable_memory(void)
+{
+	unsigned long x;
+
+	x = global_zone_page_state(NR_FREE_PAGES);
+	/*
+	 * Pages reserved for the kernel should not be considered
+	 * dirtyable, to prevent a situation where reclaim has to
+	 * clean pages in order to balance the zones.
+	 */
+	x -= min(x, totalreserve_prams);
+
+	x += global_node_page_state(NR_PRAM_INACTIVE_FILE);
+	x += global_node_page_state(NR_PRAM_ACTIVE_FILE);
+
+	if (!vm_highmem_is_dirtyable)
+		x -= highmem_dirtyable_memory(x);
+
+	return x + 1;	/* Ensure that we never return 0 */
+}
+
 static unsigned long global_dirtyable_memory(void)
 {
 	unsigned long x;
@@ -474,6 +527,28 @@ void global_dirty_limits(unsigned long *pbackground, unsigned long *pdirty)
  * Returns the maximum number of dirty pages allowed in a node, based
  * on the node's dirtyable memory.
  */
+static unsigned long pram_node_dirty_limit(struct pglist_data *pgdat)
+{
+	unsigned long node_pram = node_dirtyable_pram(pgdat);//NR_FREE_PAGES
+	return node_pram;
+/*
+	struct task_struct *tsk = current;
+	unsigned long dirty;
+
+	if (pram_vm_dirty_bytes)
+		dirty = DIV_ROUND_UP(pram_vm_dirty_bytes, PAGE_SIZE) *
+			node_pram / global_dirtyable_memory();
+	else
+		dirty = pram_vm_dirty_ratio * node_pram / 100;
+
+	if (tsk->flags & PF_LESS_THROTTLE || rt_task(tsk))
+		dirty += dirty / 4;
+
+	return dirty;
+*/
+}
+
+
 static unsigned long node_dirty_limit(struct pglist_data *pgdat)
 {
 	unsigned long node_memory = node_dirtyable_memory(pgdat);
@@ -499,6 +574,19 @@ static unsigned long node_dirty_limit(struct pglist_data *pgdat)
  * Returns %true when the dirty pages in @pgdat are within the node's
  * dirty limit, %false if the limit is exceeded.
  */
+bool pram_node_dirty_ok(struct pglist_data *pgdat)
+{
+	unsigned long limit = pram_node_dirty_limit(pgdat);
+return (limit > 0 ? true:false);
+/*
+	unsigned long nr_pages = 0;
+
+	nr_pages += node_page_state(pgdat, NR_PRAM_FILE_DIRTY);
+	nr_pages += node_page_state(pgdat, NR_PRAM_UNSTABLE_NFS);
+	nr_pages += node_page_state(pgdat, NR_PRAM_WRITEBACK);
+	return nr_pages <= limit;
+*/
+}
 bool node_dirty_ok(struct pglist_data *pgdat)
 {
 	unsigned long limit = node_dirty_limit(pgdat);
