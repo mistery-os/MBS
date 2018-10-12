@@ -3601,7 +3601,7 @@ get_pram_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
 			}
 #endif
 		}
-
+		restore_pram_policy(nid);
 try_this_zone:
 		page = rmqueue_pram(ac->preferred_zoneref->zone, zone, order,
 				gfp_mask, alloc_flags, ac->migratetype);
