@@ -130,7 +130,7 @@ static inline unsigned long global_nusa_state(enum nusa_stat_item item)
 }
 
 static inline unsigned long zone_nusa_state_snapshot(struct zone *zone,
-					enum rusa_stat_item item)
+					enum nusa_stat_item item)
 {
 	long x = atomic_long_read(&zone->vm_nusa_stat[item]);
 	int cpu;
