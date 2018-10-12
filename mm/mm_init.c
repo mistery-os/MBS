@@ -146,6 +146,8 @@ s32 vm_committed_as_batch = 32;
 //<<<2018.05.18 Yongseob
 EXPORT_SYMBOL_GPL(vm_committed_as_batch);
 //>>>
+s32 pram_vm_committed_as_batch = 32;
+EXPORT_SYMBOL_GPL(pram_vm_committed_as_batch);
 
 static void __meminit mm_compute_batch(void)
 {
@@ -157,6 +159,7 @@ static void __meminit mm_compute_batch(void)
 	memsized_batch = min_t(u64, (totalram_pages/nr)/256, 0x7fffffff);
 
 	vm_committed_as_batch = max_t(s32, memsized_batch, batch);
+	pram_vm_committed_as_batch = max_t(s32, memsized_batch, batch);
 }
 
 static int __meminit mm_compute_batch_notifier(struct notifier_block *self,
