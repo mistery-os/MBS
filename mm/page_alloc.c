@@ -3523,11 +3523,12 @@ get_pram_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
 //								ac->nodemask) {
 		struct page *page;
 		unsigned long mark;
-
+/*
 		if (cpusets_enabled() &&
 			(alloc_flags & ALLOC_CPUSET) &&
 			!__cpuset_zone_allowed(zone, gfp_mask))
 				continue;
+*/
 		/*
 		 * When allocating a page cache page for writing, we
 		 * want to get it from a node that is within its dirty
@@ -3547,6 +3548,7 @@ get_pram_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
 		 * will require awareness of nodes in the
 		 * dirty-throttling and the flusher threads.
 		 */
+/*
 		if (ac->spread_dirty_pages) { //__GFP_WRITE
 			if (last_pgdat_dirty_limit == zone->zone_pgdat)
 				continue;
@@ -3556,9 +3558,8 @@ get_pram_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
 				continue;
 			}
 		}
-
+*/
 		mark = zone->watermark[alloc_flags & ALLOC_pram_MASK];
-		goto try_this_zone;
 		if (!pram_zone_watermark_fast(zone, order, mark,
 				       ac_classzone_idx(ac), alloc_flags)) {
 			int ret;
@@ -3567,7 +3568,7 @@ get_pram_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
 				goto try_this_zone;
 
 			/************/
-
+#if 0
 			/* Checked here to keep the fast path fast */
 			BUILD_BUG_ON(ALLOC_NO_WATERMARKS < NR_pramWMARK);
 			if (alloc_flags & ALLOC_NO_WATERMARKS)
@@ -3593,6 +3594,7 @@ get_pram_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
 
 				continue;
 			}
+#endif
 		}
 
 try_this_zone:
