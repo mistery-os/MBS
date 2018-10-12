@@ -3525,6 +3525,7 @@ get_pram_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
 	 */
 //	for_next_zone_zonelist_nodemask(zone, z, ac->zonelist, ac->high_zoneidx,
 //								ac->nodemask) {
+	zone=z->zone;
 		struct page *page;
 		unsigned long mark;
 /*
@@ -4666,19 +4667,9 @@ static inline bool prepare_alloc_prams(gfp_t gfp_mask, unsigned int order,
 		unsigned int *alloc_flags)
 {
 	ac->high_zoneidx = gfp_zone(gfp_mask);
-#if 0
-	if ( ac->high_zoneidx & GFP_PRAM)
-		pr_info("GFP_PRAM requested\n");//works fine pr_info
-#endif
 	ac->zonelist = node_zonelist(preferred_nid, gfp_mask);
 	ac->nodemask = nodemask;
 	ac->migratetype = gfpflags_to_migratetype(gfp_mask);
-	//<<<2018.05.30 Yongseob
-#if 0   // 2018.06.07 temporaly disabled
-
-	if (ac->high_zoneidx & ZONE_PRAM ) //if ( gfp_mask & GFP_PRAM )
-		*alloc_flags |= ALLOC_NO_WATERMARKS;
-#endif  //>>>
 
 	if (cpusets_enabled()) {
 		*alloc_mask |= __GFP_HARDWALL;
@@ -4777,7 +4768,8 @@ __alloc_prams_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
 
 	gfp_mask &= gfp_allowed_mask;
 	alloc_mask = gfp_mask;
-	if (!prepare_alloc_prams(gfp_mask, order, preferred_nid, nodemask, &ac, &alloc_mask, &alloc_flags))
+	//if (!prepare_alloc_prams(gfp_mask, order, preferred_nid, nodemask, &ac, &alloc_mask, &alloc_flags))
+	if (!prepare_alloc_pages(gfp_mask, order, preferred_nid, nodemask, &ac, &alloc_mask, &alloc_flags))
 		return NULL;
 
 	finalise_ac(gfp_mask, order, &ac);
