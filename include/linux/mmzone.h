@@ -308,9 +308,9 @@ enum zone_watermarks_pram {
 	NR_pramWMARK
 };
 
-#define min_pram_pages(z) (z->watermark[pramW_MIN])
-#define low_pram_pages(z) (z->watermark[pramW_LOW])
-#define high_pram_pages(z) (z->watermark[pramW_HIGH])
+#define min_pram_pages(z) (z->watermark[pram_MIN])
+#define low_pram_pages(z) (z->watermark[pram_LOW])
+#define high_pram_pages(z) (z->watermark[pram_HIGH])
 //>>>
 
 enum zone_watermarks {

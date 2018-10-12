@@ -4683,7 +4683,8 @@ static inline bool prepare_alloc_prams(gfp_t gfp_mask, unsigned int order,
 	if (cpusets_enabled()) {
 		*alloc_mask |= __GFP_HARDWALL;
 		if (!ac->nodemask)// nodemask=NULL
-			ac->nodemask = &cpuset_current_prams_allowed;
+			ac->nodemask = &cpuset_current_mems_allowed;
+			//ac->nodemask = &cpuset_current_prams_allowed;
 		else
 			*alloc_flags |= ALLOC_CPUSET;
 	}
@@ -4770,7 +4771,7 @@ __alloc_prams_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
 		nodemask_t *nodemask)
 {
 	struct page *page;
-	unsigned int alloc_flags = ALLOC_pram_LOW;/*ALLOC_WMARK_LOW; */
+	unsigned int alloc_flags = ALLOC_WMARK_LOW;//ALLOC_pram_LOW;/*ALLOC_WMARK_LOW; */
 	gfp_t alloc_mask; /* The gfp_t that was actually used for allocation */
 	struct alloc_context ac = { };
 
