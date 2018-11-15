@@ -3654,8 +3654,7 @@ static bool zone_allows_reclaim(struct zone *local_zone, struct zone *zone)
  */
 static struct page *
 get_pram_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
-						const struct alloc_context *ac,
-					int nid)
+			const struct alloc_context *ac)
 {
 	struct zoneref *z = ac->preferred_zoneref;
 	struct zone *zone;
@@ -5270,8 +5269,8 @@ __alloc_prams_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
 	finalise_ac(gfp_mask, order, &ac);
 
 	/* First allocation attempt */
-	page = get_pram_from_freelist(alloc_mask, order, alloc_flags, &ac, 
-			preferred_nid);
+	page = get_pram_from_freelist(alloc_mask, order, alloc_flags, &ac); 
+			//preferred_nid);
 	if (likely(page))
 		goto out;
 	
