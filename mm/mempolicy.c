@@ -146,29 +146,39 @@ EXPORT_SYMBOL_GPL(preferred_node_pram_policy);
 /**************************************/
 /**************************************/
 nodemask_t candidate_nodes;
+nodemask_t slim_nodes;
 nodemask_t fat_nodes;
 //nodes_setall(candidate_nodes);
-void init_pram_policy_var(void)
+void add_candidate_nodes(int nid){
+	node_set(nid, candidate_nodes);
+	node_clear(nid, fat_nodes);
+}
+EXPORT_SYMBOL_GPL(add_candidate_nodes);
+void remove_candidate_nodes(int nid){
+	node_clear(nid, candidate_nodes);
+	node_set(nid, fat_nodes);
+}
+EXPORT_SYMBOL_GPL(remove_candidate_nodes);
+void init_nodes(void)
 {
 	int nid;
 	nodes_clear(candidate_nodes);
+	nodes_clear(slim_nodes);
 	nodes_clear(fat_nodes);
 	for_each_node(nid){
 		node_set(nid, candidate_nodes);
 	}
 }
-void changeI_pram_policy(int nid)
+void pram_striping_policy(int nid)
 {
-	node_clear(nid, candidate_nodes);
-	node_set(nid, fat_nodes);
 	preferred_node_pram_policy[nid] = (struct mempolicy) {
 	.refcnt = ATOMIC_INIT(1),
 	.mode = MPOL_INTERLEAVE,
 	. v = { .nodes = candidate_nodes,},
 	};
 }
-EXPORT_SYMBOL_GPL(changeI_pram_policy);
-void restore_pram_policy(int nid)
+EXPORT_SYMBOL_GPL(pram_striping_policy);
+void pram_local_policy(int nid)
 {
 	preferred_node_pram_policy[nid] = (struct mempolicy) {
 		.refcnt = ATOMIC_INIT(1),
@@ -176,24 +186,21 @@ void restore_pram_policy(int nid)
 		.flags = MPOL_F_MOF | MPOL_F_MORON,
 		.v = { .preferred_node = nid, },
 	};
-	node_set(nid, candidate_nodes);
-	node_clear(nid, fat_nodes);
 }
-EXPORT_SYMBOL_GPL(restore_pram_policy);
+EXPORT_SYMBOL_GPL(pram_local_policy);
 /**************************************/
 /**************************************/
 /**************************************/
 /**************************************/
-
 
 struct mempolicy *get_pram_policy(struct task_struct *p)
 {
-	//struct mempolicy *pol = p->prampolicy;
-	struct mempolicy *pol = NULL;
+	struct mempolicy *pol = p->prampolicy;
+//	struct mempolicy *pol = NULL;
 	int node;
 
-	//if (pol)
-	//	return pol;
+	if (pol)
+		return pol;
 
 	node = numa_node_id();
 	if (node != NUMA_NO_NODE) {
@@ -2113,16 +2120,6 @@ static int apply_pram_policy_zone(struct mempolicy *policy, enum zone_type zone)
  * Return a nodemask representing a mempolicy for filtering nodes for
  * page allocation
  */
-static nodemask_t *policy_nodemask(gfp_t gfp, struct mempolicy *policy)
-{
-	/* Lower zones don't get a nodemask applied for MPOL_BIND */
-	if (unlikely(policy->mode == MPOL_BIND) &&
-			apply_policy_zone(policy, gfp_zone(gfp)) &&
-			cpuset_nodemask_valid_mems_allowed(&policy->v.nodes))
-		return &policy->v.nodes;
-
-	return NULL;
-}
 static nodemask_t *pram_policy_nodemask(gfp_t gfp, struct mempolicy *policy)
 {
 	/* Lower zones don't get a nodemask applied for MPOL_BIND */
@@ -2134,6 +2131,16 @@ static nodemask_t *pram_policy_nodemask(gfp_t gfp, struct mempolicy *policy)
 	return NULL;
 }
 
+static nodemask_t *policy_nodemask(gfp_t gfp, struct mempolicy *policy)
+{
+	/* Lower zones don't get a nodemask applied for MPOL_BIND */
+	if (unlikely(policy->mode == MPOL_BIND) &&
+			apply_policy_zone(policy, gfp_zone(gfp)) &&
+			cpuset_nodemask_valid_mems_allowed(&policy->v.nodes))
+		return &policy->v.nodes;
+
+	return NULL;
+}
 
 /* Return the node id preferred by the given mempolicy, or the given id */
 static int policy_node(gfp_t gfp, struct mempolicy *policy,
@@ -2154,6 +2161,18 @@ static int policy_node(gfp_t gfp, struct mempolicy *policy,
 }
 
 /* Do dynamic interleaving for a process */
+static unsigned interleave_nodes_pram(struct mempolicy *policy)
+{
+	unsigned next;
+	struct task_struct *me = current;
+
+	next = next_node_in(me->il_prev_pram, policy->v.nodes);
+	if (next < MAX_NUMNODES)
+		me->il_prev_pram = next;
+	return next;
+}
+
+
 static unsigned interleave_nodes(struct mempolicy *policy)
 {
 	unsigned next;
@@ -2485,7 +2504,6 @@ static struct page *alloc_pram_interleave(gfp_t gfp, unsigned order,
 	return page;
 }
 
-
 static struct page *alloc_page_interleave(gfp_t gfp, unsigned order,
 					unsigned nid)
 {
@@ -2747,7 +2765,7 @@ struct page *alloc_prams_current(gfp_t gfp, unsigned order)
 	 * nor system default_pram_policy
 	 */
 	if (pol->mode == MPOL_INTERLEAVE)
-		page = alloc_pram_interleave(gfp, order, interleave_nodes(pol));
+		page = alloc_pram_interleave(gfp, order, interleave_nodes_pram(pol));
 	else
 		page = __alloc_prams_nodemask(gfp, order,
 				policy_node(gfp, pol, numa_node_id()),
@@ -3689,7 +3707,7 @@ void __init numa_policy_init(void)
 	   */
 	//if (do_set_prampolicy(MPOL_INTERLEAVE, 0, &interleave_nodes))
 	//	pr_err("%s: interleaving failed\n", __func__);
-	init_pram_policy_var();
+	init_nodes();
 	check_numabalancing_enable();
 }
 #if 0

@@ -20,6 +20,10 @@ extern int sysctl_stat_interval;
  * Counters are handled completely inline. On many platforms the code
  * generated will simply be the increment of a global address.
  */
+struct vm_pram_event_state {
+	unsigned long event[NR_VM_EVENT_ITEMS];
+};
+DECLARE_PER_CPU(struct vm_pram_event_state, vm_pram_event_states);
 
 struct vm_event_state {
 	unsigned long event[NR_VM_EVENT_ITEMS];
@@ -181,6 +185,17 @@ static inline void node_page_state_add(long x, struct pglist_data *pgdat,
 	atomic_long_add(x, &vm_node_stat[item]);
 }
 
+static inline unsigned long global_pram_zone_page_state(enum pram_zone_stat_item item)
+{
+	long x = atomic_long_read(&vm_pram_zone_stat[item]);
+#ifdef CONFIG_SMP
+	if (x < 0)
+		x = 0;
+#endif
+	return x;
+}
+
+
 static inline unsigned long global_zone_page_state(enum zone_stat_item item)
 {
 	long x = atomic_long_read(&vm_zone_stat[item]);
@@ -200,6 +215,18 @@ static inline unsigned long global_node_page_state(enum node_stat_item item)
 #endif
 	return x;
 }
+
+static inline unsigned long pram_zone_page_state(struct zone *zone,
+					enum pram_zone_stat_item item)
+{
+	long x = atomic_long_read(&zone->pram_vm_stat[item]);
+#ifdef CONFIG_SMP
+	if (x < 0)
+		x = 0;
+#endif
+	return x;
+}
+
 
 static inline unsigned long zone_page_state(struct zone *zone,
 					enum zone_stat_item item)
@@ -401,6 +428,15 @@ static inline void drain_zonestat(struct zone *zone,
 			struct per_cpu_pageset *pset) { }
 #endif		/* CONFIG_SMP */
 
+static inline void __mod_pram_zone_freepage_state(struct zone *zone, int nr_pages,
+					     int migratetype)
+{
+	__mod_zone_page_state(zone, NR_FREE_PRAMS, nr_pages);
+#if 0
+	if (is_migrate_cma(migratetype))
+		__mod_zone_page_state(zone, NR_FREE_CMA_PAGES, nr_pages);
+#endif
+}
 static inline void __mod_zone_freepage_state(struct zone *zone, int nr_pages,
 					     int migratetype)
 {

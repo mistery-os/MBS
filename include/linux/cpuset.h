@@ -148,6 +148,20 @@ static inline bool read_mems_allowed_retry(unsigned int seq)
 	return read_seqcount_retry(&current->mems_allowed_seq, seq);
 }
 
+static inline void set_prams_allowed(nodemask_t nodemask)
+{
+	unsigned long flags;
+
+	task_lock(current);
+	local_irq_save(flags);
+	write_seqcount_begin(&current->prams_allowed_seq);
+	current->prams_allowed = nodemask;
+	write_seqcount_end(&current->prams_allowed_seq);
+	local_irq_restore(flags);
+	task_unlock(current);
+}
+
+
 static inline void set_mems_allowed(nodemask_t nodemask)
 {
 	unsigned long flags;

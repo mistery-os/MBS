@@ -876,6 +876,7 @@ struct task_struct {
 
 	/* VM state: */
 	struct reclaim_state		*reclaim_state;
+	struct mbs_mntr_state		*mbs_mntr_state;
 
 	struct backing_dev_info		*backing_dev_info;
 
@@ -1322,11 +1323,13 @@ extern struct pid *cad_pid;
 #define PF_KTHREAD		0x00200000	/* I am a kernel thread */
 #define PF_RANDOMIZE		0x00400000	/* Randomize virtual address space */
 #define PF_SWAPWRITE		0x00800000	/* Allowed to write to swap */
+#define PF_MBS_MNTRD		0x02000000	/* I am MBS monitord */
 #define PF_NO_SETAFFINITY	0x04000000	/* Userland is not allowed to meddle with cpus_allowed */
 #define PF_MCE_EARLY		0x08000000      /* Early kill for mce process policy */
 #define PF_MUTEX_TESTER		0x20000000	/* Thread belongs to the rt mutex tester */
 #define PF_FREEZER_SKIP		0x40000000	/* Freezer should not count it as freezable */
 #define PF_SUSPEND_TASK		0x80000000      /* This thread called freeze_processes() and should not be frozen */
+#define PF_MBS_THROTTLE		0x10000000	/* MBS throttling */
 
 /*
  * Only the _current_ task can read/write to tsk->flags, but other

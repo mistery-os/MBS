@@ -32,7 +32,7 @@ static struct numa_meminfo numa_meminfo
 __initdata
 #endif
 ;
-static struct numa_meminfo nusa_meminfo
+static struct nusa_meminfo nusa_meminfo
 #ifndef CONFIG_MEMORY_HOTPLUG
 __initdata
 #endif

@@ -92,11 +92,15 @@ void vm_events_fold_cpu(int cpu)
 atomic_long_t vm_zone_stat[NR_VM_ZONE_STAT_ITEMS] __cacheline_aligned_in_smp;
 atomic_long_t vm_numa_stat[NR_VM_NUMA_STAT_ITEMS] __cacheline_aligned_in_smp;
 atomic_long_t vm_node_stat[NR_VM_NODE_STAT_ITEMS] __cacheline_aligned_in_smp;
+atomic_long_t vm_pram_zone_stat[NR_VM_PRAM_ZONE_STAT_ITEMS] __cacheline_aligned_in_smp;
 atomic_long_t vm_nusa_stat[NR_VM_NUSA_STAT_ITEMS] __cacheline_aligned_in_smp;
+atomic_long_t vm_pram_node_stat[NR_VM_NODE_STAT_ITEMS] __cacheline_aligned_in_smp;
 EXPORT_SYMBOL(vm_zone_stat);
 EXPORT_SYMBOL(vm_numa_stat);
 EXPORT_SYMBOL(vm_node_stat);
+EXPORT_SYMBOL(vm_pram_zone_stat);
 EXPORT_SYMBOL(vm_nusa_stat);
+EXPORT_SYMBOL(vm_pram_node_stat);
 
 #ifdef CONFIG_SMP
 
@@ -1085,6 +1089,8 @@ const char * const vmstat_text[] = {
 #endif
 	"nr_free_cma",
 
+	"nr_free_prams",
+
 	/* enum numa_stat_item counters */
 #ifdef CONFIG_NUMA
 	"numa_hit",
@@ -1544,13 +1550,15 @@ static void zoneinfo_show_print(struct seq_file *m, pg_data_t *pgdat,
 		   "\n        spanned  %lu"
 		   "\n        present  %lu"
 		   "\n        managed  %lu",
+		   "\n  prams free     %lu",
 		   zone_page_state(zone, NR_FREE_PAGES),
 		   min_wmark_pages(zone),
 		   low_wmark_pages(zone),
 		   high_wmark_pages(zone),
 		   zone->spanned_pages,
 		   zone->present_pages,
-		   zone->managed_pages);
+		   zone->managed_pages),
+		   zone_page_state(zone, NR_FREE_PRAMS);
 
 	seq_printf(m,
 		   "\n        protection: (%ld",

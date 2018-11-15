@@ -16,6 +16,17 @@ struct numa_meminfo {
 	struct numa_memblk	blk[NR_NODE_MEMBLKS];
 };
 
+struct nusa_memblk {
+	u64			start;
+	u64			end;
+	int			nid;
+};
+
+struct nusa_meminfo {
+	int			nr_blks;
+	struct nusa_memblk	blk[NR_NODE_MEMBLKS];
+};
+
 void __init numa_remove_memblk_from(int idx, struct numa_meminfo *mi);
 int __init numa_cleanup_meminfo(struct numa_meminfo *mi);
 int __init nusa_cleanup_meminfo_pram(struct numa_meminfo *mi);

@@ -95,7 +95,7 @@ int vm_dirty_ratio = 20;
  * vm_dirty_ratio * the amount of dirtyable memory
  */
 unsigned long vm_dirty_bytes;
-int pram_vm_dirty_ratio = 20;
+int pram_vm_dirty_ratio = 80;
 unsigned long pram_vm_dirty_bytes=0;
 
 /*
@@ -276,7 +276,7 @@ static void wb_min_max_ratio(struct bdi_writeback *wb,
  * Returns the node's number of pages potentially available for dirty
  * page cache.  This is the base value for the per-node dirty limits.
  */
-static unsigned long node_dirtyable_pram(struct pglist_data *pgdat)
+static unsigned long node_threshold_pram(struct pglist_data *pgdat)
 {
 	unsigned long nr_pages = 0;
 	int z;
@@ -286,10 +286,12 @@ static unsigned long node_dirtyable_pram(struct pglist_data *pgdat)
 		z= ZONE_PRAM;
 		struct zone *zone = pgdat->node_zones + z;
 
-		if (!populated_zone(zone))
+		if (!populated_zone(zone)) //zone->present_pages;
 			return 0; //continue;
 
-		nr_pages += zone_page_state(zone, NR_FREE_PAGES);
+		//nr_pages += pram_zone_page_state(zone, NR_FREE_PRAMS);
+		//nr_pages += zone_page_state(zone, NR_FREE_PAGES);
+		nr_pages += zone_page_state(zone, NR_FREE_PRAMS);
 	}
 
 	/*
@@ -297,12 +299,14 @@ static unsigned long node_dirtyable_pram(struct pglist_data *pgdat)
 	 * dirtyable, to prevent a situation where reclaim has to
 	 * clean pages in order to balance the zones.
 	 */
-	//nr_pages -= min(nr_pages, pgdat->totalreserve_pram_pages);
+#if 0
+	nr_pages -= min(nr_pages, pgdat->totalreserve_pram_pages);
 			/* no reserved prams for user space */
-/*   We do not RECLAIM on the ZONE_PRAM
+/*   We do not RECLAIM on the ZONE_PRAM */
 	nr_pages += node_page_state(pgdat, NR_PRAM_INACTIVE_FILE);
 	nr_pages += node_page_state(pgdat, NR_PRAM_ACTIVE_FILE);
-*/
+
+#endif
 	return nr_pages;
 }
 
@@ -314,9 +318,11 @@ static unsigned long node_dirtyable_memory(struct pglist_data *pgdat)
 	for (z = 0; z < MAX_NR_ZONES; z++) {
 		struct zone *zone = pgdat->node_zones + z;
 
-		if (!populated_zone(zone))
+		//if (!populated_zone(zone))
+		if (!populated_zone(zone) | z == ZONE_PRAM)
 			continue;
 
+		//if ( z != ZONE_PRAM)
 		nr_pages += zone_page_state(zone, NR_FREE_PAGES);
 	}
 
@@ -391,16 +397,17 @@ static unsigned long highmem_dirtyable_memory(unsigned long total)
  * Returns the global number of pages potentially available for dirty
  * page cache.  This is the base value for the global dirty limits.
  */
-static unsigned long pram_global_dirtyable_memory(void)
+static unsigned long global_balance_pram(void)
 {
 	unsigned long x;
 
-	x = global_zone_page_state(NR_FREE_PAGES);
+	x = global_pram_zone_page_state(NR_FREE_PRAMS);
 	/*
 	 * Pages reserved for the kernel should not be considered
 	 * dirtyable, to prevent a situation where reclaim has to
 	 * clean pages in order to balance the zones.
 	 */
+#if 0
 	x -= min(x, totalreserve_pram_pages);
 
 	x += global_node_page_state(NR_PRAM_INACTIVE_FILE);
@@ -408,7 +415,7 @@ static unsigned long pram_global_dirtyable_memory(void)
 
 	if (!vm_highmem_is_dirtyable)
 		x -= highmem_dirtyable_memory(x);
-
+#endif
 	return x + 1;	/* Ensure that we never return 0 */
 }
 
@@ -527,27 +534,27 @@ void global_dirty_limits(unsigned long *pbackground, unsigned long *pdirty)
  * Returns the maximum number of dirty pages allowed in a node, based
  * on the node's dirtyable memory.
  */
-static unsigned long pram_node_dirty_limit(struct pglist_data *pgdat)
+static unsigned long pram_node_threshold_limit(struct pglist_data *pgdat)
 {
-	unsigned long node_pram = node_dirtyable_pram(pgdat);//NR_FREE_PAGES
-	return node_pram;
-/*
+	//return node_pram;
+
+	unsigned long node_pram = node_threshold_pram(pgdat);//NR_FREE_PRAMS
 	struct task_struct *tsk = current;
 	unsigned long dirty;
 
 	if (pram_vm_dirty_bytes)
 		dirty = DIV_ROUND_UP(pram_vm_dirty_bytes, PAGE_SIZE) *
-			node_pram / global_dirtyable_memory();
+			node_pram / global_balance_pram();
 	else
 		dirty = pram_vm_dirty_ratio * node_pram / 100;
 
-	if (tsk->flags & PF_LESS_THROTTLE || rt_task(tsk))
-		dirty += dirty / 4;
+	if (tsk->flags & PF_MBS_THROTTLE || rt_task(tsk))
+		dirty = node_pram;
+		//dirty += dirty / 4;
 
 	return dirty;
-*/
-}
 
+}
 
 static unsigned long node_dirty_limit(struct pglist_data *pgdat)
 {
@@ -574,9 +581,9 @@ static unsigned long node_dirty_limit(struct pglist_data *pgdat)
  * Returns %true when the dirty pages in @pgdat are within the node's
  * dirty limit, %false if the limit is exceeded.
  */
-bool pram_node_dirty_ok(struct pglist_data *pgdat)
+bool pram_node_threshold_ok(struct pglist_data *pgdat)
 {
-	unsigned long limit = pram_node_dirty_limit(pgdat);
+	unsigned long limit = pram_node_threshold_limit(pgdat);
 return (limit > 0 ? true:false);
 /*
 	unsigned long nr_pages = 0;

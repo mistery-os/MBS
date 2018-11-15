@@ -65,6 +65,7 @@ int arch_update_cpu_topology(void);
 
 #ifdef CONFIG_USE_PERCPU_NUMA_NODE_ID
 DECLARE_PER_CPU(int, numa_node);
+DECLARE_PER_CPU(int, nusa_node);
 
 #ifndef numa_node_id
 /* Returns the number of the current Node. */
@@ -116,7 +117,15 @@ static inline int numa_node_id(void)
  */
 DECLARE_PER_CPU(int, _numa_mem_);
 extern int _node_numa_mem_[MAX_NUMNODES];
-
+DECLARE_PER_CPU(int, _nusa_mem_);
+extern int _node_nusa_pram_[MAX_NUMNODES];
+#ifndef set_nusa_mem
+static inline void set_nusa_mem(int node)
+{
+	this_cpu_write(_nusa_mem_, node);
+	_node_nusa_pram_[numa_node_id()] = node;
+}
+#endif
 #ifndef set_numa_mem
 static inline void set_numa_mem(int node)
 {
@@ -125,6 +134,12 @@ static inline void set_numa_mem(int node)
 }
 #endif
 
+#ifndef node_to_pram_node
+static inline int node_to_pram_node(int node)
+{
+	return _node_nusa_pram_[node];
+}
+#endif
 #ifndef node_to_mem_node
 static inline int node_to_mem_node(int node)
 {
@@ -154,6 +169,13 @@ static inline int cpu_to_mem(int cpu)
 }
 #endif
 
+#ifndef set_cpu_nusa_pram
+static inline void set_cpu_nusa_pram(int cpu, int node)
+{
+	per_cpu(_nusa_pram_, cpu) = node;
+	_node_nusa_pram_[cpu_to_node(cpu)] = node;
+}
+#endif
 #ifndef set_cpu_numa_mem
 static inline void set_cpu_numa_mem(int cpu, int node)
 {
@@ -164,6 +186,13 @@ static inline void set_cpu_numa_mem(int cpu, int node)
 
 #else	/* !CONFIG_HAVE_MEMORYLESS_NODES */
 
+#ifndef nusa_pram_id
+/* Returns the number of the nearest Node with memory */
+static inline int nusa_pram_id(void)
+{
+	return numa_node_id();
+}
+#endif
 #ifndef numa_mem_id
 /* Returns the number of the nearest Node with memory */
 static inline int numa_mem_id(void)
@@ -172,6 +201,12 @@ static inline int numa_mem_id(void)
 }
 #endif
 
+#ifndef node_to_pram_node
+static inline int node_to_pram_node(int node)
+{
+	return node;
+}
+#endif
 #ifndef node_to_mem_node
 static inline int node_to_mem_node(int node)
 {
@@ -179,6 +214,12 @@ static inline int node_to_mem_node(int node)
 }
 #endif
 
+#ifndef cpu_to_pram
+static inline int cpu_to_pram(int cpu)
+{
+	return cpu_to_node(cpu);
+}
+#endif
 #ifndef cpu_to_mem
 static inline int cpu_to_mem(int cpu)
 {

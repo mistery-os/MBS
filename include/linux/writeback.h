@@ -335,7 +335,7 @@ void laptop_mode_timer_fn(unsigned long data);
 static inline void laptop_sync_completion(void) { }
 #endif
 bool node_dirty_ok(struct pglist_data *pgdat);
-bool pram_node_dirty_ok(struct pglist_data *pgdat);
+bool pram_node_threshold_ok(struct pglist_data *pgdat);
 int wb_domain_init(struct wb_domain *dom, gfp_t gfp);
 #ifdef CONFIG_CGROUP_WRITEBACK
 void wb_domain_exit(struct wb_domain *dom);

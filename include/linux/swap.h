@@ -130,6 +130,9 @@ struct reclaim_state {
 	unsigned long reclaimed_slab;
 };
 
+struct mbs_mntr_state {
+	unsigned long mbs_mntr_k;
+};
 #ifdef __KERNEL__
 
 struct address_space;

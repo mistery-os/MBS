@@ -50,6 +50,7 @@ struct vm_area_struct;
 #else
 #define ___GFP_NOLOCKDEP	0
 #endif
+#define ___GFP_SENSITIVE	0x8000000u
 /* If the above are modified, __GFP_BITS_SHIFT may need updating */
 
 /*
@@ -62,6 +63,7 @@ struct vm_area_struct;
 #define __GFP_DMA	((__force gfp_t)___GFP_DMA)
 #define __GFP_HIGHMEM	((__force gfp_t)___GFP_HIGHMEM)
 #define __GFP_PRAM	((__force gfp_t)___GFP_PRAM)
+#define __GFP_SENSITIVE	((__force gfp_t)___GFP_SENSITIVE)
 #define __GFP_DMA32	((__force gfp_t)___GFP_DMA32)
 #define __GFP_MOVABLE	((__force gfp_t)___GFP_MOVABLE)  /* ZONE_MOVABLE allowed */
 //<<<2018.05.30 Yongseob
@@ -308,6 +310,7 @@ struct vm_area_struct;
 //<<<2018.03.22 Yongseob
 //#define GFP_PRAM	(__GFP_PRAM | __GFP_IO)
 #define GFP_PRAM	__GFP_PRAM
+#define GFP_SENSITIVE	__GPF_SENSITIVE	
 //>>>
 #define GFP_DMA		__GFP_DMA
 #define GFP_DMA32	__GFP_DMA32

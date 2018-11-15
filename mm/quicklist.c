@@ -39,6 +39,7 @@ static unsigned long max_pages(unsigned long min_pages)
 		zone_page_state(&zones[ZONE_DMA32], NR_FREE_PAGES) +
 #endif
 		zone_page_state(&zones[ZONE_NORMAL], NR_FREE_PAGES);
+		//zone_page_state(&zones[ZONE_PRAM], NR_FREE_PAGES);
 
 	max = node_free_pages / FRACTION_OF_NODE_MEM;
 

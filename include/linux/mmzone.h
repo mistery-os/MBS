@@ -139,10 +139,33 @@ enum numa_stat_item {
 #define NR_VM_NUMA_STAT_ITEMS 0
 #define NR_VM_NUSA_STAT_ITEMS 0
 #endif
+//#if 0
+enum pram_zone_stat_item {
+	/* First 128 byte cacheline (assuming 64 bit words) */
+	NR_FREE_PRAMS,
+	NR_PRAM_ZONE_LRU_BASE, /* Used only for compaction and reclaim retry */
+	NR_PRAM_ZONE_INACTIVE_ANON = NR_ZONE_LRU_BASE,
+	NR_PRAM_ZONE_ACTIVE_ANON,
+	NR_PRAM_ZONE_INACTIVE_FILE,
+	NR_PRAM_ZONE_ACTIVE_FILE,
+	NR_PRAM_ZONE_UNEVICTABLE,
+	NR_PRAM_ZONE_WRITE_PENDING,	/* Count of dirty, writeback and unstable pages */
+	NR_PRAM_MLOCK,		/* mlock()ed pages found and moved off LRU */
+	NR_PRAM_TABLE,		/* used for pagetables */
+	NR_PRAM_KERNEL_STACK_KB,	/* measured in KiB */
+	/* Second 128 byte cacheline */
+	NR_PRAM_BOUNCE,
+#if IS_ENABLED(CONFIG_ZSMALLOC)
+	NR_ZSPRAMS,		/* allocated in zsmalloc */
+#endif
+	NR_FREE_CMA_PRAMS,
+	NR_VM_PRAM_ZONE_STAT_ITEMS };
+//#endif
 
 enum zone_stat_item {
 	/* First 128 byte cacheline (assuming 64 bit words) */
 	NR_FREE_PAGES,
+	NR_FREE_PRAMS = NR_FREE_PAGES,		/* MBS free pages */
 	NR_ZONE_LRU_BASE, /* Used only for compaction and reclaim retry */
 	NR_ZONE_INACTIVE_ANON = NR_ZONE_LRU_BASE,
 	NR_ZONE_ACTIVE_ANON,
@@ -159,7 +182,9 @@ enum zone_stat_item {
 	NR_ZSPAGES,		/* allocated in zsmalloc */
 #endif
 	NR_FREE_CMA_PAGES,
-	NR_VM_ZONE_STAT_ITEMS };
+	//NR_FREE_PRAMS,		/* MBS free pages */
+	NR_VM_ZONE_STAT_ITEMS
+};
 
 enum node_stat_item {
 	NR_LRU_BASE,
@@ -301,16 +326,16 @@ struct lruvec {
 /* LRU Isolation modes. */
 typedef unsigned __bitwise isolate_mode_t;
 //<<<2018.05.28 Yongseob
-enum zone_watermarks_pram {
-	pram_MIN,
-	pram_LOW,
-	pram_HIGH,
-	NR_pramWMARK
+enum MBS_balance {
+	MBS_FULL,	/* out of space */
+	MBS_FAT,	/* only for local first setup */
+	MBS_SLIM,	/* plenty of space */
+	NR_MBS_balance
 };
 
-#define min_pram_pages(z) (z->watermark[pram_MIN])
-#define low_pram_pages(z) (z->watermark[pram_LOW])
-#define high_pram_pages(z) (z->watermark[pram_HIGH])
+#define PRAM_ZONE_FULL(z) (z->watermark[MBS_FULL])
+#define PRAM_ZONE_FAT(z) (z->watermark[MBS_FAT])
+#define PRAM_ZONE_SLIM(z) (z->watermark[MBS_SLIM])
 //>>>
 
 enum zone_watermarks {
@@ -343,12 +368,14 @@ struct per_cpu_pageset {
 #ifdef CONFIG_SMP
 	s8 stat_threshold;
 	s8 vm_stat_diff[NR_VM_ZONE_STAT_ITEMS];
+	s8 vm_pram_stat_diff[NR_VM_ZONE_STAT_ITEMS];
 #endif
 };
 
 struct per_cpu_nodestat {
 	s8 stat_threshold;
 	s8 vm_node_stat_diff[NR_VM_NODE_STAT_ITEMS];
+	s8 vm_pram_node_stat_diff[NR_VM_NODE_STAT_ITEMS];
 };
 
 #endif /* !__GENERATING_BOUNDS.H */
@@ -429,6 +456,7 @@ struct zone {
 
 	/* zone watermarks, access with *_wmark_pages(zone) macros */
 	unsigned long watermark[NR_WMARK];
+	//unsigned long pram_balance[NR_MBS_balance];
 
 	unsigned long nr_reserved_highatomic;
 
@@ -572,7 +600,8 @@ struct zone {
 
 	ZONE_PADDING(_pad3_)
 		/* Zone statistics */
-		atomic_long_t		vm_stat[NR_VM_ZONE_STAT_ITEMS];
+	atomic_long_t		vm_stat[NR_VM_ZONE_STAT_ITEMS];
+	//atomic_long_t		pram_vm_stat[NR_VM_PRAM_ZONE_STAT_ITEMS];
 	atomic_long_t		vm_numa_stat[NR_VM_NUMA_STAT_ITEMS];
 	atomic_long_t		vm_nusa_stat[NR_VM_NUSA_STAT_ITEMS];
 } ____cacheline_internodealigned_in_smp;
@@ -724,11 +753,16 @@ typedef struct pglist_data {
 	unsigned long node_present_pages; /* total number of physical pages */
 	unsigned long node_spanned_pages; /* total size of physical page
 					     range, including holes */
+	unsigned long node_start_prams;
+	unsigned long node_present_prams; /* total number of physical prams */
+	unsigned long node_spanned_prams; /* total size of physical pram
+					     range, including holes */
 	int node_id;
 	wait_queue_head_t kswapd_wait;
 	wait_queue_head_t pfmemalloc_wait;
 	struct task_struct *kswapd;	/* Protected by
 					   mem_hotplug_begin/end() */
+	struct task_struct *mbs_mntrd;	/* YONGSEOB */
 	int kswapd_order;
 	enum zone_type kswapd_classzone_idx;
 
