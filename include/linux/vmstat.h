@@ -116,6 +116,7 @@ static inline void vm_events_fold_cpu(int cpu)
 extern atomic_long_t vm_zone_stat[NR_VM_ZONE_STAT_ITEMS];
 extern atomic_long_t vm_numa_stat[NR_VM_NUMA_STAT_ITEMS];
 extern atomic_long_t vm_node_stat[NR_VM_NODE_STAT_ITEMS];
+extern atomic_long_t vm_pram_zone_stat[NR_VM_PRAM_ZONE_STAT_ITEMS];
 extern atomic_long_t vm_nusa_stat[NR_VM_NUSA_STAT_ITEMS];
 
 #ifdef CONFIG_NUMA
@@ -185,7 +186,8 @@ static inline void node_page_state_add(long x, struct pglist_data *pgdat,
 	atomic_long_add(x, &vm_node_stat[item]);
 }
 
-static inline unsigned long global_pram_zone_page_state(enum pram_zone_stat_item item)
+//static inline unsigned long global_pram_zone_page_state(enum pram_zone_stat_item item)
+static inline unsigned long global_pram_zone_page_state(enum zone_stat_item item)
 {
 	long x = atomic_long_read(&vm_pram_zone_stat[item]);
 #ifdef CONFIG_SMP
@@ -217,9 +219,11 @@ static inline unsigned long global_node_page_state(enum node_stat_item item)
 }
 
 static inline unsigned long pram_zone_page_state(struct zone *zone,
-					enum pram_zone_stat_item item)
+					enum zone_stat_item item)
+//					enum pram_zone_stat_item item)
 {
-	long x = atomic_long_read(&zone->pram_vm_stat[item]);
+	//long x = atomic_long_read(&zone->pram_vm_stat[item]);
+	long x = atomic_long_read(&zone->vm_stat[item]);
 #ifdef CONFIG_SMP
 	if (x < 0)
 		x = 0;

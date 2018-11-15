@@ -139,29 +139,6 @@ enum numa_stat_item {
 #define NR_VM_NUMA_STAT_ITEMS 0
 #define NR_VM_NUSA_STAT_ITEMS 0
 #endif
-//#if 0
-enum pram_zone_stat_item {
-	/* First 128 byte cacheline (assuming 64 bit words) */
-	NR_FREE_PRAMS,
-	NR_PRAM_ZONE_LRU_BASE, /* Used only for compaction and reclaim retry */
-	NR_PRAM_ZONE_INACTIVE_ANON = NR_ZONE_LRU_BASE,
-	NR_PRAM_ZONE_ACTIVE_ANON,
-	NR_PRAM_ZONE_INACTIVE_FILE,
-	NR_PRAM_ZONE_ACTIVE_FILE,
-	NR_PRAM_ZONE_UNEVICTABLE,
-	NR_PRAM_ZONE_WRITE_PENDING,	/* Count of dirty, writeback and unstable pages */
-	NR_PRAM_MLOCK,		/* mlock()ed pages found and moved off LRU */
-	NR_PRAM_TABLE,		/* used for pagetables */
-	NR_PRAM_KERNEL_STACK_KB,	/* measured in KiB */
-	/* Second 128 byte cacheline */
-	NR_PRAM_BOUNCE,
-#if IS_ENABLED(CONFIG_ZSMALLOC)
-	NR_ZSPRAMS,		/* allocated in zsmalloc */
-#endif
-	NR_FREE_CMA_PRAMS,
-	NR_VM_PRAM_ZONE_STAT_ITEMS };
-//#endif
-
 enum zone_stat_item {
 	/* First 128 byte cacheline (assuming 64 bit words) */
 	NR_FREE_PAGES,
@@ -183,8 +160,32 @@ enum zone_stat_item {
 #endif
 	NR_FREE_CMA_PAGES,
 	//NR_FREE_PRAMS,		/* MBS free pages */
-	NR_VM_ZONE_STAT_ITEMS
+	NR_VM_ZONE_STAT_ITEMS,
+	NR_VM_PRAM_ZONE_STAT_ITEMS = NR_VM_ZONE_STAT_ITEMS
 };
+#if 0
+enum pram_zone_stat_item {
+	/* First 128 byte cacheline (assuming 64 bit words) */
+	NR_FREE_PRAMS,
+	NR_PRAM_ZONE_LRU_BASE, /* Used only for compaction and reclaim retry */
+	NR_PRAM_ZONE_INACTIVE_ANON = NR_PRAM_ZONE_LRU_BASE,//NR_ZONE_LRU_BASE,
+	NR_PRAM_ZONE_ACTIVE_ANON,
+	NR_PRAM_ZONE_INACTIVE_FILE,
+	NR_PRAM_ZONE_ACTIVE_FILE,
+	NR_PRAM_ZONE_UNEVICTABLE,
+	NR_PRAM_ZONE_WRITE_PENDING,	/* Count of dirty, writeback and unstable pages */
+	NR_PRAM_MLOCK,		/* mlock()ed pages found and moved off LRU */
+	NR_PRAM_TABLE,		/* used for pagetables */
+	NR_PRAM_KERNEL_STACK_KB,	/* measured in KiB */
+	/* Second 128 byte cacheline */
+	NR_PRAM_BOUNCE,
+#if IS_ENABLED(CONFIG_ZSMALLOC)
+	NR_ZSPRAMS,		/* allocated in zsmalloc */
+#endif
+	NR_FREE_CMA_PRAMS,
+	NR_VM_PRAM_ZONE_STAT_ITEMS };
+#endif
+
 
 enum node_stat_item {
 	NR_LRU_BASE,
