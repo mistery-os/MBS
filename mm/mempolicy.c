@@ -154,15 +154,15 @@ nodemask_t fat_nodes;
 //nodes_setall(candidate_nodes);
 void add_candidate_nodes(int nid){
 	mutex_lock(&mbs_counter);
-	node_test_and_set(nid, candidate_nodes);
 	node_clear(nid, fat_nodes);
+	node_set(nid, candidate_nodes);
 	mutex_unlock(&mbs_counter);
 }
 EXPORT_SYMBOL_GPL(add_candidate_nodes);
 void remove_candidate_nodes(int nid){
 	mutex_lock(&mbs_counter);
 	node_clear(nid, candidate_nodes);
-	node_test_and_set(nid, fat_nodes);
+	node_set(nid, fat_nodes);
 	mutex_unlock(&mbs_counter);
 }
 EXPORT_SYMBOL_GPL(remove_candidate_nodes);

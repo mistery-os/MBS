@@ -3665,10 +3665,10 @@ get_pram_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
 	 * Scan zonelist, looking for a zone with enough free.
 	 * See also __cpuset_node_allowed() comment in kernel/cpuset.c.
 	 */
-//	for_next_zone_zonelist_nodemask(zone, z, ac->zonelist, ac->high_zoneidx,
-//								ac->nodemask)
+	for_next_zone_zonelist_nodemask(zone, z, ac->zonelist, ac->high_zoneidx,
+								ac->nodemask)
 	{
-	zone=z->zone;
+	//zone=z->zone;
 		struct page *page;
 		unsigned long mark;
 /*
