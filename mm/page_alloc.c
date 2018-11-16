@@ -3719,11 +3719,12 @@ get_pram_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
 			//balance algorithm 동작
 			int ret;
 /******************************************************/
-			remove_candidate_nodes(nid);
-		pram_striping_policy(nid);
-				goto try_this_zone;
+//works good interleave
+//			remove_candidate_nodes(nid);
+//		pram_striping_policy(nid);
+//				goto try_this_zone;
 /******************************************************/
-#if 0
+//#if 0
 			/* Checked here to keep the fast path fast */
 			BUILD_BUG_ON(ALLOC_NO_WATERMARKS < NR_pramWMARK);
 			if (alloc_flags & ALLOC_NO_MBS_BALANCE)
@@ -3749,7 +3750,7 @@ get_pram_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
 
 				continue;
 			}
-#endif
+//#endif
 		}
 		//add_candidate_nodes(nid);
 		//pram_local_policy(nid);
