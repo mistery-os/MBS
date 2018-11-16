@@ -205,7 +205,7 @@ void pram_local_policy(int nid)
 	preferred_node_pram_policy[nid] = (struct mempolicy) {
 		.refcnt = ATOMIC_INIT(1),
 		.mode = MPOL_PREFERRED,
-		.flags = MPOL_F_MOF | MPOL_F_MORON,
+//		.flags = MPOL_F_MOF | MPOL_F_MORON,
 		.v = { .preferred_node = nid, },
 	};
 	mutex_unlock(&mbs_policy);

@@ -3751,8 +3751,8 @@ get_pram_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
 			}
 #endif
 		}
-		add_candidate_nodes(nid);
-		pram_local_policy(nid);
+		//add_candidate_nodes(nid);
+		//pram_local_policy(nid);
 try_this_zone:
 		page = rmqueue_pram(ac->preferred_zoneref->zone, zone, order,
 				gfp_mask, alloc_flags, ac->migratetype);
