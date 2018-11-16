@@ -3659,6 +3659,7 @@ get_pram_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
 	struct zoneref *z = ac->preferred_zoneref;
 	struct zone *zone;
 	struct pglist_data *last_pgdat_dirty_limit = NULL;
+	int nid=numa_node_id();
 
 	/*
 	 * Scan zonelist, looking for a zone with enough free.
@@ -3666,7 +3667,7 @@ get_pram_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
 	 */
 //	for_next_zone_zonelist_nodemask(zone, z, ac->zonelist, ac->high_zoneidx,
 //								ac->nodemask)
-								{
+	{
 	zone=z->zone;
 		struct page *page;
 		unsigned long mark;
@@ -3717,12 +3718,11 @@ get_pram_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
 		{//NR_FREE_PRAMS가 mark 보다 작으면 아래 수행
 			//balance algorithm 동작
 			int ret;
-			/******************************************************/
-//			remove_candidate_nodes(nid);
-//		pram_striping_policy(nid);
-//				goto try_this_zone;
-
-			/******************************************************/
+/******************************************************/
+			remove_candidate_nodes(nid);
+		pram_striping_policy(nid);
+				goto try_this_zone;
+/******************************************************/
 #if 0
 			/* Checked here to keep the fast path fast */
 			BUILD_BUG_ON(ALLOC_NO_WATERMARKS < NR_pramWMARK);
@@ -3751,7 +3751,8 @@ get_pram_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
 			}
 #endif
 		}
-//		pram_local_policy(nid);
+		add_candidate_nodes(nid);
+		pram_local_policy(nid);
 try_this_zone:
 		page = rmqueue_pram(ac->preferred_zoneref->zone, zone, order,
 				gfp_mask, alloc_flags, ac->migratetype);
@@ -5269,7 +5270,7 @@ __alloc_prams_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
 	finalise_ac(gfp_mask, order, &ac);
 
 	/* First allocation attempt */
-	page = get_pram_from_freelist(alloc_mask, order, alloc_flags, &ac); 
+	page = get_pram_from_freelist(alloc_mask, order, alloc_flags, &ac);//,
 			//preferred_nid);
 	if (likely(page))
 		goto out;

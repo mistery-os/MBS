@@ -760,14 +760,18 @@ typedef struct pglist_data {
 					     range, including holes */
 	int node_id;
 	wait_queue_head_t kswapd_wait;
+	wait_queue_head_t mntrd_wait;
 	wait_queue_head_t pfmemalloc_wait;
 	struct task_struct *kswapd;	/* Protected by
 					   mem_hotplug_begin/end() */
-	struct task_struct *mbs_mntrd;	/* YONGSEOB */
 	int kswapd_order;
 	enum zone_type kswapd_classzone_idx;
 
 	int kswapd_failures;		/* Number of 'reclaimed == 0' runs */
+
+	struct task_struct *mbs_mntrd;	/* YONGSEOB */
+	int mntrd_order;
+	enum zone_type mntrd_classzone_idx;
 
 #ifdef CONFIG_COMPACTION
 	int kcompactd_max_order;

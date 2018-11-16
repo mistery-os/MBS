@@ -104,6 +104,7 @@
 
 #include <asm/tlbflush.h>
 #include <linux/uaccess.h>
+#include <linux/mutex.h> /*MBS-counter*/
 
 #include "internal.h"
 /* Internal flags */
@@ -145,18 +146,24 @@ EXPORT_SYMBOL_GPL(preferred_node_pram_policy);
 //>>>
 /**************************************/
 /**************************************/
+DEFINE_MUTEX(mbs_counter);
+DEFINE_MUTEX(mbs_policy);
 nodemask_t candidate_nodes;
 nodemask_t slim_nodes;
 nodemask_t fat_nodes;
 //nodes_setall(candidate_nodes);
 void add_candidate_nodes(int nid){
-	node_set(nid, candidate_nodes);
+	mutex_lock(&mbs_counter);
+	node_test_and_set(nid, candidate_nodes);
 	node_clear(nid, fat_nodes);
+	mutex_unlock(&mbs_counter);
 }
 EXPORT_SYMBOL_GPL(add_candidate_nodes);
 void remove_candidate_nodes(int nid){
+	mutex_lock(&mbs_counter);
 	node_clear(nid, candidate_nodes);
-	node_set(nid, fat_nodes);
+	node_test_and_set(nid, fat_nodes);
+	mutex_unlock(&mbs_counter);
 }
 EXPORT_SYMBOL_GPL(remove_candidate_nodes);
 void init_nodes(void)
@@ -166,28 +173,56 @@ void init_nodes(void)
 	nodes_clear(slim_nodes);
 	nodes_clear(fat_nodes);
 	for_each_node(nid){
-		node_set(nid, candidate_nodes);
+		node_test_and_set(nid, candidate_nodes);
+		node_test_and_set(nid, slim_nodes);
 	}
 }
 void pram_striping_policy(int nid)
 {
+	mutex_lock(&mbs_policy);
 	preferred_node_pram_policy[nid] = (struct mempolicy) {
 	.refcnt = ATOMIC_INIT(1),
 	.mode = MPOL_INTERLEAVE,
 	. v = { .nodes = candidate_nodes,},
 	};
+	mutex_unlock(&mbs_policy);
 }
 EXPORT_SYMBOL_GPL(pram_striping_policy);
+void pram_slims_policy(int nid)
+{
+	mutex_lock(&mbs_policy);
+	preferred_node_pram_policy[nid] = (struct mempolicy) {
+	.refcnt = ATOMIC_INIT(1),
+	.mode = MPOL_INTERLEAVE,
+	. v = { .nodes = slim_nodes,},
+	};
+	mutex_unlock(&mbs_policy);
+}
+EXPORT_SYMBOL_GPL(pram_slims_policy);
 void pram_local_policy(int nid)
 {
+	mutex_lock(&mbs_policy);
 	preferred_node_pram_policy[nid] = (struct mempolicy) {
 		.refcnt = ATOMIC_INIT(1),
 		.mode = MPOL_PREFERRED,
 		.flags = MPOL_F_MOF | MPOL_F_MORON,
 		.v = { .preferred_node = nid, },
 	};
+	mutex_unlock(&mbs_policy);
 }
 EXPORT_SYMBOL_GPL(pram_local_policy);
+void pram_richest_policy(int nid, int richest_node)
+{
+	mutex_lock(&mbs_policy);
+	preferred_node_pram_policy[nid] = (struct mempolicy) {
+		.refcnt = ATOMIC_INIT(1),
+		.mode = MPOL_PREFERRED,
+		.flags = MPOL_F_MOF | MPOL_F_MORON,
+		.v = { .preferred_node = richest_node, },
+	};
+	mutex_unlock(&mbs_policy);
+}
+EXPORT_SYMBOL_GPL(pram_richest_policy);
 /**************************************/
 /**************************************/
 /**************************************/
