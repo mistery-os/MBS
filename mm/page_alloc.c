@@ -3726,7 +3726,7 @@ get_pram_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
 /******************************************************/
 //#if 0
 			/* Checked here to keep the fast path fast */
-			BUILD_BUG_ON(ALLOC_NO_WATERMARKS < NR_pramWMARK);
+			BUILD_BUG_ON(ALLOC_NO_WATERMARKS < NR_MBS_balance);
 			if (alloc_flags & ALLOC_NO_MBS_BALANCE)
 				goto try_this_zone;
 
