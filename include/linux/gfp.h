@@ -612,6 +612,9 @@ extern struct page *alloc_prams_vma(gfp_t gfp_mask, int order,
 extern struct page *alloc_prams_vma2(gfp_t gfp_mask, int order,
 			struct vm_area_struct *vma, unsigned long addr,
 			int node, bool hugepage);
+extern struct page *alloc_prams_vma_pram_policy(gfp_t gfp, int order, 
+		struct vm_area_struct *vma,
+		unsigned long addr, int node, bool hugepage);
 
 #define alloc_hugepage_vma(gfp_mask, vma, addr, order)	\
 	alloc_pages_vma(gfp_mask, order, vma, addr, numa_node_id(), true)
@@ -632,6 +635,9 @@ extern struct page *alloc_prams_vma2(gfp_t gfp_mask, int order,
 	alloc_prams_vma(gfp_mask, 0, vma, addr, numa_node_id(), false)
 #define alloc_pram_vma2(gfp_mask, vma, addr)			\
 	alloc_prams_vma2(gfp_mask, 0, vma, addr, numa_node_id(), false)
+#define alloc_pram_vma_pram_policy(gfp_mask, vma, addr) \
+	alloc_prams_vma_pram_policy(gfp_mask, 0, vma, addr, numa_node_id(), false
+
 #define alloc_page_vma_node(gfp_mask, vma, addr, node)		\
 	alloc_pages_vma(gfp_mask, 0, vma, addr, node, false)
 
