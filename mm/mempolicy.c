@@ -2708,7 +2708,7 @@ alloc_prams_vma_pram_policy(gfp_t gfp, int order, struct vm_area_struct *vma,
 	preferred_nid = policy_node(gfp, pol, numa_node_id());
 	pr_debug("preferred_nid=%d, numa_node_id=%d\n",preferred_nid,numa_node_id());
 #endif
-	page = __alloc_pages_nodemask(gfp, order, preferred_nid, nmask);
+	page = __alloc_prams_nodemask(gfp, order, preferred_nid, nmask);
 	//mpol_cond_put(pol);
 	mpol_cond_put_pram(pol);
 out:
@@ -2772,7 +2772,7 @@ alloc_prams_vma(gfp_t gfp, int order, struct vm_area_struct *vma,
 	preferred_nid = policy_node(gfp, pol, numa_node_id());
 	pr_debug("preferred_nid=%d, numa_node_id=%d\n",preferred_nid,numa_node_id());
 #endif
-	page = __alloc_pages_nodemask(gfp, order, preferred_nid, nmask);
+	page = __alloc_prams_nodemask(gfp, order, preferred_nid, nmask);
 	//mpol_cond_put(pol);
 	mpol_cond_put_pram(pol);
 out:
@@ -2844,7 +2844,7 @@ alloc_prams_vma2(gfp_t gfp, int order, struct vm_area_struct *vma,
 	pr_debug("preferred_nid=%d, numa_node_id=%d\n",preferred_nid,numa_node_id());
 #endif
 	preferred_nid = numa_node_id();
-	page = __alloc_pages_nodemask(gfp, order, preferred_nid, nmask);
+	page = __alloc_prams_nodemask(gfp, order, preferred_nid, nmask);
 	//mpol_cond_put(pol);
 #if 0
 	mpol_cond_put_pram(pol);
