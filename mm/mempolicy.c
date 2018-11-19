@@ -2287,6 +2287,26 @@ static unsigned offset_il_node(struct mempolicy *pol, unsigned long n)
 }
 
 /* Determine a node number for interleave */
+static inline unsigned interleave_nid_pram(struct mempolicy *pol,
+		 struct vm_area_struct *vma, unsigned long addr, int shift)
+{
+	if (vma) {
+		unsigned long off;
+
+		/*
+		 * for small pages, there is no difference between
+		 * shift and PAGE_SHIFT, so the bit-shift is safe.
+		 * for huge pages, since vm_pgoff is in units of small
+		 * pages, we need to shift off the always 0 bits to get
+		 * a useful offset.
+		 */
+		BUG_ON(shift < PAGE_SHIFT);
+		off = vma->vm_pgoff >> (shift - PAGE_SHIFT);
+		off += (addr - vma->vm_start) >> shift;
+		return offset_il_node(pol, off);
+	} else
+		return interleave_nodes_pram(pol);
+}
 static inline unsigned interleave_nid(struct mempolicy *pol,
 		 struct vm_area_struct *vma, unsigned long addr, int shift)
 {
@@ -2521,8 +2541,6 @@ out:
 	return ret;
 }
 
-
-
 /* Allocate a page in interleaved policy.
    Own path because it needs to do special accounting. */
 static struct page *alloc_pram_interleave(gfp_t gfp, unsigned order,
@@ -2633,6 +2651,71 @@ out:
 EXPORT_SYMBOL_GPL(alloc_pages_vma);
 //>>>
 struct page *
+alloc_prams_vma_pram_policy(gfp_t gfp, int order, struct vm_area_struct *vma,
+		unsigned long addr, int node, bool hugepage)
+{
+	struct mempolicy *pol;
+	struct page *page;
+	int preferred_nid;
+	nodemask_t *nmask;
+
+	//pol = get_vma_policy(vma, addr);
+	//pol = get_vma_pram_policy(vma, addr);
+	pol = get_pram_policy(current);
+
+	if (pol->mode == MPOL_INTERLEAVE) {
+		unsigned nid;
+
+		nid = interleave_nid(pol, vma, addr, PAGE_SHIFT + order);
+		//mpol_cond_put(pol);
+		mpol_cond_put_pram(pol);
+		page = alloc_pram_interleave(gfp, order, nid);
+		goto out;
+	}
+#if 0
+	if (unlikely(IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE) && hugepage)) {
+		int hpage_node = node;
+
+		/*
+		 * For hugepage allocation and non-interleave policy which
+		 * allows the current node (or other explicitly preferred
+		 * node) we only try to allocate from the current/preferred
+		 * node and don't fall back to other nodes, as the cost of
+		 * remote accesses would likely offset THP benefits.
+		 *
+		 * If the policy is interleave, or does not allow the current
+		 * node in its nodemask, we allocate the standard way.
+		 */
+		if (pol->mode == MPOL_PREFERRED &&
+						!(pol->flags & MPOL_F_LOCAL))
+			hpage_node = pol->v.preferred_node;
+
+		nmask = pram_policy_nodemask(gfp, pol);
+		if (!nmask || node_isset(hpage_node, *nmask)) {
+			mpol_cond_put_pram(pol);
+			page = __alloc_pages_node(hpage_node,
+						gfp | __GFP_THISNODE, order);
+			goto out;
+		}
+	}
+#endif
+	//nmask = policy_nodemask(gfp, pol);
+	nmask = pram_policy_nodemask(gfp, pol);
+	preferred_nid = policy_node(gfp, pol, node);
+#if 0
+	if ( preferred_nid != node )
+		pr_info("preferred_nid=%d, node=%d\n",preferred_nid,node);
+	preferred_nid = policy_node(gfp, pol, numa_node_id());
+	pr_debug("preferred_nid=%d, numa_node_id=%d\n",preferred_nid,numa_node_id());
+#endif
+	page = __alloc_pages_nodemask(gfp, order, preferred_nid, nmask);
+	//mpol_cond_put(pol);
+	mpol_cond_put_pram(pol);
+out:
+	return page;
+}
+EXPORT_SYMBOL_GPL(alloc_prams_vma_pram_policy);
+struct page *
 alloc_prams_vma(gfp_t gfp, int order, struct vm_area_struct *vma,
 		unsigned long addr, int node, bool hugepage)
 {
@@ -2650,7 +2733,7 @@ alloc_prams_vma(gfp_t gfp, int order, struct vm_area_struct *vma,
 		nid = interleave_nid(pol, vma, addr, PAGE_SHIFT + order);
 		//mpol_cond_put(pol);
 		mpol_cond_put_pram(pol);
-		page = alloc_page_interleave(gfp, order, nid);
+		page = alloc_pram_interleave(gfp, order, nid);
 		goto out;
 	}
 #if 0

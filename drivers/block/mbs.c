@@ -37,7 +37,7 @@
 
 extern struct memblock memblock;
 /*
- * Each block ramdisk device has a radix_tree mbs_pages of pages that stores
+ * Each block mbsdisk device has a radix_tree mbs_pages of pages that stores
  * the pages containing the block device's contents. A mbs page's ->index is
  * its offset in PAGE_SIZE units. This is similar to, but in no way connected
  * with, the kernel's pagecache or buffer cache (which sit above our block
@@ -384,33 +384,33 @@ static const struct block_device_operations mbs_fops = {
 /*
  * And now the modules code and kernel interface.
  */
-//static int rd_nr = CONFIG_BLK_DEV_RAM_COUNT;
-static int rd_nr = 1;
-module_param(rd_nr, int, S_IRUGO);
-MODULE_PARM_DESC(rd_nr, "Maximum number of mbs devices");
+//static int mbs_nr = CONFIG_BLK_DEV_RAM_COUNT;
+static int mbs_nr = 1;
+module_param(mbs_nr, int, S_IRUGO);
+MODULE_PARM_DESC(mbs_nr, "Maximum number of mbs devices");
 
-//unsigned long rd_size = CONFIG_BLK_DEV_RAM_SIZE;
-unsigned long rd_size = 67108864;
-//unsigned long rd_size = memblock.pram.total_size/1024;
-module_param(rd_size, ulong, S_IRUGO);
-MODULE_PARM_DESC(rd_size, "Size of each RAM disk in kbytes.");
+//unsigned long mbs_size = CONFIG_BLK_DEV_RAM_SIZE;
+unsigned long mbs_size = 67108864;
+//unsigned long mbs_size = memblock.pram.total_size/1024;
+module_param(mbs_size, ulong, S_IRUGO);
+MODULE_PARM_DESC(mbs_size, "Size of each RAM disk in kbytes.");
 
 static int max_part = 1;
 module_param(max_part, int, S_IRUGO);
 MODULE_PARM_DESC(max_part, "Num Minors to reserve between devices");
 
 MODULE_LICENSE("GPL");
-MODULE_ALIAS_BLOCKDEV_MAJOR(RAMDISK_MAJOR);
+MODULE_ALIAS_BLOCKDEV_MAJOR(MBSDISK_MAJOR);
 MODULE_ALIAS("rd");
 
 #ifndef MODULE
 /* Legacy boot options - nonmodular */
-static int __init ramdisk_size(char *str)
+static int __init mbsdisk_size(char *str)
 {
-	rd_size = simple_strtol(str, NULL, 0);
+	mbs_size = simple_strtol(str, NULL, 0);
 	return 1;
 }
-__setup("ramdisk_size=", ramdisk_size);
+__setup("mbsdisk_size=", mbsdisk_size);
 #endif
 
 /*
@@ -425,7 +425,7 @@ static struct mbs_device *mbs_alloc(int i)
 	struct mbs_device *mbs;
 	struct gendisk *disk;
 
-	rd_size = memblock.pram.total_size/1024;//convert to kbytes
+	mbs_size = memblock.pram.total_size/1024;//convert to kbytes
 	mbs = kzalloc(sizeof(*mbs), GFP_KERNEL);
 	if (!mbs)
 		goto out;
@@ -450,14 +450,14 @@ static struct mbs_device *mbs_alloc(int i)
 	disk = mbs->mbs_disk = alloc_disk(max_part);
 	if (!disk)
 		goto out_free_queue;
-	disk->major		= RAMDISK_MAJOR;
+	disk->major		= MBSDISK_MAJOR;
 	disk->first_minor	= i * max_part;
 	disk->fops		= &mbs_fops;
 	disk->private_data	= mbs;
 	disk->queue		= mbs->mbs_queue;
 	disk->flags		= GENHD_FL_EXT_DEVT;
 	sprintf(disk->disk_name, "mbs%d", i);
-	set_capacity(disk, rd_size * 2);
+	set_capacity(disk, mbs_size * 2);
 
 #ifdef CONFIG_BLK_DEV_PRAM_DAX
 	queue_flag_set_unlocked(QUEUE_FLAG_DAX, mbs->mbs_queue);
@@ -547,7 +547,7 @@ static int __init mbs_init(void)
 	 * mbs module now has a feature to instantiate underlying device
 	 * structure on-demand, provided that there is an access dev node.
 	 *
-	 * (1) if rd_nr is specified, create that many upfront. else
+	 * (1) if mbs_nr is specified, create that many upfront. else
 	 *     it defaults to CONFIG_BLK_DEV_RAM_COUNT
 	 * (2) User can further extend mbs devices by create dev node themselves
 	 *     and have kernel automatically instantiate actual device
@@ -558,13 +558,13 @@ static int __init mbs_init(void)
 	 *	dynamically.
 	 */
 
-	if (register_blkdev(RAMDISK_MAJOR, "ramdisk"))
+	if (register_blkdev(MBSDISK_MAJOR, "mbsdisk"))
 		return -EIO;
 
 	if (unlikely(!max_part))
 		max_part = 1;
 
-	for (i = 0; i < rd_nr; i++) {
+	for (i = 0; i < mbs_nr; i++) {
 		mbs = mbs_alloc(i);
 		if (!mbs)
 			goto out_free;
@@ -576,7 +576,7 @@ static int __init mbs_init(void)
 	list_for_each_entry(mbs, &mbs_devices, mbs_list)
 		add_disk(mbs->mbs_disk);
 
-	blk_register_region(MKDEV(RAMDISK_MAJOR, 0), 1UL << MINORBITS,
+	blk_register_region(MKDEV(MBSDISK_MAJOR, 0), 1UL << MINORBITS,
 				  THIS_MODULE, mbs_probe, NULL, NULL);
 
 	pr_info("mbs: module loaded\n");
@@ -587,7 +587,7 @@ out_free:
 		list_del(&mbs->mbs_list);
 		mbs_free(mbs);
 	}
-	unregister_blkdev(RAMDISK_MAJOR, "ramdisk");
+	unregister_blkdev(MBSDISK_MAJOR, "mbsdisk");
 
 	pr_info("mbs: module NOT loaded !!!\n");
 	return -ENOMEM;
@@ -600,8 +600,8 @@ static void __exit mbs_exit(void)
 	list_for_each_entry_safe(mbs, next, &mbs_devices, mbs_list)
 		mbs_del_one(mbs);
 
-	blk_unregister_region(MKDEV(RAMDISK_MAJOR, 0), 1UL << MINORBITS);
-	unregister_blkdev(RAMDISK_MAJOR, "ramdisk");
+	blk_unregister_region(MKDEV(MBSDISK_MAJOR, 0), 1UL << MINORBITS);
+	unregister_blkdev(MBSDISK_MAJOR, "mbsdisk");
 
 	pr_info("mbs: module unloaded\n");
 }
