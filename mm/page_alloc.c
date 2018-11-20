@@ -3660,7 +3660,6 @@ get_pram_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
 	struct zone *zone;
 	struct pglist_data *last_pgdat_dirty_limit = NULL;
 	//int nid=numa_node_id();
-	int nid=zone_to_nid(zone);
 
 	/*
 	 * Scan zonelist, looking for a zone with enough free.
@@ -3672,6 +3671,7 @@ get_pram_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
 	//zone=z->zone;
 		struct page *page;
 		unsigned long mark;
+	int nid=zone_to_nid(zone);
 /*
 		if (cpusets_enabled() &&
 			(alloc_flags & ALLOC_CPUSET) &&
