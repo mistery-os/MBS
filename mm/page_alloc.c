@@ -3659,7 +3659,8 @@ get_pram_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
 	struct zoneref *z = ac->preferred_zoneref;
 	struct zone *zone;
 	struct pglist_data *last_pgdat_dirty_limit = NULL;
-	int nid=numa_node_id();
+	//int nid=numa_node_id();
+	int nid=zone_to_nid(zone);
 
 	/*
 	 * Scan zonelist, looking for a zone with enough free.
@@ -3720,7 +3721,7 @@ get_pram_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
 			int ret;
 /******************************************************/
 //works good interleave
-			remove_candidate_nodes(nid);
+		remove_candidate_nodes(nid);
 		pram_striping_policy(nid);
 				goto try_this_zone;
 /******************************************************/
