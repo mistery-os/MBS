@@ -3397,11 +3397,9 @@ static inline bool should_fail_alloc_page(gfp_t gfp_mask, unsigned int order)
  * one free page of a suitable size. Checking now avoids taking the zone lock
  * to check in the allocation paths if no pages are free.
  */
-bool pram_zone_watermark_ok(struct zone *z, unsigned int order, unsigned long mark,
-		      int classzone_idx, unsigned int alloc_flags)
+bool pram_zone_watermark_ok(struct zone *z,  unsigned long mark)
 {
-	return __pram_zone_watermark_ok(z, order, mark, classzone_idx, alloc_flags,
-					zone_page_state(z, NR_FREE_PRAMS));
+	return __pram_zone_watermark_ok(z, mark, zone_page_state(z, NR_FREE_PRAMS));
 }
 /******************************************************************************/
 bool __pram_zone_watermark_ok(struct zone *z, unsigned long mark, long free_pages)
@@ -3410,7 +3408,7 @@ bool __pram_zone_watermark_ok(struct zone *z, unsigned long mark, long free_page
 	int o;
 
 	/* free_pages may go negative - that's OK */
-	free_pages -= (1 << order) - 1;
+	//free_pages -= (1 << order) - 1;
 	//if (free_pages <= min + z->lowmem_reserve[ZONE_PRAM])
 	if (free_pages <= min )
 		return false;
@@ -3538,8 +3536,7 @@ static inline bool pram_zone_watermark_fast(struct zone *z, unsigned int order,
 	if (!order && (free_pages - cma_pages) > mark + z->lowmem_reserve[classzone_idx])
 		return true;
 
-	return __pram_zone_watermark_ok(z, order, mark, classzone_idx, alloc_flags,
-					free_pages);
+	return __pram_zone_watermark_ok(z, mark, free_pages);
 }
 static inline bool zone_watermark_fast(struct zone *z, unsigned int order,
 		unsigned long mark, int classzone_idx, unsigned int alloc_flags)
