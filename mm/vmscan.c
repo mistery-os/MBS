@@ -4077,6 +4077,24 @@ static int kswapd_cpu_online(unsigned int cpu)
  * On node-hot-add, kswapd will moved to proper cpus if cpus are hot-added.
  */
 /******************************************************************************/
+static int mbs_mntrd_run(int nid)
+{
+	pg_data_t *pgdat = NODE_DATA(nid);
+	int ret = 0;
+
+	if (pgdat->mbs_mntrd)
+		return 0;
+
+	pgdat->mbs_mntrd = kthread_run(mbs_mntrd, pgdat, "mbs_mntrd%d", nid);
+	if (IS_ERR(pgdat->mbs_mntrd)) {
+		//BUG_ON(system_state < SYSTEM_RUNNING);
+		pr_err("Failed to start mbs_mntr on node %d\n", nid);
+		ret = PTR_ERR(pgdat->mbs_mntrd);
+		pgdat->mbs_mntrd = NULL;
+	}
+	return ret;
+}
+EXPORT_SYMBOL(mbs_mntrd_run);
 /******************************************************************************/
 int kswapd_run(int nid)
 {
