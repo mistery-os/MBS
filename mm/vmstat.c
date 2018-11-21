@@ -103,7 +103,77 @@ EXPORT_SYMBOL(vm_nusa_stat);
 EXPORT_SYMBOL(vm_pram_node_stat);
 
 #ifdef CONFIG_SMP
+/******************************************************************************/
+int calculate_pressure_mbs_threshold(struct zone *zone)
+{
+	int threshold;
+	int watermark_distance;
 
+	/*
+	 * As vmstats are not up to date, there is drift between the estimated
+	 * and real values. For high thresholds and a high number of CPUs, it
+	 * is possible for the min watermark to be breached while the estimated
+	 * value looks fine. The pressure threshold is a reduced value such
+	 * that even the maximum amount of drift will not accidentally breach
+	 * the min watermark
+	 */
+	watermark_distance = PRAM_ZONE_FAT(zone) - PRAM_ZONE_FULL(zone);
+	threshold = max(1, (int)(watermark_distance / num_online_cpus()));
+
+	/*
+	 * Maximum threshold is 125
+	 */
+	threshold = min(125, threshold);
+
+	return threshold;
+}
+int calculate_mbs_threshold(struct zone *zone)
+{
+	int threshold;
+	int mem;	/* memory in 128 MB units */
+
+	/*
+	 * The threshold scales with the number of processors and the amount
+	 * of memory per zone. More memory means that we can defer updates for
+	 * longer, more processors could lead to more contention.
+ 	 * fls() is used to have a cheap way of logarithmic scaling.
+	 *
+	 * Some sample thresholds:
+	 *
+	 * Threshold	Processors	(fls)	Zonesize	fls(mem+1)
+	 * ------------------------------------------------------------------
+	 * 8		1		1	0.9-1 GB	4
+	 * 16		2		2	0.9-1 GB	4
+	 * 20 		2		2	1-2 GB		5
+	 * 24		2		2	2-4 GB		6
+	 * 28		2		2	4-8 GB		7
+	 * 32		2		2	8-16 GB		8
+	 * 4		2		2	<128M		1
+	 * 30		4		3	2-4 GB		5
+	 * 48		4		3	8-16 GB		8
+	 * 32		8		4	1-2 GB		4
+	 * 32		8		4	0.9-1GB		4
+	 * 10		16		5	<128M		1
+	 * 40		16		5	900M		4
+	 * 70		64		7	2-4 GB		5
+	 * 84		64		7	4-8 GB		6
+	 * 108		512		9	4-8 GB		6
+	 * 125		1024		10	8-16 GB		8
+	 * 125		1024		10	16-32 GB	9
+	 */
+
+	mem = zone->managed_pages >> (27 - PAGE_SHIFT);
+
+	threshold = 2 * fls(num_online_cpus()) * (1 + fls(mem));
+
+	/*
+	 * Maximum threshold is 125
+	 */
+	threshold = min(125, threshold);
+
+	return threshold;
+}
+/******************************************************************************/
 int calculate_pressure_threshold(struct zone *zone)
 {
 	int threshold;
@@ -222,7 +292,28 @@ void refresh_zone_stat_thresholds(void)
 					max_drift;
 	}
 }
+/******************************************************************************/
+void set_pgdat_percpu_mbs_threshold(pg_data_t *pgdat,
+				int (*calculate_pressure)(struct zone *))
+{
+	struct zone *zone;
+	int cpu;
+	int threshold;
+	int i;
 
+//	for (i = 0; i < pgdat->nr_zones; i++) {
+		//zone = &pgdat->node_zones[i];
+		zone = &pgdat->node_zones[ZONE_PRAM];
+		if (!zone->percpu_drift_mark)
+			continue;
+
+		threshold = (*calculate_pressure)(zone);
+		for_each_online_cpu(cpu)
+			per_cpu_ptr(zone->pageset, cpu)->stat_threshold
+							= threshold;
+//	}
+}
+/******************************************************************************/
 void set_pgdat_percpu_threshold(pg_data_t *pgdat,
 				int (*calculate_pressure)(struct zone *))
 {

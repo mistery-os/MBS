@@ -338,6 +338,10 @@ int calculate_pressure_threshold(struct zone *zone);
 int calculate_normal_threshold(struct zone *zone);
 void set_pgdat_percpu_threshold(pg_data_t *pgdat,
 				int (*calculate_pressure)(struct zone *));
+int calculate_pressure_mbs_threshold(struct zone *zone);
+int calculate_mbs_threshold(struct zone *zone);
+void set_pgdat_percpu_mbs_threshold(pg_data_t *pgdat,
+				int (*calculate_pressure)(struct zone *));
 #else /* CONFIG_SMP */
 
 /*
