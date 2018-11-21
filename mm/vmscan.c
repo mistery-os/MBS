@@ -3615,6 +3615,7 @@ static void mbs_mntrd_try_to_sleep(pg_data_t *pgdat)
 	if (prepare_mntrd_sleep(pgdat)){
 
 		remaining = schedule_timeout(HZ/10);
+		remaining = schedule_timeout(MAX_SCHEDULE_TIMEOUT);
 
 		finish_wait(&pgdat->mbs_mntrd_wait, &mntrd_wait);
 		prepare_to_wait(&pgdat->mbs_mntrd_wait, &mntrd_wait, TASK_INTERRUPTIBLE);
@@ -3624,7 +3625,7 @@ static void mbs_mntrd_try_to_sleep(pg_data_t *pgdat)
 	    prepare_mntrd_sleep(pgdat)){
 
 		//set_pgdat_percpu_mbs_threshold(pgdat, calculate_mbs_threshold);
-
+ssleep(10);
 		if (!kthread_should_stop())
 			schedule();
 
