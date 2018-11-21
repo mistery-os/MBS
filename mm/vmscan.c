@@ -60,6 +60,8 @@
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/vmscan.h>
+extern void add_candidate_nodes(int nid);
+extern void pram_local_policy(int nid);
 
 struct scan_control {
 	/* How many pages shrink_list() should reclaim */
@@ -3628,7 +3630,7 @@ static void mbs_mntrd_try_to_sleep(pg_data_t *pgdat, int alloc_order, int reclai
 	if ( kthread_should_stop())
 		return;
 
-	prepare_to_wait(&pgdat->mntrd_wait, &wait, TASK_INTERRUPTIBLE);
+	prepare_to_wait(&pgdat->mbs_mntrd_wait, &wait, TASK_INTERRUPTIBLE);
 
 	/*
 	 * Try to sleep for a short interval. Note that kcompactd will only be
@@ -3660,12 +3662,12 @@ static void mbs_mntrd_try_to_sleep(pg_data_t *pgdat, int alloc_order, int reclai
 		 * the previous request that slept prematurely.
 		 */
 		if (remaining) {
-			pgdat->mntrd_classzone_idx = ZONE_PRAM; 
-			pgdat->mntrd_order = max(pgdat->mntrd_order, reclaim_order);
+			pgdat->mbs_mntrd_classzone_idx = ZONE_PRAM; 
+			pgdat->mbs_mntrd_order = max(pgdat->mbs_mntrd_order, reclaim_order);
 		}
 
-		finish_wait(&pgdat->mntrd_wait, &wait);
-		prepare_to_wait(&pgdat->mntrd_wait, &wait, TASK_INTERRUPTIBLE);
+		finish_wait(&pgdat->mbs_mntrd_wait, &wait);
+		prepare_to_wait(&pgdat->mbs_mntrd_wait, &wait, TASK_INTERRUPTIBLE);
 	}
 
 	/*
@@ -3696,7 +3698,7 @@ static void mbs_mntrd_try_to_sleep(pg_data_t *pgdat, int alloc_order, int reclai
 		else
 			//count_vm_event(KSWAPD_HIGH_WMARK_HIT_QUICKLY);
 	}
-	finish_wait(&pgdat->mntrd_wait, &wait);
+	finish_wait(&pgdat->mbs_mntrd_wait, &wait);
 }
 /******************************************************************************/
 static void kswapd_try_to_sleep(pg_data_t *pgdat, int alloc_order, int reclaim_order,
@@ -3830,13 +3832,13 @@ static int mbs_mntrd(void *p)
 	tsk->flags |= PF_MBS_MNTRD;
 //	set_freezable();
 
-	pgdat->mntrd_order = 0;
-	pgdat->mntrd_classzone_idx = MAX_NR_ZONES;
+	pgdat->mbs_mntrd_order = 0;
+	pgdat->mbs_mntrd_classzone_idx = MAX_NR_ZONES;
 
 	for ( ; ; ){
 		bool ret;
 
-		alloc_order = reclaim_order = pgdat->mntrd_order;
+		alloc_order = reclaim_order = pgdat->mbs_mntrd_order;
 		classzone_idx = ZONE_PRAM;
 
 mbs_mntrd_try_sleep:
@@ -3844,7 +3846,7 @@ mbs_mntrd_try_sleep:
 					classzone_idx);
 
 		/* Read the new order and classzone_idx */
-		alloc_order = reclaim_order = pgdat->mntrd_order;
+		alloc_order = reclaim_order = pgdat->mbs_mntrd_order;
 		classzone_idx = ZONE_PRAM;
 		pgdat->mntrd_order = 0;
 		pgdat->mntrd_classzone_idx = ZONE_PRAM;
