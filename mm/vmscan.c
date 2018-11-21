@@ -3584,6 +3584,7 @@ out:
  * given classzone and returns it or the highest classzone index kswapd
  * was recently woke for.
  */
+#if 0
 static enum zone_type mbs_mntrd_classzone_idx(pg_data_t *pgdat,
 					   enum zone_type classzone_idx)
 {
@@ -3592,6 +3593,7 @@ static enum zone_type mbs_mntrd_classzone_idx(pg_data_t *pgdat,
 
 	return max(pgdat->mbs_mntrd_classzone_idx, classzone_idx);
 }
+#endif
 static enum zone_type kswapd_classzone_idx(pg_data_t *pgdat,
 					   enum zone_type classzone_idx)
 {
