@@ -304,8 +304,8 @@ void set_pgdat_percpu_mbs_threshold(pg_data_t *pgdat,
 //	for (i = 0; i < pgdat->nr_zones; i++) {
 		//zone = &pgdat->node_zones[i];
 		zone = &pgdat->node_zones[ZONE_PRAM];
-		if (!zone->percpu_drift_mark)
-			continue;
+//		if (!zone->percpu_drift_mark)
+//			continue;
 
 		threshold = (*calculate_pressure)(zone);
 		for_each_online_cpu(cpu)
