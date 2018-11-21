@@ -3625,12 +3625,12 @@ static void mbs_mntrd_try_to_sleep(pg_data_t *pgdat, int alloc_order, int reclai
 				unsigned int classzone_idx)
 {
 	long remaining = 0;
-	DEFINE_WAIT(wait);
+	DEFINE_WAIT(mntrd_wait);
 	//if (freezing(current) || kthread_should_stop())
 	if ( kthread_should_stop())
 		return;
 
-	prepare_to_wait(&pgdat->mbs_mntrd_wait, &wait, TASK_INTERRUPTIBLE);
+	prepare_to_wait(&pgdat->mbs_mntrd_wait, &mntrd_wait, TASK_INTERRUPTIBLE);
 
 	/*
 	 * Try to sleep for a short interval. Note that kcompactd will only be
@@ -3666,8 +3666,8 @@ static void mbs_mntrd_try_to_sleep(pg_data_t *pgdat, int alloc_order, int reclai
 			pgdat->mbs_mntrd_order = max(pgdat->mbs_mntrd_order, reclaim_order);
 		}
 
-		finish_wait(&pgdat->mbs_mntrd_wait, &wait);
-		prepare_to_wait(&pgdat->mbs_mntrd_wait, &wait, TASK_INTERRUPTIBLE);
+		finish_wait(&pgdat->mbs_mntrd_wait, &mntrd_wait);
+		prepare_to_wait(&pgdat->mbs_mntrd_wait, &mntrd_wait, TASK_INTERRUPTIBLE);
 	}
 
 	/*
@@ -3701,7 +3701,7 @@ static void mbs_mntrd_try_to_sleep(pg_data_t *pgdat, int alloc_order, int reclai
 			//count_vm_event(KSWAPD_HIGH_WMARK_HIT_QUICKLY);
 	}
 #endif
-	finish_wait(&pgdat->mbs_mntrd_wait, &wait);
+	finish_wait(&pgdat->mbs_mntrd_wait, &mntrd_wait);
 }
 /******************************************************************************/
 static void kswapd_try_to_sleep(pg_data_t *pgdat, int alloc_order, int reclaim_order,
@@ -3800,7 +3800,7 @@ static void kswapd_try_to_sleep(pg_data_t *pgdat, int alloc_order, int reclaim_o
 /******************************************************************************/
 static int mbs_mntrd(void *p)
 {
-	allow_signal(SIGKILL|SIGSTOP);
+//	allow_signal(SIGKILL|SIGSTOP);
 /*
 	while(!kthread_should_stop())
 	{
@@ -3817,11 +3817,11 @@ static int mbs_mntrd(void *p)
 	unsigned int classzone_idx = ZONE_PRAM;
 	pg_data_t *pgdat = (pg_data_t*)p;
 	struct task_struct *tsk = current;
-
+/*
 	struct mbs_mntr_state mbs_mntr_state = {
 		.mbs_mntr_k = 0,
 	};
-
+*/
 	int nid = pgdat->node_id;
 	int i, zid = ZONE_PRAM;
 	struct zone *zone = pgdat->node_zones + zid;
@@ -3844,7 +3844,7 @@ static int mbs_mntrd(void *p)
 		alloc_order = reclaim_order = pgdat->mbs_mntrd_order;
 		classzone_idx = ZONE_PRAM;
 
-mbs_mntrd_try_sleep:
+//mbs_mntrd_try_sleep:
 		mbs_mntrd_try_to_sleep(pgdat, alloc_order, reclaim_order,
 					classzone_idx);
 
@@ -4077,7 +4077,7 @@ static int kswapd_cpu_online(unsigned int cpu)
  * On node-hot-add, kswapd will moved to proper cpus if cpus are hot-added.
  */
 /******************************************************************************/
-static int mbs_mntrd_run(int nid)
+int mbs_mntrd_run(int nid)
 {
 	pg_data_t *pgdat = NODE_DATA(nid);
 	int ret = 0;
