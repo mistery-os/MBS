@@ -3308,6 +3308,7 @@ static bool kswapd_shrink_node(pg_data_t *pgdat,
  * or lower is eligible for reclaim until at least one usable zone is
  * balanced.
  */
+#if 0
 static int mbs_balance_pgdat(pg_data_t *pgdat, int order, int classzone_idx)
 {
 	int i;
@@ -3424,6 +3425,7 @@ out:
 	 */
 	return sc.order;
 }
+#endif
 static int balance_pgdat(pg_data_t *pgdat, int order, int classzone_idx)
 {
 	int i;
