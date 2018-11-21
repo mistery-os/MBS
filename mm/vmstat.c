@@ -243,6 +243,7 @@ void set_pgdat_percpu_threshold(pg_data_t *pgdat,
 	}
 }
 
+
 /*
  * For use when we know that interrupts are disabled,
  * or when we know that preemption is disabled and that
@@ -886,7 +887,6 @@ void __inc_nusa_state(struct zone *zone,
 	}
 }
 
-
 void __inc_numa_state(struct zone *zone,
 				 enum numa_stat_item item)
 {
@@ -936,7 +936,6 @@ unsigned long sum_zone_nusa_state(int node,
 
 	return count;
 }
-
 
 unsigned long sum_zone_numa_state(int node,
 				 enum numa_stat_item item)

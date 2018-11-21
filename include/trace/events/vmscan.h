@@ -76,6 +76,29 @@ TRACE_EVENT(mm_vmscan_kswapd_wake,
 	TP_printk("nid=%d zid=%d order=%d", __entry->nid, __entry->zid, __entry->order)
 );
 
+TRACE_EVENT(mm_vmscan_wakeup_mbs_mntrd,
+
+	TP_PROTO(int nid, int zid, int order),
+
+	TP_ARGS(nid, zid, order),
+
+	TP_STRUCT__entry(
+		__field(	int,		nid	)
+		__field(	int,		zid	)
+		__field(	int,		order	)
+	),
+
+	TP_fast_assign(
+		__entry->nid		= nid;
+		__entry->zid		= zid;
+		__entry->order		= order;
+	),
+
+	TP_printk("nid=%d zid=%d order=%d",
+		__entry->nid,
+		__entry->zid,
+		__entry->order)
+);
 TRACE_EVENT(mm_vmscan_wakeup_kswapd,
 
 	TP_PROTO(int nid, int zid, int order),

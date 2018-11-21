@@ -3179,6 +3179,7 @@ static void age_active_anon(struct pglist_data *pgdat,
  * Returns true if there is an eligible zone balanced for the request order
  * and classzone_idx
  */
+
 static bool pgdat_balanced(pg_data_t *pgdat, int order, int classzone_idx)
 {
 	int i;
@@ -3307,6 +3308,122 @@ static bool kswapd_shrink_node(pg_data_t *pgdat,
  * or lower is eligible for reclaim until at least one usable zone is
  * balanced.
  */
+static int mbs_balance_pgdat(pg_data_t *pgdat, int order, int classzone_idx)
+{
+	int i;
+	unsigned long nr_soft_reclaimed;
+	unsigned long nr_soft_scanned;
+	struct zone *zone;
+	struct scan_control sc = {
+		.gfp_mask = GFP_KERNEL,
+		.order = order,
+		.priority = DEF_PRIORITY,
+		.may_writepage = !laptop_mode,
+		.may_unmap = 1,
+		.may_swap = 1,
+	};
+	//count_vm_event(PAGEOUTRUN);
+
+	do {
+		unsigned long nr_reclaimed = sc.nr_reclaimed;
+		bool raise_priority = true;
+
+		sc.reclaim_idx = classzone_idx;
+
+		/*
+		 * If the number of buffer_heads exceeds the maximum allowed
+		 * then consider reclaiming from all zones. This has a dual
+		 * purpose -- on 64-bit systems it is expected that
+		 * buffer_heads are stripped during active rotation. On 32-bit
+		 * systems, highmem pages can pin lowmem memory and shrinking
+		 * buffers can relieve lowmem pressure. Reclaim may still not
+		 * go ahead if all eligible zones for the original allocation
+		 * request are balanced to avoid excessive reclaim from kswapd.
+		 */
+		if (buffer_heads_over_limit) {
+			for (i = MAX_NR_ZONES - 1; i >= 0; i--) {
+				zone = pgdat->node_zones + i;
+				if (!managed_zone(zone))
+					continue;
+
+				sc.reclaim_idx = i;
+				break;
+			}
+		}
+
+		/*
+		 * Only reclaim if there are no eligible zones. Note that
+		 * sc.reclaim_idx is not used as buffer_heads_over_limit may
+		 * have adjusted it.
+		 */
+		if (pram_pgdat_balanced(pgdat, sc.order, classzone_idx))
+			goto out;
+
+		/*
+		 * Do some background aging of the anon list, to give
+		 * pages a chance to be referenced before reclaiming. All
+		 * pages are rotated regardless of classzone as this is
+		 * about consistent aging.
+		 */
+		age_active_anon(pgdat, &sc);
+
+		/*
+		 * If we're getting trouble reclaiming, start doing writepage
+		 * even in laptop mode.
+		 */
+		if (sc.priority < DEF_PRIORITY - 2)
+			sc.may_writepage = 1;
+
+		/* Call soft limit reclaim before calling shrink_node. */
+		sc.nr_scanned = 0;
+		nr_soft_scanned = 0;
+		nr_soft_reclaimed = mem_cgroup_soft_limit_reclaim(pgdat, sc.order,
+						sc.gfp_mask, &nr_soft_scanned);
+		sc.nr_reclaimed += nr_soft_reclaimed;
+
+		/*
+		 * There should be no need to raise the scanning priority if
+		 * enough pages are already being scanned that that high
+		 * watermark would be met at 100% efficiency.
+		 */
+		if (kswapd_shrink_node(pgdat, &sc))
+			raise_priority = false;
+
+		/*
+		 * If the low watermark is met there is no need for processes
+		 * to be throttled on pfmemalloc_wait as they should not be
+		 * able to safely make forward progress. Wake them
+		 */
+		if (waitqueue_active(&pgdat->pfmemalloc_wait) &&
+				allow_direct_reclaim(pgdat))
+			wake_up_all(&pgdat->pfmemalloc_wait);
+
+		/* Check if kswapd should be suspending */
+		if (try_to_freeze() || kthread_should_stop())
+			break;
+
+		/*
+		 * Raise priority if scanning rate is too low or there was no
+		 * progress in reclaiming pages
+		 */
+		nr_reclaimed = sc.nr_reclaimed - nr_reclaimed;
+		if (raise_priority || !nr_reclaimed)
+			sc.priority--;
+	} while (sc.priority >= 1);
+
+	if (!sc.nr_reclaimed)
+		pgdat->mbs_mntrd_failures++;
+
+out:
+	snapshot_refaults(NULL, pgdat);
+	/*
+	 * Return the order kswapd stopped reclaiming at as
+	 * prepare_kswapd_sleep() takes it into account. If another caller
+	 * entered the allocator slow path while kswapd was awake, order will
+	 * remain at the higher level.
+	 */
+	return sc.order;
+}
 static int balance_pgdat(pg_data_t *pgdat, int order, int classzone_idx)
 {
 	int i;
@@ -3431,6 +3548,14 @@ out:
  * given classzone and returns it or the highest classzone index kswapd
  * was recently woke for.
  */
+static enum zone_type mbs_mntrd_classzone_idx(pg_data_t *pgdat,
+					   enum zone_type classzone_idx)
+{
+	if (pgdat->mbs_mntrd_classzone_idx == MAX_NR_ZONES)
+		return classzone_idx;
+
+	return max(pgdat->mbs_mntrd_classzone_idx, classzone_idx);
+}
 static enum zone_type kswapd_classzone_idx(pg_data_t *pgdat,
 					   enum zone_type classzone_idx)
 {
@@ -3619,6 +3744,7 @@ kswapd_try_sleep:
 /*
  * A zone is low on free memory, so wake its kswapd task to service it.
  */
+
 void wakeup_kswapd(struct zone *zone, int order, enum zone_type classzone_idx)
 {
 	pg_data_t *pgdat;
