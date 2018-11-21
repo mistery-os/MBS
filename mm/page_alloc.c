@@ -3412,7 +3412,8 @@ bool __pram_zone_watermark_ok(struct zone *z, unsigned long mark, long free_page
 	//if (free_pages <= min + z->lowmem_reserve[ZONE_PRAM])
 	if (free_pages <= min )
 		return false;
-	for (o = order; o < MAX_ORDER; o++) {
+	//for (o = order; o < MAX_ORDER; o++) {
+	for (o = 0 ; o < MAX_ORDER; o++) {
 		struct free_area *area = &z->free_area[o];
 		int mt;
 
