@@ -3692,12 +3692,15 @@ static void mbs_mntrd_try_to_sleep(pg_data_t *pgdat, int alloc_order, int reclai
 			schedule();
 
 		set_pgdat_percpu_mbs_threshold(pgdat, calculate_pressure_mbs_threshold);
-	} else {
-		if (remaining)
+	}
+#if 0
+       	else {
+		//if (remaining)
 			//count_vm_event(KSWAPD_LOW_WMARK_HIT_QUICKLY);
-		else
+		//else
 			//count_vm_event(KSWAPD_HIGH_WMARK_HIT_QUICKLY);
 	}
+#endif
 	finish_wait(&pgdat->mbs_mntrd_wait, &wait);
 }
 /******************************************************************************/
@@ -3848,8 +3851,8 @@ mbs_mntrd_try_sleep:
 		/* Read the new order and classzone_idx */
 		alloc_order = reclaim_order = pgdat->mbs_mntrd_order;
 		classzone_idx = ZONE_PRAM;
-		pgdat->mntrd_order = 0;
-		pgdat->mntrd_classzone_idx = ZONE_PRAM;
+		pgdat->mbs_mntrd_order = 0;
+		pgdat->mbs_mntrd_classzone_idx = ZONE_PRAM;
 
 		//ret = try_to_freeze();
 		if (kthread_should_stop())
