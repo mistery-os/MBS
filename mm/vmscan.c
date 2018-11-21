@@ -3826,7 +3826,7 @@ static int mbs_mntrd(void *p)
 	int i, zid = ZONE_PRAM;
 	struct zone *zone = pgdat->node_zones + zid;
 
-	const struct cpumask *cpumask = cpumask_of_node(pgdat->node_id);
+	//const struct cpumask *cpumask = cpumask_of_node(pgdat->node_id);
 #if 0
 	if (!cpumask_empty(cpumask))
 		set_cpus_allowed_ptr(tsk, cpumask);
