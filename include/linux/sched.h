@@ -876,7 +876,7 @@ struct task_struct {
 
 	/* VM state: */
 	struct reclaim_state		*reclaim_state;
-	struct mbs_mntr_state		*mbs_mntr_state;
+	//struct mbs_mntr_state		*mbs_mntr_state;
 
 	struct backing_dev_info		*backing_dev_info;
 

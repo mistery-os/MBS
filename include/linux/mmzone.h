@@ -765,9 +765,7 @@ typedef struct pglist_data {
 	struct task_struct *kswapd;	/* Protected by
 					   mem_hotplug_begin/end() */
 	int kswapd_order;
-	int mbs_mntrd_order;
 	enum zone_type kswapd_classzone_idx;
-	enum zone_type mbs_mntrd_classzone_idx;
 
 	int kswapd_failures;		/* Number of 'reclaimed == 0' runs */
 	int mbs_mntrd_failures;		/* YONGSEOB */
@@ -900,23 +898,19 @@ static inline bool is_pram_zone(const struct zone *zone)
 
 void build_all_zonelists(pg_data_t *pgdat);
 void wakeup_kswapd(struct zone *zone, int order, enum zone_type classzone_idx);
-void wakeup_mbs_mntrd(struct zone *zone, int order, enum zone_type classzone_idx);
+void wakeup_mbs_mntrd(struct zone *zone);
 bool __zone_watermark_ok(struct zone *z, unsigned int order, unsigned long mark,
 		int classzone_idx, unsigned int alloc_flags,
 		long free_pages);
-bool __pram_zone_watermark_ok(struct zone *z, unsigned int order, unsigned long mark,
-		int classzone_idx, unsigned int alloc_flags,
+bool __pram_zone_watermark_ok(struct zone *z, unsigned long mark,
 		long free_pages);
 bool zone_watermark_ok(struct zone *z, unsigned int order,
 		unsigned long mark, int classzone_idx,
 		unsigned int alloc_flags);
 bool zone_watermark_ok_safe(struct zone *z, unsigned int order,
 		unsigned long mark, int classzone_idx);
-bool pram_zone_watermark_ok(struct zone *z, unsigned int order,
-		unsigned long mark, int classzone_idx,
-		unsigned int alloc_flags);
-bool pram_zone_watermark_ok_safe(struct zone *z, unsigned int order,
-		unsigned long mark, int classzone_idx);
+bool pram_zone_watermark_ok(struct zone *z, unsigned long mark);
+bool pram_zone_watermark_ok_safe(struct zone *z, unsigned long mark);
 
 enum memmap_context {
 	MEMMAP_EARLY,

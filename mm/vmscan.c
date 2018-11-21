@@ -3182,36 +3182,23 @@ static void age_active_anon(struct pglist_data *pgdat,
  * and classzone_idx
  */
 /******************************************************************************/
-static bool pram_pgdat_balanced(pg_data_t *pgdat, int order, int classzone_idx)
+static bool pram_pgdat_balanced(pg_data_t *pgdat)
 {
 	int i;
-	unsigned long mark = -1;
+	unsigned long mark;
 	struct zone *zone;
 	int nid;
 
-//	for (i = 0; i <= classzone_idx; i++) {
-		//zone = pgdat->node_zones + i;
-		zone = pgdat->node_zones + ZONE_PRAM;
-//		if (!managed_zone(zone))
-//			continue;
+	zone = pgdat->node_zones + ZONE_PRAM;
 
-		nid=zone_to_nid(zone);//pgdat->node_id;
-		mark = PRAM_ZONE_FAT(zone);//PRAM_ZONE_SLIM(zone);
-		if (pram_zone_watermark_ok_safe(zone, order, mark, classzone_idx))
-		{
-			add_candidate_nodes(nid);
-		        pram_local_policy(nid);
-			return true;
-		}
-//	}
-
-	/*
-	 * If a node has no populated zone within classzone_idx, it does not
-	 * need balancing by definition. This can happen if a zone-restricted
-	 * allocation tries to wake a remote kswapd.
-	 */
-	if (mark == -1)
+	nid=pgdat->node_id;
+	mark = PRAM_ZONE_FAT(zone);//PRAM_ZONE_SLIM(zone);
+	if (pram_zone_watermark_ok_safe(zone, mark))
+	{
+		add_candidate_nodes(nid);
+	        pram_local_policy(nid);
 		return true;
+	}
 
 	return false;
 }
@@ -3259,17 +3246,10 @@ static void clear_pgdat_congested(pg_data_t *pgdat)
  * Returns true if kswapd is ready to sleep
  */
 /******************************************************************************/
-static bool prepare_mntrd_sleep(pg_data_t *pgdat, int order, int classzone_idx)
+static bool prepare_mntrd_sleep(pg_data_t *pgdat)
 {
-//	if (waitqueue_active(&pgdat->pfmemalloc_wait))
-//		wake_up_all(&pgdat->pfmemalloc_wait);
 
-	/* Hopeless node, leave it to direct reclaim */
-//	if (pgdat->mbs_mntrd_failures >= MAX_RECLAIM_RETRIES)
-//		return true;
-
-	if (pram_pgdat_balanced(pgdat, order, classzone_idx)) {
-//		clear_pgdat_congested(pgdat);
+	if (pram_pgdat_balanced(pgdat)){
 		return true;
 	}
 
@@ -3621,86 +3601,33 @@ static enum zone_type kswapd_classzone_idx(pg_data_t *pgdat,
 	return max(pgdat->kswapd_classzone_idx, classzone_idx);
 }
 /******************************************************************************/
-static void mbs_mntrd_try_to_sleep(pg_data_t *pgdat, int alloc_order, int reclaim_order,
-				unsigned int classzone_idx)
+static void mbs_mntrd_try_to_sleep(pg_data_t *pgdat)
 {
 	long remaining = 0;
 	DEFINE_WAIT(mntrd_wait);
-	//if (freezing(current) || kthread_should_stop())
 	if ( kthread_should_stop())
 		return;
 
 	prepare_to_wait(&pgdat->mbs_mntrd_wait, &mntrd_wait, TASK_INTERRUPTIBLE);
 
-	/*
-	 * Try to sleep for a short interval. Note that kcompactd will only be
-	 * woken if it is possible to sleep for a short interval. This is
-	 * deliberate on the assumption that if reclaim cannot keep an
-	 * eligible zone balanced that it's also unlikely that compaction will
-	 * succeed.
-	 */
-	if (prepare_mntrd_sleep(pgdat, reclaim_order, classzone_idx)) {
-		/*
-		 * Compaction records what page blocks it recently failed to
-		 * isolate pages from and skips them in the future scanning.
-		 * When mbs_mntrd is going to sleep, it is reasonable to assume
-		 * that pages and compaction may succeed so reset the cache.
-		 */
-		//reset_isolation_suitable(pgdat);
-
-		/*
-		 * We have freed the memory, now we should compact it to make
-		 * allocation of the requested order possible.
-		 */
-		//wakeup_kcompactd(pgdat, alloc_order, classzone_idx);
+	if (prepare_mntrd_sleep(pgdat)){
 
 		remaining = schedule_timeout(HZ/10);
-
-		/*
-		 * If woken prematurely then reset mbs_mntrd_classzone_idx and
-		 * order. The values will either be from a wakeup request or
-		 * the previous request that slept prematurely.
-		 */
-		if (remaining) {
-			pgdat->mbs_mntrd_classzone_idx = ZONE_PRAM; 
-			pgdat->mbs_mntrd_order = max(pgdat->mbs_mntrd_order, reclaim_order);
-		}
 
 		finish_wait(&pgdat->mbs_mntrd_wait, &mntrd_wait);
 		prepare_to_wait(&pgdat->mbs_mntrd_wait, &mntrd_wait, TASK_INTERRUPTIBLE);
 	}
 
-	/*
-	 * After a short sleep, check if it was a premature sleep. If not, then
-	 * go fully to sleep until explicitly woken up.
-	 */
 	if (!remaining &&
-	    prepare_mntrd_sleep(pgdat, reclaim_order, classzone_idx)) {
-//		trace_mm_vmscan_mbs_mntrd_sleep(pgdat->node_id);
+	    prepare_mntrd_sleep(pgdat)){
 
-		/*
-		 * vmstat counters are not perfectly accurate and the estimated
-		 * value for counters such as NR_FREE_PAGES can deviate from the
-		 * true value by nr_online_cpus * threshold. To avoid the zone
-		 * watermarks being breached while under pressure, we reduce the
-		 * per-cpu vmstat threshold while mbs_mntrd is awake and restore
-		 * them before going back to sleep.
-		 */
-		set_pgdat_percpu_mbs_threshold(pgdat, calculate_mbs_threshold);
+		//set_pgdat_percpu_mbs_threshold(pgdat, calculate_mbs_threshold);
 
 		if (!kthread_should_stop())
 			schedule();
 
-		set_pgdat_percpu_mbs_threshold(pgdat, calculate_pressure_mbs_threshold);
+		//set_pgdat_percpu_mbs_threshold(pgdat, calculate_pressure_mbs_threshold);
 	}
-#if 0
-       	else {
-		//if (remaining)
-			//count_vm_event(KSWAPD_LOW_WMARK_HIT_QUICKLY);
-		//else
-			//count_vm_event(KSWAPD_HIGH_WMARK_HIT_QUICKLY);
-	}
-#endif
 	finish_wait(&pgdat->mbs_mntrd_wait, &mntrd_wait);
 }
 /******************************************************************************/
@@ -3813,56 +3740,25 @@ static int mbs_mntrd(void *p)
 	do_exit(0);
 	return 0;
 */
-	unsigned int alloc_order, reclaim_order;
-	unsigned int classzone_idx = ZONE_PRAM;
 	pg_data_t *pgdat = (pg_data_t*)p;
 	struct task_struct *tsk = current;
-/*
-	struct mbs_mntr_state mbs_mntr_state = {
-		.mbs_mntr_k = 0,
-	};
-*/
 	int nid = pgdat->node_id;
 	int i, zid = ZONE_PRAM;
 	struct zone *zone = pgdat->node_zones + zid;
 
-	//const struct cpumask *cpumask = cpumask_of_node(pgdat->node_id);
-#if 0
-	if (!cpumask_empty(cpumask))
-		set_cpus_allowed_ptr(tsk, cpumask);
-	current->mbs_mntr_state = & mbs_mntr_state;
-#endif
-	tsk->flags |= PF_MBS_MNTRD;
-//	set_freezable();
-
-	pgdat->mbs_mntrd_order = 0;
-	pgdat->mbs_mntrd_classzone_idx = MAX_NR_ZONES;
+	tsk->flags |= PF_MEMALLOC | PF_MBS_MNTRD;
 
 	for ( ; ; ){
 		bool ret;
 
-		alloc_order = reclaim_order = pgdat->mbs_mntrd_order;
-		classzone_idx = ZONE_PRAM;
-
 //mbs_mntrd_try_sleep:
-		mbs_mntrd_try_to_sleep(pgdat, alloc_order, reclaim_order,
-					classzone_idx);
+		mbs_mntrd_try_to_sleep(pgdat);
 
-		/* Read the new order and classzone_idx */
-		alloc_order = reclaim_order = pgdat->mbs_mntrd_order;
-		classzone_idx = ZONE_PRAM;
-		pgdat->mbs_mntrd_order = 0;
-		pgdat->mbs_mntrd_classzone_idx = ZONE_PRAM;
-
-		//ret = try_to_freeze();
 		if (kthread_should_stop())
 			break;
-		//if (ret)
-		//	continue;
 	}
 
-	tsk->flags &= ~(PF_MBS_MNTRD);
-	current->mbs_mntr_state = NULL;
+	tsk->flags &= ~(PF_MEMALLOC | PF_MBS_MNTRD);
 
 	return 0;
 }
@@ -3955,7 +3851,7 @@ kswapd_try_sleep:
  * A zone is low on free memory, so wake its kswapd task to service it.
  */
 /******************************************************************************/
-void wakeup_mbs_mntrd(struct zone *zone, int order, enum zone_type classzone_idx)
+void wakeup_mbs_mntrd(struct zone *zone)
 {
 	pg_data_t *pgdat;
 
@@ -3965,20 +3861,13 @@ void wakeup_mbs_mntrd(struct zone *zone, int order, enum zone_type classzone_idx
 	if (!cpuset_zone_allowed(zone, GFP_KERNEL | __GFP_HARDWALL))
 		return;
 	pgdat = zone->zone_pgdat;
-	pgdat->mbs_mntrd_classzone_idx = mbs_mntrd_classzone_idx(pgdat,
-							   classzone_idx);
-	pgdat->mbs_mntrd_order = max(pgdat->mbs_mntrd_order, order);
 	if (!waitqueue_active(&pgdat->mbs_mntrd_wait))
 		return;
 
-	/* Hopeless node, leave it to direct reclaim */
-	if (pgdat->mbs_mntrd_failures >= MAX_RECLAIM_RETRIES)
+	if (pram_pgdat_balanced(pgdat))
 		return;
 
-	if (pram_pgdat_balanced(pgdat, order, classzone_idx))
-		return;
-
-	trace_mm_vmscan_wakeup_mbs_mntrd(pgdat->node_id, classzone_idx, order);
+	//trace_mm_vmscan_wakeup_mbs_mntrd(pgdat->node_id, classzone_idx, order);
 	wake_up_interruptible(&pgdat->mbs_mntrd_wait);
 }
 /******************************************************************************/
