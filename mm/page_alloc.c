@@ -3397,10 +3397,6 @@ static inline bool should_fail_alloc_page(gfp_t gfp_mask, unsigned int order)
  * one free page of a suitable size. Checking now avoids taking the zone lock
  * to check in the allocation paths if no pages are free.
  */
-bool pram_zone_watermark_ok(struct zone *z,  unsigned long mark)
-{
-	return __pram_zone_watermark_ok(z, mark, zone_page_state(z, NR_FREE_PRAMS));
-}
 /******************************************************************************/
 bool __pram_zone_watermark_ok(struct zone *z, unsigned long mark, long free_pages)
 {
@@ -3426,6 +3422,10 @@ bool __pram_zone_watermark_ok(struct zone *z, unsigned long mark, long free_page
 		}
 	}
 	return false;
+}
+bool pram_zone_watermark_ok(struct zone *z,  unsigned long mark)
+{
+	return __pram_zone_watermark_ok(z, mark, zone_page_state(z, NR_FREE_PRAMS));
 }
 /******************************************************************************/
 bool __zone_watermark_ok(struct zone *z, unsigned int order, unsigned long mark,

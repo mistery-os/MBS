@@ -3610,22 +3610,22 @@ static void mbs_mntrd_try_to_sleep(pg_data_t *pgdat)
 	if ( kthread_should_stop())
 		return;
 
-	prepare_to_wait(&pgdat->mbs_mntrd_wait, &mntrd_wait, TASK_INTERRUPTIBLE);
+	prepare_to_wait(&pgdat->mbs_mntrd_wait, &mntrd_wait, TASK_UNINTERRUPTIBLE);
 
 	if (prepare_mntrd_sleep(pgdat)){
 
-		remaining = schedule_timeout(HZ/10);
+		//remaining = schedule_timeout(HZ/10);
 		remaining = schedule_timeout(MAX_SCHEDULE_TIMEOUT);
 
 		finish_wait(&pgdat->mbs_mntrd_wait, &mntrd_wait);
-		prepare_to_wait(&pgdat->mbs_mntrd_wait, &mntrd_wait, TASK_INTERRUPTIBLE);
+		prepare_to_wait(&pgdat->mbs_mntrd_wait, &mntrd_wait, TASK_UNINTERRUPTIBLE);
 	}
 
 	if (!remaining &&
 	    prepare_mntrd_sleep(pgdat)){
 
 		//set_pgdat_percpu_mbs_threshold(pgdat, calculate_mbs_threshold);
-ssleep(10);
+//ssleep(10);
 		if (!kthread_should_stop())
 			schedule();
 
@@ -3745,20 +3745,21 @@ static int mbs_mntrd(void *p)
 */
 	pg_data_t *pgdat = (pg_data_t*)p;
 	struct task_struct *tsk = current;
-	int nid = pgdat->node_id;
-	int i, zid = ZONE_PRAM;
-	struct zone *zone = pgdat->node_zones + zid;
+	//int nid = pgdat->node_id;
+	//int i, zid = ZONE_PRAM;
+	//struct zone *zone = pgdat->node_zones + zid;
 
 	tsk->flags |= PF_MEMALLOC | PF_MBS_MNTRD;
 
 	for ( ; ; ){
-		bool ret;
+//		bool ret;
 
 //mbs_mntrd_try_sleep:
 		mbs_mntrd_try_to_sleep(pgdat);
 
 		if (kthread_should_stop())
 			break;
+		ssleep(10);
 	}
 
 	tsk->flags &= ~(PF_MEMALLOC | PF_MBS_MNTRD);
