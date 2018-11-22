@@ -3610,7 +3610,7 @@ static void mbs_mntrd_try_to_sleep(pg_data_t *pgdat)
 	if ( kthread_should_stop())
 		return;
 
-	prepare_to_wait(&pgdat->mbs_mntrd_wait, &mntrd_wait, TASK_UNINTERRUPTIBLE);
+	prepare_to_wait(&pgdat->mbs_mntrd_wait, &mntrd_wait, TASK_INTERRUPTIBLE);
 
 	if (prepare_mntrd_sleep(pgdat)){
 
@@ -3618,7 +3618,7 @@ static void mbs_mntrd_try_to_sleep(pg_data_t *pgdat)
 		remaining = schedule_timeout(MAX_SCHEDULE_TIMEOUT);
 
 		finish_wait(&pgdat->mbs_mntrd_wait, &mntrd_wait);
-		prepare_to_wait(&pgdat->mbs_mntrd_wait, &mntrd_wait, TASK_UNINTERRUPTIBLE);
+		prepare_to_wait(&pgdat->mbs_mntrd_wait, &mntrd_wait, TASK_INTERRUPTIBLE);
 	}
 
 	if (!remaining &&
