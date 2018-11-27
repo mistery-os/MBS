@@ -96,6 +96,54 @@ static struct page *mbs_lookup_page(struct mbs_device *mbs, sector_t sector)
  * If one does not exist, allocate an empty page, and insert that. Then
  * return it.
  */
+static struct page *mbs_insert_pages(struct mbs_device *mbs, sector_t sector,int order)
+{
+	pgoff_t idx;
+	struct page *page;
+	gfp_t gfp_flags;
+
+	page = mbs_lookup_page(mbs, sector);
+	if (page)
+		return page;
+
+	/*
+	 * Must use NOIO because we don't want to recurse back into the
+	 * block or filesystem layers from page reclaim.
+	 *
+	 * Cannot support DAX and highmem, because our ->direct_access
+	 * routine for DAX must return memory that is always addressable.
+	 * If DAX was reworked to use pfns and kmap throughout, this
+	 * restriction might be able to be lifted.
+	 */
+	gfp_flags = GFP_NOIO | __GFP_ZERO;
+#ifndef CONFIG_BLK_DEV_PRAM_DAX
+	gfp_flags |= __GFP_HIGHMEM;
+#endif
+	//page = alloc_pram(gfp_flags|GFP_PRAM );
+	page = alloc_prams(GFP_PRAM,order);
+	if (!page)
+		return NULL;
+
+	if (radix_tree_preload(GFP_NOIO)) {
+		__free_page(page);
+		return NULL;
+	}
+
+	spin_lock(&mbs->mbs_lock);
+	idx = sector >> PAGE_SECTORS_SHIFT;
+	page->index = idx;
+	if (radix_tree_insert(&mbs->mbs_pages, idx, page)) {
+		__free_page(page);
+		page = radix_tree_lookup(&mbs->mbs_pages, idx);
+		BUG_ON(!page);
+		BUG_ON(page->index != idx);
+	}
+	spin_unlock(&mbs->mbs_lock);
+
+	radix_tree_preload_end();
+
+	return page;
+}
 static struct page *mbs_insert_page(struct mbs_device *mbs, sector_t sector)
 {
 	pgoff_t idx;
@@ -344,15 +392,27 @@ static long __mbs_direct_access(struct mbs_device *mbs, pgoff_t pgoff,
 		long nr_pages, void **kaddr, pfn_t *pfn)
 {
 	struct page *page;
+	struct vm_struct *vm;
+	unsigned long mbs_size;
+	int order=9;
 
 	if (!mbs)
 		return -ENODEV;
-	page = mbs_insert_page(mbs, (sector_t)pgoff << PAGE_SECTORS_SHIFT);
+#if 0
+	page = mbs_insert_pages(mbs, (sector_t)pgoff << PAGE_SECTORS_SHIFT, order);
 	if (!page)
 		return -ENOSPC;
 	*kaddr = page_address(page);
 	*pfn = page_to_pfn_t(page);
-
+#endif
+	mbs_size = memblock.pram.total_size/PAGE_SIZE;// bytes
+	vm = vmalloc(mbs_size);
+	page=vmalloc_to_page(vm);
+	//*kaddr = page_address(vmalloc_to_page(vm));
+	//*pfn = (pfn_t)vmalloc_to_pfn(vm);
+	*kaddr = page_address(page);
+	*pfn = page_to_pfn_t(page);
+	return mbs_size;
 	return 1;
 }
 
