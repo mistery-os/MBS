@@ -1659,7 +1659,64 @@ void *vmap(struct page **pages, unsigned int count,
 	return area->addr;
 }
 EXPORT_SYMBOL(vmap);
+static void *__vmalloc_node_parm(unsigned long size, unsigned long align,
+			    gfp_t gfp_mask, pgprot_t prot,
+			    int node, const void *caller);
+static void *__vmalloc_area_node_pram(struct vm_struct *area, gfp_t gfp_mask,
+				 pgprot_t prot, int node)
+{
+	struct page **pages;
+	unsigned int nr_pages, array_size, i;
+	const gfp_t nested_gfp = (gfp_mask & GFP_RECLAIM_MASK) | __GFP_ZERO;
+	const gfp_t alloc_mask = gfp_mask | __GFP_NOWARN;
 
+	nr_pages = get_vm_area_size(area) >> PAGE_SHIFT;
+	array_size = (nr_pages * sizeof(struct page *));
+
+	area->nr_pages = nr_pages;
+	/* Please note that the recursion is strictly bounded. */
+	if (array_size > PAGE_SIZE) {
+		pages = __vmalloc_node_pram(array_size, 1, nested_gfp,
+				PAGE_KERNEL, node, area->caller);
+	} else {
+		pages = kmalloc_node(array_size, nested_gfp, node);
+	}
+	area->pages = pages;
+	if (!area->pages) {
+		remove_vm_area(area->addr);
+		kfree(area);
+		return NULL;
+	}
+
+	for (i = 0; i < area->nr_pages; i++) {
+		struct page *page;
+
+		if (node == NUMA_NO_NODE)
+			page = alloc_pram(alloc_mask);
+		else
+			page = alloc_prams_node(node, alloc_mask, 0);
+
+		if (unlikely(!page)) {
+			/* Successfully allocated i pages, free them in __vunmap() */
+			area->nr_pages = i;
+			goto fail;
+		}
+		area->pages[i] = page;
+		if (gfpflags_allow_blocking(gfp_mask))
+			cond_resched();
+	}
+
+	if (map_vm_area(area, prot, pages))
+		goto fail;
+	return area->addr;
+
+fail:
+	warn_alloc(gfp_mask, NULL,
+			  "vmalloc: allocation failure, allocated %ld of %ld bytes",
+			  (area->nr_pages*PAGE_SIZE), area->size);
+	vfree(area->addr);
+	return NULL;
+}
 static void *__vmalloc_node(unsigned long size, unsigned long align,
 			    gfp_t gfp_mask, pgprot_t prot,
 			    int node, const void *caller);
@@ -1738,6 +1795,45 @@ fail:
  *	allocator with @gfp_mask flags.  Map them into contiguous
  *	kernel virtual space, using a pagetable protection of @prot.
  */
+void *__vmalloc_node_range_pram(unsigned long size, unsigned long align,
+			unsigned long start, unsigned long end, gfp_t gfp_mask,
+			pgprot_t prot, unsigned long vm_flags, int node,
+			const void *caller)
+{
+	struct vm_struct *area;
+	void *addr;
+	unsigned long real_size = size;
+
+	size = PAGE_ALIGN(size);
+	//if (!size || (size >> PAGE_SHIFT) > totalpram_pages)
+	if (!size || (size >> PAGE_SHIFT) > totalram_pages)
+		goto fail;
+
+	area = __get_vm_area_node(size, align, VM_ALLOC | VM_UNINITIALIZED |
+				vm_flags, start, end, node, gfp_mask, caller);
+	if (!area)
+		goto fail;
+
+	addr = __vmalloc_area_node_pram(area, gfp_mask, prot, node);
+	if (!addr)
+		return NULL;
+
+	/*
+	 * In this function, newly allocated vm_struct has VM_UNINITIALIZED
+	 * flag. It means that vm_struct is not fully initialized.
+	 * Now, it is fully initialized, so remove this flag here.
+	 */
+	clear_vm_uninitialized_flag(area);
+
+	kmemleak_vmalloc(area, size, gfp_mask);
+
+	return addr;
+
+fail:
+	warn_alloc(gfp_mask, NULL,
+			  "vmalloc: allocation failure: %lu bytes", real_size);
+	return NULL;
+}
 void *__vmalloc_node_range(unsigned long size, unsigned long align,
 			unsigned long start, unsigned long end, gfp_t gfp_mask,
 			pgprot_t prot, unsigned long vm_flags, int node,
@@ -1797,6 +1893,13 @@ fail:
  *	with mm people.
  *
  */
+static void *__vmalloc_node_pram(unsigned long size, unsigned long align,
+			    gfp_t gfp_mask, pgprot_t prot,
+			    int node, const void *caller)
+{
+	return __vmalloc_node_range_pram(size, align, VMALLOC_START, VMALLOC_END,
+				gfp_mask, prot, 0, node, caller);
+}
 static void *__vmalloc_node(unsigned long size, unsigned long align,
 			    gfp_t gfp_mask, pgprot_t prot,
 			    int node, const void *caller)
@@ -1812,6 +1915,12 @@ void *__vmalloc(unsigned long size, gfp_t gfp_mask, pgprot_t prot)
 }
 EXPORT_SYMBOL(__vmalloc);
 
+static inline void *__vmalloc_node_flags_pram(unsigned long size,
+					int node, gfp_t flags)
+{
+	return __vmalloc_node_pram(size, 1, flags, PAGE_KERNEL,
+					node, __builtin_return_address(0));
+}
 static inline void *__vmalloc_node_flags(unsigned long size,
 					int node, gfp_t flags)
 {
@@ -1844,7 +1953,7 @@ EXPORT_SYMBOL(vmalloc);
 //<<<2018.03.21 Yongseob
 void *vmalloc_pram(unsigned long size)
 {
-	return __vmalloc_node_flags(size, NUMA_NO_NODE, GFP_PRAM);
+	return __vmalloc_node_flags_pram(size, NUMA_NO_NODE, GFP_PRAM);
 }
 EXPORT_SYMBOL(vmalloc_pram);
 //>>>

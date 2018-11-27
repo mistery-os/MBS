@@ -568,6 +568,14 @@ __alloc_pages(gfp_t gfp_mask, unsigned int order, int preferred_nid)
  * online. For more general interface, see alloc_pages_node().
  */
 static inline struct page *
+__alloc_prams_node(int nid, gfp_t gfp_mask, unsigned int order)
+{
+	VM_BUG_ON(nid < 0 || nid >= MAX_NUMNODES);
+	VM_WARN_ON(!node_online(nid));
+
+	return __alloc_prams(gfp_mask, order, nid);
+}
+static inline struct page *
 __alloc_pages_node(int nid, gfp_t gfp_mask, unsigned int order)
 {
 	VM_BUG_ON(nid < 0 || nid >= MAX_NUMNODES);
@@ -581,6 +589,14 @@ __alloc_pages_node(int nid, gfp_t gfp_mask, unsigned int order)
  * prefer the current CPU's closest node. Otherwise node must be valid and
  * online.
  */
+static inline struct page *alloc_prams_node(int nid, gfp_t gfp_mask,
+						unsigned int order)
+{
+	if (nid == NUMA_NO_NODE)
+		nid = numa_mem_id();
+
+	return __alloc_prams_node(nid, gfp_mask, order);
+}
 static inline struct page *alloc_pages_node(int nid, gfp_t gfp_mask,
 						unsigned int order)
 {
