@@ -1383,6 +1383,39 @@ static void clear_vm_uninitialized_flag(struct vm_struct *vm)
 	vm->flags &= ~VM_UNINITIALIZED;
 }
 
+static struct vm_struct *__get_vm_area_node_pram(unsigned long size,
+		unsigned long align, unsigned long flags, unsigned long start,
+		unsigned long end, int node, gfp_t gfp_mask, const void *caller)
+{
+	struct vmap_area *va;
+	struct vm_struct *area;
+
+	BUG_ON(in_interrupt());
+	size = PAGE_ALIGN(size);
+	if (unlikely(!size))
+		return NULL;
+
+	if (flags & VM_IOREMAP)
+		align = 1ul << clamp_t(int, get_count_order_long(size),
+				       PAGE_SHIFT, IOREMAP_MAX_ORDER);
+
+	area = kzalloc_node_pram(sizeof(*area), gfp_mask & GFP_RECLAIM_MASK, node);
+	if (unlikely(!area))
+		return NULL;
+
+	if (!(flags & VM_NO_GUARD))
+		size += PAGE_SIZE;
+
+	va = alloc_vmap_area(size, align, start, end, node, gfp_mask);
+	if (IS_ERR(va)) {
+		kfree(area);
+		return NULL;
+	}
+
+	setup_vmalloc_vm(area, va, flags, caller);
+
+	return area;
+}
 static struct vm_struct *__get_vm_area_node(unsigned long size,
 		unsigned long align, unsigned long flags, unsigned long start,
 		unsigned long end, int node, gfp_t gfp_mask, const void *caller)
@@ -1809,7 +1842,7 @@ void *__vmalloc_node_range_pram(unsigned long size, unsigned long align,
 	if (!size || (size >> PAGE_SHIFT) > totalram_pages)
 		goto fail;
 
-	area = __get_vm_area_node(size, align, VM_ALLOC | VM_UNINITIALIZED |
+	area = __get_vm_area_node_pram(size, align, VM_ALLOC | VM_UNINITIALIZED |
 				vm_flags, start, end, node, gfp_mask, caller);
 	if (!area)
 		goto fail;

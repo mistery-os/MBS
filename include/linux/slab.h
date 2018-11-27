@@ -519,7 +519,22 @@ static __always_inline int kmalloc_size(int n)
 #endif
 	return 0;
 }
+static __always_inline void *kmalloc_node_pram(size_t size, gfp_t flags, int node)
+{
+#ifndef CONFIG_SLOB
+	if (__builtin_constant_p(size) &&
+		size <= KMALLOC_MAX_CACHE_SIZE && !(flags & GFP_DMA)) {
+		int i = kmalloc_index(size);
 
+		if (!i)
+			return ZERO_SIZE_PTR;
+
+		return kmem_cache_alloc_node_trace(kmalloc_caches[i],
+						flags, node, size);
+	}
+#endif
+	return __kmalloc_node_pram(size, flags, node);
+}
 static __always_inline void *kmalloc_node(size_t size, gfp_t flags, int node)
 {
 #ifndef CONFIG_SLOB
@@ -674,6 +689,10 @@ static inline void *kzalloc(size_t size, gfp_t flags)
  * @flags: the type of memory to allocate (see kmalloc).
  * @node: memory node from which to allocate
  */
+static inline void *kzalloc_node_pram(size_t size, gfp_t flags, int node)
+{
+	return kmalloc_node_pram(size, flags | __GFP_ZERO, node);
+}
 static inline void *kzalloc_node(size_t size, gfp_t flags, int node)
 {
 	return kmalloc_node(size, flags | __GFP_ZERO, node);
