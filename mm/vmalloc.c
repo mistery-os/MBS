@@ -399,6 +399,144 @@ static BLOCKING_NOTIFIER_HEAD(vmap_notify_list);
  * Allocate a region of KVA of the specified size and alignment, within the
  * vstart and vend.
  */
+static struct vmap_area *alloc_vmap_area_pram(unsigned long size,
+				unsigned long align,
+				unsigned long vstart, unsigned long vend,
+				int node, gfp_t gfp_mask)
+{
+	struct vmap_area *va;
+	struct rb_node *n;
+	unsigned long addr;
+	int purged = 0;
+	struct vmap_area *first;
+
+	BUG_ON(!size);
+	BUG_ON(offset_in_page(size));
+	BUG_ON(!is_power_of_2(align));
+
+	might_sleep();
+
+	va = kmalloc_node_pram(sizeof(struct vmap_area),
+			gfp_mask & GFP_RECLAIM_MASK, node);
+	if (unlikely(!va))
+		return ERR_PTR(-ENOMEM);
+
+	/*
+	 * Only scan the relevant parts containing pointers to other objects
+	 * to avoid false negatives.
+	 */
+	kmemleak_scan_area(&va->rb_node, SIZE_MAX, gfp_mask & GFP_RECLAIM_MASK);
+
+retry:
+	spin_lock(&vmap_area_lock);
+	/*
+	 * Invalidate cache if we have more permissive parameters.
+	 * cached_hole_size notes the largest hole noticed _below_
+	 * the vmap_area cached in free_vmap_cache: if size fits
+	 * into that hole, we want to scan from vstart to reuse
+	 * the hole instead of allocating above free_vmap_cache.
+	 * Note that __free_vmap_area may update free_vmap_cache
+	 * without updating cached_hole_size or cached_align.
+	 */
+	if (!free_vmap_cache ||
+			size < cached_hole_size ||
+			vstart < cached_vstart ||
+			align < cached_align) {
+nocache:
+		cached_hole_size = 0;
+		free_vmap_cache = NULL;
+	}
+	/* record if we encounter less permissive parameters */
+	cached_vstart = vstart;
+	cached_align = align;
+
+	/* find starting point for our search */
+	if (free_vmap_cache) {
+		first = rb_entry(free_vmap_cache, struct vmap_area, rb_node);
+		addr = ALIGN(first->va_end, align);
+		if (addr < vstart)
+			goto nocache;
+		if (addr + size < addr)
+			goto overflow;
+
+	} else {
+		addr = ALIGN(vstart, align);
+		if (addr + size < addr)
+			goto overflow;
+
+		n = vmap_area_root.rb_node;
+		first = NULL;
+
+		while (n) {
+			struct vmap_area *tmp;
+			tmp = rb_entry(n, struct vmap_area, rb_node);
+			if (tmp->va_end >= addr) {
+				first = tmp;
+				if (tmp->va_start <= addr)
+					break;
+				n = n->rb_left;
+			} else
+				n = n->rb_right;
+		}
+
+		if (!first)
+			goto found;
+	}
+
+	/* from the starting point, walk areas until a suitable hole is found */
+	while (addr + size > first->va_start && addr + size <= vend) {
+		if (addr + cached_hole_size < first->va_start)
+			cached_hole_size = first->va_start - addr;
+		addr = ALIGN(first->va_end, align);
+		if (addr + size < addr)
+			goto overflow;
+
+		if (list_is_last(&first->list, &vmap_area_list))
+			goto found;
+
+		first = list_next_entry(first, list);
+	}
+
+found:
+	if (addr + size > vend)
+		goto overflow;
+
+	va->va_start = addr;
+	va->va_end = addr + size;
+	va->flags = 0;
+	__insert_vmap_area(va);
+	free_vmap_cache = &va->rb_node;
+	spin_unlock(&vmap_area_lock);
+
+	BUG_ON(!IS_ALIGNED(va->va_start, align));
+	BUG_ON(va->va_start < vstart);
+	BUG_ON(va->va_end > vend);
+
+	return va;
+
+overflow:
+	spin_unlock(&vmap_area_lock);
+	if (!purged) {
+		purge_vmap_area_lazy();
+		purged = 1;
+		goto retry;
+	}
+
+	if (gfpflags_allow_blocking(gfp_mask)) {
+		unsigned long freed = 0;
+		blocking_notifier_call_chain(&vmap_notify_list, 0, &freed);
+		if (freed > 0) {
+			purged = 0;
+			goto retry;
+		}
+	}
+
+	if (!(gfp_mask & __GFP_NOWARN) && printk_ratelimit())
+		pr_warn("vmap allocation for size %lu failed: use vmalloc=<size> to increase size\n",
+			size);
+	kfree(va);
+	return ERR_PTR(-EBUSY);
+}
 static struct vmap_area *alloc_vmap_area(unsigned long size,
 				unsigned long align,
 				unsigned long vstart, unsigned long vend,
@@ -1977,19 +2115,21 @@ void *__vmalloc_node_flags_caller(unsigned long size, int node, gfp_t flags,
  *	For tight control over page level allocator and protection flags
  *	use __vmalloc() instead.
  */
+//<<<2018.03.21 Yongseob
+void *vmalloc_pram(unsigned long size)
+{
+	return __vmalloc_node_flags_pram(size, NUMA_NO_NODE,
+				GFP_PRAM);
+}
+EXPORT_SYMBOL(vmalloc_pram);
+//>>>
+
 void *vmalloc(unsigned long size)
 {
 	return __vmalloc_node_flags(size, NUMA_NO_NODE,
 				    GFP_KERNEL);
 }
 EXPORT_SYMBOL(vmalloc);
-//<<<2018.03.21 Yongseob
-void *vmalloc_pram(unsigned long size)
-{
-	return __vmalloc_node_flags_pram(size, NUMA_NO_NODE, GFP_PRAM);
-}
-EXPORT_SYMBOL(vmalloc_pram);
-//>>>
 
 /**
  *	vzalloc - allocate virtually contiguous memory with zero fill
