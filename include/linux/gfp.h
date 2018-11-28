@@ -549,6 +549,7 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
 							nodemask_t *nodemask);
 struct page *
 __alloc_prams_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
+							nodemask_t *nodemask);
 	
 struct page *
 __alloc_prams_nodemask_vmalloc(gfp_t gfp_mask, unsigned int order, int preferred_nid,
