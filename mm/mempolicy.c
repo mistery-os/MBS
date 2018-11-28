@@ -2870,6 +2870,30 @@ EXPORT_SYMBOL_GPL(alloc_prams_vma2);
  *	interrupt context and apply the current process NUMA policy.
  *	Returns NULL when no page can be allocated.
  */
+struct page *alloc_prams_current_vmalloc(gfp_t gfp, unsigned order)
+{
+	struct mempolicy *pol = &default_pram_policy;
+	struct page *page;
+#if 0
+	if (!in_interrupt() && !(gfp & __GFP_THISNODE))
+		pol = get_pram_policy(current);
+
+	/*
+	 * No reference counting needed for current-prampolicy
+	 * nor system default_pram_policy
+	 */
+	if (pol->mode == MPOL_INTERLEAVE)
+		page = alloc_pram_interleave(gfp, order, interleave_nodes_pram(pol));
+	else
+#endif
+		page = __alloc_prams_nodemask_vmalloc(gfp, order,
+				policy_node(gfp, pol, numa_node_id()),
+				pram_policy_nodemask(gfp, pol));
+
+	return page;
+}
+EXPORT_SYMBOL(alloc_prams_current_vmalloc);
+
 struct page *alloc_prams_current(gfp_t gfp, unsigned order)
 {
 	struct mempolicy *pol = &default_pram_policy;

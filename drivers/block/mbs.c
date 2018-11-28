@@ -96,6 +96,7 @@ static struct page *mbs_lookup_page(struct mbs_device *mbs, sector_t sector)
  * If one does not exist, allocate an empty page, and insert that. Then
  * return it.
  */
+#if 0
 static struct page *mbs_insert_pages(struct mbs_device *mbs, sector_t sector,int order)
 {
 	pgoff_t idx;
@@ -144,6 +145,7 @@ static struct page *mbs_insert_pages(struct mbs_device *mbs, sector_t sector,int
 
 	return page;
 }
+#endif
 static struct page *mbs_insert_page(struct mbs_device *mbs, sector_t sector)
 {
 	pgoff_t idx;
@@ -388,31 +390,32 @@ static int mbs_rw_page(struct block_device *bdev, sector_t sector,
 }
 
 #ifdef CONFIG_BLK_DEV_PRAM_DAX
+void *vmalloc_addr;
 static long __mbs_direct_access(struct mbs_device *mbs, pgoff_t pgoff,
 		long nr_pages, void **kaddr, pfn_t *pfn)
 {
 	struct page *page;
-	struct vm_struct *vm;
+	//struct vm_struct *vm;
 	unsigned long mbs_size;
-	int order=9;
 
 	if (!mbs)
 		return -ENODEV;
 #if 0
+	int order=9;
 	page = mbs_insert_pages(mbs, (sector_t)pgoff << PAGE_SECTORS_SHIFT, order);
 	if (!page)
 		return -ENOSPC;
 	*kaddr = page_address(page);
 	*pfn = page_to_pfn_t(page);
 #endif
-	mbs_size = memblock.pram.total_size/PAGE_SIZE;// bytes
-	vm = vmalloc_pram(mbs_size);//vm = vmalloc(mbs_size);
-	page=vmalloc_to_page(vm);
-	//*kaddr = page_address(vmalloc_to_page(vm));
-	//*pfn = (pfn_t)vmalloc_to_pfn(vm);
-	*kaddr = page_address(page);
+	mbs_size = memblock.pram.total_size;// bytes
+	vmalloc_addr  = vmalloc_pram(mbs_size);//vm = vmalloc(mbs_size);
+	page = vmalloc_to_page(vmalloc_addr);
+	//*kaddr = page_address(vmalloc_to_page(vmalloc_addr));
+	//*pfn = (vmalloc_to_pfn(vmalloc_addr));
 	*pfn = page_to_pfn_t(page);
-	return mbs_size;
+	*kaddr = page_address(page);
+	return mbs_size/PAGE_SIZE;
 	return 1;
 }
 
@@ -547,6 +550,8 @@ static void mbs_free(struct mbs_device *mbs)
 	put_disk(mbs->mbs_disk);
 	blk_cleanup_queue(mbs->mbs_queue);
 	mbs_free_pages(mbs);
+	if (vmalloc_addr != NULL)
+	vfree(vmalloc_addr);
 	kfree(mbs);
 }
 

@@ -3614,6 +3614,53 @@ static void wake_all_mbs_mntrds(unsigned int order, const struct alloc_context *
  * a page.
  */
 static struct page *
+get_pram_from_freelist_vmalloc(gfp_t gfp_mask, unsigned int order, int alloc_flags,
+			const struct alloc_context *ac)
+{
+	struct zoneref *z = ac->preferred_zoneref;
+	struct zone *zone;
+	struct pglist_data *last_pgdat_dirty_limit = NULL;
+	//int nid=numa_node_id();
+
+	/*
+	 * Scan zonelist, looking for a zone with enough free.
+	 * See also __cpuset_node_allowed() comment in kernel/cpuset.c.
+	 */
+	for_next_zone_zonelist_nodemask(zone, z, ac->zonelist, ac->high_zoneidx,
+								ac->nodemask)
+	{
+	//zone=z->zone;
+		struct page *page;
+		unsigned long mark;
+	int nid=zone_to_nid(zone);
+//$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+//$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+		mark = zone->watermark[alloc_flags & ALLOC_MBS_MASK];
+		if (!pram_zone_watermark_fast(zone, order, mark,
+				       ac_classzone_idx(ac), alloc_flags)) 
+		{//NR_FREE_PRAMS가 mark 보다 작으면 아래 수행
+			//balance algorithm 동작
+//			int ret;
+/******************************************************/
+/******************************************************/
+		}
+try_this_zone:
+		page = rmqueue_pram(ac->preferred_zoneref->zone, zone, order,
+				gfp_mask, alloc_flags, ac->migratetype);
+		if (page) {
+			prep_new_page(page, order, gfp_mask, alloc_flags);
+
+			/*
+			 * If this is a high-order atomic allocation then check
+			 * if the pageblock should be reserved for the future
+			 */
+			return page;
+		}
+	}
+
+	return NULL;
+}
+static struct page *
 get_pram_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
 			const struct alloc_context *ac)
 {
@@ -5217,6 +5264,61 @@ static inline void finalise_ac(gfp_t gfp_mask,
  * This is the 'heart' of the zoned buddy allocator.
  */
 //#if 0
+struct page *
+__alloc_prams_nodemask_vmalloc(gfp_t gfp_mask, unsigned int order, int preferred_nid,
+		nodemask_t *nodemask)
+{
+	struct page *page;
+	unsigned int alloc_flags = ALLOC_MBS_FAT;
+	gfp_t alloc_mask; /* The gfp_t that was actually used for allocation */
+	struct alloc_context ac = { };
+
+	alloc_mask = gfp_mask;
+	if (!prepare_alloc_prams(gfp_mask, order, preferred_nid, nodemask, &ac, &alloc_mask, &alloc_flags))
+		return NULL;
+
+	finalise_ac(gfp_mask, order, &ac);
+
+	/* First allocation attempt */
+	page = get_pram_from_freelist_vmalloc(alloc_mask, order, alloc_flags, &ac);//,
+			//preferred_nid);
+	if (likely(page))
+		goto out;
+	
+	/*
+	 * Apply scoped allocation constraints. This is mainly about GFP_NOFS
+	 * resp. GFP_NOIO which has to be inherited for all allocation requests
+	 * from a particular context which has been marked by
+	 * memalloc_no{fs,io}_{save,restore}.
+	 */
+	alloc_mask = current_gfp_context(gfp_mask);
+	ac.spread_dirty_pages = false;
+
+	/*
+	 * Restore the original nodemask if it was potentially replaced with
+	 * &cpuset_current_mems_allowed to optimize the fast-path attempt.
+	 */
+	if (unlikely(ac.nodemask != nodemask))
+		ac.nodemask = nodemask;
+/* ZONE_PRAM no need to call kswapd */
+//	ENOSPC /* No space left on device */
+//	page = __alloc_prams_slowpath(alloc_mask, order, &ac);
+	page = NULL;
+
+out:
+	if (memcg_kmem_enabled() && (gfp_mask & __GFP_ACCOUNT) && page &&
+			unlikely(memcg_kmem_charge(page, gfp_mask, order) != 0)) {
+		__free_pages(page, order);
+		page = NULL;
+	}
+
+	if (kmemcheck_enabled && page)
+		kmemcheck_pagealloc_alloc(page, order, gfp_mask);
+
+	trace_mm_page_alloc(page, order, alloc_mask, ac.migratetype);
+
+	return page;
+}
 struct page *
 __alloc_prams_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
 		nodemask_t *nodemask)

@@ -522,6 +522,7 @@ static __always_inline int kmalloc_size(int n)
 }
 static __always_inline void *kmalloc_node_pram(size_t size, gfp_t flags, int node)
 {
+#if 0
 #ifndef CONFIG_SLOB
 	if (__builtin_constant_p(size) &&
 		size <= KMALLOC_MAX_CACHE_SIZE && !(flags & GFP_DMA)) {
@@ -533,6 +534,7 @@ static __always_inline void *kmalloc_node_pram(size_t size, gfp_t flags, int nod
 		return kmem_cache_alloc_node_trace(kmalloc_caches[i],
 						flags, node, size);
 	}
+#endif
 #endif
 	return __kmalloc_node_pram(size, flags, node);
 }

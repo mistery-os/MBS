@@ -549,8 +549,15 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
 							nodemask_t *nodemask);
 struct page *
 __alloc_prams_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
-							nodemask_t *nodemask);
 	
+struct page *
+__alloc_prams_nodemask_vmalloc(gfp_t gfp_mask, unsigned int order, int preferred_nid,
+							nodemask_t *nodemask);
+static inline struct page *
+__alloc_prams_vmalloc(gfp_t gfp_mask, unsigned int order, int preferred_nid)
+{
+	return __alloc_prams_nodemask_vmalloc(gfp_mask, order, preferred_nid, NULL);
+}
 static inline struct page *
 __alloc_prams(gfp_t gfp_mask, unsigned int order, int preferred_nid)
 {
@@ -567,6 +574,14 @@ __alloc_pages(gfp_t gfp_mask, unsigned int order, int preferred_nid)
  * Allocate pages, preferring the node given as nid. The node must be valid and
  * online. For more general interface, see alloc_pages_node().
  */
+static inline struct page *
+__alloc_prams_node_vmalloc(int nid, gfp_t gfp_mask, unsigned int order)
+{
+	VM_BUG_ON(nid < 0 || nid >= MAX_NUMNODES);
+	VM_WARN_ON(!node_online(nid));
+
+	return __alloc_prams_vmalloc(gfp_mask, order, nid);
+}
 static inline struct page *
 __alloc_prams_node(int nid, gfp_t gfp_mask, unsigned int order)
 {
@@ -589,6 +604,14 @@ __alloc_pages_node(int nid, gfp_t gfp_mask, unsigned int order)
  * prefer the current CPU's closest node. Otherwise node must be valid and
  * online.
  */
+static inline struct page *alloc_prams_node_vmalloc(int nid, gfp_t gfp_mask,
+						unsigned int order)
+{
+	if (nid == NUMA_NO_NODE)
+		nid = numa_mem_id();
+
+	return __alloc_prams_node_vmalloc(nid, gfp_mask, order);
+}
 static inline struct page *alloc_prams_node(int nid, gfp_t gfp_mask,
 						unsigned int order)
 {
@@ -609,6 +632,12 @@ static inline struct page *alloc_pages_node(int nid, gfp_t gfp_mask,
 #ifdef CONFIG_NUMA
 extern struct page *alloc_pages_current(gfp_t gfp_mask, unsigned order);
 extern struct page *alloc_prams_current(gfp_t gfp_mask, unsigned order);
+extern struct page *alloc_prams_current_vmalloc(gfp_t gfp_mask, unsigned order);
+static inline struct page *
+alloc_prams_vmalloc(gfp_t gfp_mask, unsigned int order)
+{
+	return alloc_prams_current_vmalloc(gfp_mask, order);
+}
 static inline struct page *
 alloc_prams(gfp_t gfp_mask, unsigned int order)
 {
@@ -645,6 +674,7 @@ extern struct page *alloc_prams_vma_pram_policy(gfp_t gfp, int order,
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 #define alloc_page(gfp_mask) alloc_pages(gfp_mask, 0)
 #define alloc_pram(gfp_mask) alloc_prams(gfp_mask, 0)
+#define alloc_pram_vmalloc(gfp_mask) alloc_prams_vmalloc(gfp_mask, 0)
 #define alloc_page_vma(gfp_mask, vma, addr)			\
 	alloc_pages_vma(gfp_mask, 0, vma, addr, numa_node_id(), false)
 #define alloc_pram_vma(gfp_mask, vma, addr)			\

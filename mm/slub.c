@@ -3805,7 +3805,7 @@ void *__kmalloc_node_pram(size_t size, gfp_t flags, int node)
 	struct kmem_cache *s;
 	void *ret;
 
-	if (unlikely(size > KMALLOC_MAX_CACHE_SIZE)) {
+//	if (unlikely(size > KMALLOC_MAX_CACHE_SIZE)) {
 		ret = kmalloc_large_node_pram(size, flags, node);
 
 		trace_kmalloc_node(_RET_IP_, ret,
@@ -3813,8 +3813,8 @@ void *__kmalloc_node_pram(size_t size, gfp_t flags, int node)
 				   flags, node);
 
 		return ret;
-	}
-
+//	}
+#if 0
 	s = kmalloc_slab(size, flags);
 
 	if (unlikely(ZERO_OR_NULL_PTR(s)))
@@ -3827,6 +3827,7 @@ void *__kmalloc_node_pram(size_t size, gfp_t flags, int node)
 	kasan_kmalloc(s, ret, size, flags);
 
 	return ret;
+#endif
 }
 EXPORT_SYMBOL(__kmalloc_node_pram);
 
