@@ -2123,6 +2123,12 @@ void *vmalloc_pram(unsigned long size)
 				GFP_PRAM);
 }
 EXPORT_SYMBOL(vmalloc_pram);
+void *vmalloc_PRAM(unsigned long size)
+{
+	return __vmalloc_node_flags(size, NUMA_NO_NODE,
+				GFP_PRAM);
+}
+EXPORT_SYMBOL(vmalloc_PRAM);
 //>>>
 
 void *vmalloc(unsigned long size)
