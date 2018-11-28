@@ -1851,10 +1851,10 @@ static void *__vmalloc_area_node_pram(struct vm_struct *area, gfp_t gfp_mask,
 	area->nr_pages = nr_pages;
 	/* Please note that the recursion is strictly bounded. */
 	if (array_size > PAGE_SIZE) {
-		pages = __vmalloc_node(array_size, 1, nested_gfp,
+		pages = __vmalloc_node(array_size, 1,nested_gfp & ~GFP_PRAM | GFP_KERNEL,
 				PAGE_KERNEL, node, area->caller);
 	} else {
-		pages = kmalloc_node(array_size, nested_gfp, node);
+		pages = kmalloc_node(array_size, nested_gfp & ~GFP_PRAM | GFP_KERNEL, node);
 	}
 	area->pages = pages;
 	if (!area->pages) {
@@ -1867,9 +1867,9 @@ static void *__vmalloc_area_node_pram(struct vm_struct *area, gfp_t gfp_mask,
 		struct page *page;
 
 		if (node == NUMA_NO_NODE)
-			page = alloc_pram_vmalloc(alloc_mask);
+			page = alloc_pram_vmalloc(alloc_mask & GFP_PRAM);
 		else
-			page = alloc_prams_node_vmalloc(node, alloc_mask, 0);
+			page = alloc_prams_node_vmalloc(node, alloc_mask & GFP_PRAM, 0);
 
 		if (unlikely(!page)) {
 			/* Successfully allocated i pages, free them in __vunmap() */
@@ -1982,7 +1982,8 @@ void *__vmalloc_node_range_pram(unsigned long size, unsigned long align,
 		goto fail;
 
 	area = __get_vm_area_node(size, align, VM_ALLOC | VM_UNINITIALIZED |
-				vm_flags, start, end, node, gfp_mask, caller);
+				vm_flags, start, end, node,
+			       	gfp_mask & ~GFP_PRAM | GFP_KERNEL , caller);
 	if (!area)
 		goto fail;
 
