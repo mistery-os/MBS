@@ -5324,7 +5324,7 @@ __alloc_prams_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
 		nodemask_t *nodemask)
 {
 	struct page *page;
-	unsigned int alloc_flags = ALLOC_MBS_FAT;
+	unsigned int alloc_flags = ALLOC_MBS_SLIM;//ALLOC_MBS_FAT;
 	gfp_t alloc_mask; /* The gfp_t that was actually used for allocation */
 	struct alloc_context ac = { };
 
@@ -8492,21 +8492,27 @@ static void __setup_per_zone_wmarks(void)
 {
 	unsigned long pages_min = min_free_kbytes >> (PAGE_SHIFT - 10);
 	unsigned long lowmem_pages = 0;
+	unsigned long pram_pages = 0;
 	struct zone *zone;
 	unsigned long flags;
 
 	/* Calculate total number of !ZONE_HIGHMEM pages */
 	for_each_zone(zone) {
-		if (!is_highmem(zone))
-			lowmem_pages += zone->managed_pages;
+		if !is_highmem(zone) 
+			if !is_pram_zone(zone)
+				lowmem_pages += zone->managed_pages;
+			else
+				pram_pages += zone->managed_pages;
 	}
 
 	for_each_zone(zone) {
 		u64 tmp;
+		u64 tmp_pram;
 
 		spin_lock_irqsave(&zone->lock, flags);
 		tmp = (u64)pages_min * zone->managed_pages;
 		do_div(tmp, lowmem_pages);
+		do_div(tmp_pram, pram_pages);
 		if (is_highmem(zone)) {
 			/*
 			 * __GFP_HIGH and PF_MEMALLOC allocations usually don't
@@ -8527,7 +8533,11 @@ static void __setup_per_zone_wmarks(void)
 			 * If it's a lowmem zone, reserve a number of pages
 			 * proportionate to the zone's size.
 			 */
-			zone->watermark[WMARK_MIN] = tmp;
+			if !is_pram_zone(zone)
+				zone->watermark[WMARK_MIN] = tmp;
+			else
+				zone->watermark[MBS_FULL] = tmp_pram;
+
 		}
 
 		/*
@@ -8535,12 +8545,22 @@ static void __setup_per_zone_wmarks(void)
 		 * scale factor in proportion to available memory, but
 		 * ensure a minimum size on small systems.
 		 */
+
+		if !is_pram_zone(zone){
 		tmp = max_t(u64, tmp >> 2,
 				mult_frac(zone->managed_pages,
 					watermark_scale_factor, 10000));
-
 		zone->watermark[WMARK_LOW]  = min_wmark_pages(zone) + tmp;
 		zone->watermark[WMARK_HIGH] = min_wmark_pages(zone) + tmp * 2;
+		}
+		else
+		{
+		tmp_pram = max_t(u64, tmp_pram >> 2,
+				mult_frac(zone->managed_pages,
+					watermark_scale_factor, 10000));
+		zone->watermark[WMARK_FAT]  = PRAM_ZONE_FULL(zone) + tmp_pram;
+		zone->watermark[WMARK_SLIM] = PRAM_ZONE_FULL(zone) + tmp_pram * 2;
+		}
 
 		spin_unlock_irqrestore(&zone->lock, flags);
 	}

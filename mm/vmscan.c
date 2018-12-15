@@ -3192,7 +3192,7 @@ static bool pram_pgdat_balanced(pg_data_t *pgdat)
 	zone = pgdat->node_zones + ZONE_PRAM;
 
 	nid=pgdat->node_id;
-	mark = PRAM_ZONE_FAT(zone);//PRAM_ZONE_SLIM(zone);
+	mark = PRAM_ZONE_SLIM(zone);//PRAM_ZONE_FAT(zone);//
 	if (pram_zone_watermark_ok_safe(zone, mark))
 	{
 		add_candidate_nodes(nid);
@@ -3759,7 +3759,7 @@ static int mbs_mntrd(void *p)
 
 		if (kthread_should_stop())
 			break;
-		ssleep(10);
+		ssleep(3);
 	}
 
 	tsk->flags &= ~(PF_MEMALLOC | PF_MBS_MNTRD);
