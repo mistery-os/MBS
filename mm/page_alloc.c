@@ -5379,7 +5379,7 @@ __alloc_prams_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
 /* ZONE_PRAM no need to call kswapd */
 //	ENOSPC /* No space left on device */
 	page = __alloc_prams_slowpath(alloc_mask, order, &ac);
-	page = NULL;
+	//page = NULL;
 
 out:
 	if (memcg_kmem_enabled() && (gfp_mask & __GFP_ACCOUNT) && page &&
