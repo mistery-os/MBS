@@ -199,15 +199,6 @@ void init_nodes(void)
 		node_test_and_set(nid, all_nodes);
 	}
 }
-void pram_striping_policy2(int nid)
-{
-	preferred_node_pram_policy[nid] = (struct mempolicy) {
-	.refcnt = ATOMIC_INIT(1),
-	.mode = MPOL_INTERLEAVE,
-	. v = { .nodes = all_nodes,},
-	};
-}
-EXPORT_SYMBOL_GPL(pram_striping_policy2);
 
 void pram_striping_policy(int nid)
 {

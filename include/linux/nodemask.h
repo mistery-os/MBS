@@ -528,6 +528,9 @@ struct nodemask_scratch {
 	nodemask_t	mask2;
 };
 
+#define NODEMASK_SCRATCH_PRAM(x)						\
+			NODEMASK_ALLOC(struct nodemask_scratch, x,	\
+					GFP_PRAM | __GFP_NORETRY)
 #define NODEMASK_SCRATCH(x)						\
 			NODEMASK_ALLOC(struct nodemask_scratch, x,	\
 					GFP_KERNEL | __GFP_NORETRY)
