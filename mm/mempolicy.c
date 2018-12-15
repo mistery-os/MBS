@@ -152,7 +152,6 @@ nodemask_t all_nodes;
 nodemask_t candidate_nodes;
 nodemask_t slim_nodes;
 nodemask_t fat_nodes;
-//nodes_setall(all_nodes);
 //nodes_setall(candidate_nodes);
 void add_candidate_nodes(int nid){
 	mutex_lock(&mbs_counter);
@@ -1078,7 +1077,7 @@ out:
 	NODEMASK_SCRATCH_FREE(scratch);
 	return ret;
 }
-EXPORT_SYMBOL(do_set_prampolicy);
+EXPORT_SYMBOL_GPL(do_set_prampolicy);
 /*
  * Return nodemask for policy for get_mempolicy() query
  *
