@@ -8559,8 +8559,8 @@ static void __setup_per_zone_wmarks(void)
 		tmp_pram = max_t(u64, tmp_pram >> 2,
 				mult_frac(zone->managed_pages,
 					mbsmark_scale_factor, 10000));
-		zone->watermark[WMARK_FAT]  = PRAM_ZONE_FULL(zone) + tmp_pram;
-		zone->watermark[WMARK_SLIM] = PRAM_ZONE_FULL(zone) + tmp_pram * 2;
+		zone->watermark[MBS_FAT]  = PRAM_ZONE_FULL(zone) + tmp_pram;
+		zone->watermark[MBS_SLIM] = PRAM_ZONE_FULL(zone) + tmp_pram * 2;
 		}
 
 		spin_unlock_irqrestore(&zone->lock, flags);
