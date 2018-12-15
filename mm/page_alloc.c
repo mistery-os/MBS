@@ -73,12 +73,8 @@
 #include <asm/tlbflush.h>
 #include <asm/div64.h>
 #include "internal.h"
-
+#include <linux/mempolicy.h>
 /**************************************/
-long do_set_prampolicy(unsigned short mode, unsigned short flags,
-			     nodemask_t *nodes);
-extern long do_set_prampolicy(unsigned short mode, unsigned short flags,
-			     nodemask_t *nodes);
 /**************************************/
 extern nodemask_t candidate_nodes;
 extern nodemask_t fat_node;
@@ -87,6 +83,7 @@ extern void remove_candidate_nodes(int nid);
 extern void pram_striping_policy(int nid);
 extern void pram_local_policy(int nid);
 extern void wakeup_mbs_mntrd(struct zone *zone);
+//extern long do_set_prampolicy(unsigned short mode, unsigned short flags, nodemask_t *nodes);
 /* prevent >1 _updater_ of zone percpu pageset ->high and ->batch fields */
 static DEFINE_MUTEX(pcp_batch_high_lock);
 #define MIN_PERCPU_PAGELIST_FRACTION	(8)
@@ -3737,7 +3734,7 @@ get_pram_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
 		remove_candidate_nodes(nid);
 		//mpol_rebind_policy(current->prampolicy,candidate_nodes);
 		pram_striping_policy(nid);
-		do_set_mempolicy(MPOL_INTERLEAVE, 0, &candidate_nodes);
+		do_set_prampolicy(MPOL_INTERLEAVE, 0, &candidate_nodes);
 		wake_all_mbs_mntrds(order, ac);
 				goto try_this_zone;
 /******************************************************/

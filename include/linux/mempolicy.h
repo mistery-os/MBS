@@ -271,7 +271,7 @@ static inline bool vma_migratable(struct vm_area_struct *vma)
 extern int mpol_misplaced(struct page *, struct vm_area_struct *, unsigned long);
 extern void mpol_put_task_policy(struct task_struct *);
 extern void mpol_put_pram_policy(struct task_struct *);
-
+extern long do_set_prampolicy(unsigned short mode, unsigned short flags, nodemask_t *nodes);
 #else
 
 struct mempolicy {};
