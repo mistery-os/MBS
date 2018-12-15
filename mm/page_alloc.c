@@ -75,7 +75,7 @@
 #include "internal.h"
 
 /**************************************/
-static long do_set_prampolicy(unsigned short mode, unsigned short flags,
+extern long do_set_prampolicy(unsigned short mode, unsigned short flags,
 			     nodemask_t *nodes);
 /**************************************/
 extern nodemask_t candidate_nodes;

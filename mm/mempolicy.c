@@ -1078,7 +1078,7 @@ out:
 	NODEMASK_SCRATCH_FREE(scratch);
 	return ret;
 }
-
+EXPORT_SYMBOL(do_set_prampolicy);
 /*
  * Return nodemask for policy for get_mempolicy() query
  *
