@@ -157,9 +157,24 @@ void add_candidate_nodes(int nid){
 	node_clear(nid, fat_nodes);
 	node_set(nid, candidate_nodes);
 	mutex_unlock(&mbs_counter);
+}
+#if 0
+void add_candidate_nodes(int nid){
+	mutex_lock(&mbs_counter);
+	node_clear(nid, fat_nodes);
+	node_set(nid, candidate_nodes);
+	mutex_unlock(&mbs_counter);
 pram_local_policy(nid);
 }
+#endif
 EXPORT_SYMBOL_GPL(add_candidate_nodes);
+void remove_candidate_nodes(int nid){
+	mutex_lock(&mbs_counter);
+	node_clear(nid, candidate_nodes);
+	node_set(nid, fat_nodes);
+	mutex_unlock(&mbs_counter);
+}
+#if 0
 void remove_candidate_nodes(int nid){
 	mutex_lock(&mbs_counter);
 	node_clear(nid, candidate_nodes);
@@ -167,6 +182,7 @@ void remove_candidate_nodes(int nid){
 	mutex_unlock(&mbs_counter);
 pram_striping_policy(nid);
 }
+#endif
 EXPORT_SYMBOL_GPL(remove_candidate_nodes);
 void init_nodes(void)
 {
@@ -182,46 +198,54 @@ void init_nodes(void)
 void pram_striping_policy(int nid)
 {
 	mutex_lock(&mbs_policy);
+	mutex_lock(&mbs_counter);
 	preferred_node_pram_policy[nid] = (struct mempolicy) {
 	.refcnt = ATOMIC_INIT(1),
 	.mode = MPOL_INTERLEAVE,
 	. v = { .nodes = candidate_nodes,},
 	};
+	mutex_unlock(&mbs_counter);
 	mutex_unlock(&mbs_policy);
 }
 EXPORT_SYMBOL_GPL(pram_striping_policy);
 void pram_slims_policy(int nid)
 {
 	mutex_lock(&mbs_policy);
+	mutex_lock(&mbs_counter);
 	preferred_node_pram_policy[nid] = (struct mempolicy) {
 	.refcnt = ATOMIC_INIT(1),
 	.mode = MPOL_INTERLEAVE,
 	. v = { .nodes = slim_nodes,},
 	};
+	mutex_unlock(&mbs_counter);
 	mutex_unlock(&mbs_policy);
 }
 EXPORT_SYMBOL_GPL(pram_slims_policy);
 void pram_local_policy(int nid)
 {
 	mutex_lock(&mbs_policy);
+	mutex_lock(&mbs_counter);
 	preferred_node_pram_policy[nid] = (struct mempolicy) {
 		.refcnt = ATOMIC_INIT(1),
 		.mode = MPOL_PREFERRED,
 		.flags = MPOL_F_MOF | MPOL_F_MORON,
 		.v = { .preferred_node = nid, },
 	};
+	mutex_unlock(&mbs_counter);
 	mutex_unlock(&mbs_policy);
 }
 EXPORT_SYMBOL_GPL(pram_local_policy);
 void pram_richest_policy(int nid, int richest_node)
 {
 	mutex_lock(&mbs_policy);
+	mutex_lock(&mbs_counter);
 	preferred_node_pram_policy[nid] = (struct mempolicy) {
 		.refcnt = ATOMIC_INIT(1),
 		.mode = MPOL_PREFERRED,
 		.flags = MPOL_F_MOF | MPOL_F_MORON,
 		.v = { .preferred_node = richest_node, },
 	};
+	mutex_unlock(&mbs_counter);
 	mutex_unlock(&mbs_policy);
 }
 EXPORT_SYMBOL_GPL(pram_richest_policy);
@@ -241,7 +265,9 @@ struct mempolicy *get_pram_policy(struct task_struct *p)
 
 	node = numa_node_id();
 	if (node != NUMA_NO_NODE) {
+		mutex_lock(&mbs_counter);
 		pol = &preferred_node_pram_policy[node];
+		mutex_unlock(&mbs_counter);
 		/* preferred_node_pram_policy is not initialised early in boot */
 		if (pol->mode)
 			return pol;

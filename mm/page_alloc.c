@@ -3731,7 +3731,7 @@ get_pram_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
 /******************************************************/
 //works good interleave  : wakeup monitor needed
 		remove_candidate_nodes(nid);
-		//pram_striping_policy(nid);
+		pram_striping_policy(nid);
 		wake_all_mbs_mntrds(order, ac);
 				goto try_this_zone;
 /******************************************************/
