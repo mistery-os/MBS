@@ -4700,7 +4700,7 @@ retry_cpuset:
 	if (!ac->preferred_zoneref->zone)
 		goto nopage;
 
-//	if (gfp_mask & __GFP_KSWAPD_RECLAIM)
+	if (gfp_mask & __GFP_KSWAPD_RECLAIM)
 		wake_all_mbs_mntrds(order, ac);
 
 	/*
@@ -4730,7 +4730,7 @@ retry_cpuset:
 						&compact_result);
 		if (page)
 			goto got_pg;
-#if 0
+
 		/*
 		 * Checks for costly allocations with __GFP_NORETRY, which
 		 * includes THP page fault allocations
@@ -4755,10 +4755,10 @@ retry_cpuset:
 			compact_priority = INIT_COMPACT_PRIORITY;
 		}
 	}
-#endif
+
 retry:
 	/* Ensure kswapd doesn't accidentally go to sleep as long as we loop */
-//	if (gfp_mask & __GFP_KSWAPD_RECLAIM)
+	if (gfp_mask & __GFP_KSWAPD_RECLAIM)
 		wake_all_mbs_mntrds(order, ac);
 
 	reserve_flags = __gfp_pfmemalloc_flags(gfp_mask);
@@ -4857,7 +4857,7 @@ retry:
 		no_progress_loops = 0;
 		goto retry;
 	}
-
+#endif
 nopage:
 	/* Deal with possible cpuset update races before we fail */
 	if (check_retry_cpuset(cpuset_mems_cookie, ac))
@@ -4903,7 +4903,6 @@ nopage:
 		cond_resched();
 		goto retry;
 	}
-#endif
 fail:
 	warn_alloc(gfp_mask, ac->nodemask,
 			"page allocation failure: order:%u", order);
