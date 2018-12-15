@@ -302,6 +302,7 @@ compound_page_dtor * const compound_page_dtors[] = {
 int min_free_kbytes = 1024;
 int user_min_free_kbytes = -1;
 int watermark_scale_factor = 10;
+int mbsmark_scale_factor = 1000;
 
 static unsigned long __meminitdata nr_kernel_pages;// counts all identity mapped pages
 static unsigned long __meminitdata nr_all_pages; // includee high-memory
@@ -5324,7 +5325,7 @@ __alloc_prams_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
 		nodemask_t *nodemask)
 {
 	struct page *page;
-	unsigned int alloc_flags = ALLOC_MBS_SLIM;//ALLOC_MBS_FAT;
+	unsigned int alloc_flags = ALLOC_MBS_FAT;//ALLOC_MBS_SLIM;//
 	gfp_t alloc_mask; /* The gfp_t that was actually used for allocation */
 	struct alloc_context ac = { };
 
@@ -8546,7 +8547,7 @@ static void __setup_per_zone_wmarks(void)
 		 * ensure a minimum size on small systems.
 		 */
 
-		if !is_pram_zone(zone){
+		if (!is_pram_zone(zone)){
 		tmp = max_t(u64, tmp >> 2,
 				mult_frac(zone->managed_pages,
 					watermark_scale_factor, 10000));
@@ -8557,7 +8558,7 @@ static void __setup_per_zone_wmarks(void)
 		{
 		tmp_pram = max_t(u64, tmp_pram >> 2,
 				mult_frac(zone->managed_pages,
-					watermark_scale_factor, 10000));
+					mbsmark_scale_factor, 10000));
 		zone->watermark[WMARK_FAT]  = PRAM_ZONE_FULL(zone) + tmp_pram;
 		zone->watermark[WMARK_SLIM] = PRAM_ZONE_FULL(zone) + tmp_pram * 2;
 		}
