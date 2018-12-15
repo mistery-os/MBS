@@ -4730,7 +4730,7 @@ retry_cpuset:
 						&compact_result);
 		if (page)
 			goto got_pg;
-
+#if 0
 		/*
 		 * Checks for costly allocations with __GFP_NORETRY, which
 		 * includes THP page fault allocations
@@ -4755,7 +4755,7 @@ retry_cpuset:
 			compact_priority = INIT_COMPACT_PRIORITY;
 		}
 	}
-
+#endif
 retry:
 	/* Ensure kswapd doesn't accidentally go to sleep as long as we loop */
 //	if (gfp_mask & __GFP_KSWAPD_RECLAIM)
