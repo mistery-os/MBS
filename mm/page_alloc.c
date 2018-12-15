@@ -5332,8 +5332,8 @@ __alloc_prams_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
 	//gfp_mask &= gfp_allowed_mask;
 	alloc_mask = gfp_mask;
 	//if (!prepare_alloc_pages(gfp_mask, order, preferred_nid, nodemask, &ac, &alloc_mask, &alloc_flags))
-	if (!prepare_alloc_prams(gfp_mask, order, preferred_nid, nodemask, &ac, &alloc_mask, &alloc_flags))
-		return NULL;
+	//if (!prepare_alloc_prams(gfp_mask, order, preferred_nid, nodemask, &ac, &alloc_mask, &alloc_flags))
+	//	return NULL;
 
 	finalise_ac(gfp_mask, order, &ac);
 
