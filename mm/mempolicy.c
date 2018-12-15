@@ -1043,7 +1043,7 @@ out:
 	return ret;
 }
 
-static long do_set_prampolicy(unsigned short mode, unsigned short flags,
+long do_set_prampolicy(unsigned short mode, unsigned short flags,
 			     nodemask_t *nodes)
 {
 	struct mempolicy *new, *old;
