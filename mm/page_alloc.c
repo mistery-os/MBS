@@ -75,6 +75,8 @@
 #include "internal.h"
 
 /**************************************/
+static long do_set_prampolicy(unsigned short mode, unsigned short flags,
+			     nodemask_t *nodes);
 /**************************************/
 extern nodemask_t candidate_nodes;
 extern nodemask_t fat_node;
@@ -3681,7 +3683,6 @@ get_pram_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
 		struct page *page;
 		unsigned long mark;
 	int nid=zone_to_nid(zone);
-	struct task_struct *p=current;
 /*
 		if (cpusets_enabled() &&
 			(alloc_flags & ALLOC_CPUSET) &&
