@@ -8498,8 +8498,8 @@ static void __setup_per_zone_wmarks(void)
 
 	/* Calculate total number of !ZONE_HIGHMEM pages */
 	for_each_zone(zone) {
-		if !is_highmem(zone) 
-			if !is_pram_zone(zone)
+		if (!is_highmem(zone)) 
+			if (!is_pram_zone(zone))
 				lowmem_pages += zone->managed_pages;
 			else
 				pram_pages += zone->managed_pages;
@@ -8533,7 +8533,7 @@ static void __setup_per_zone_wmarks(void)
 			 * If it's a lowmem zone, reserve a number of pages
 			 * proportionate to the zone's size.
 			 */
-			if !is_pram_zone(zone)
+			if (!is_pram_zone(zone))
 				zone->watermark[WMARK_MIN] = tmp;
 			else
 				zone->watermark[MBS_FULL] = tmp_pram;
