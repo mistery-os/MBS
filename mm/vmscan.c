@@ -3196,7 +3196,7 @@ static bool pram_pgdat_balanced(pg_data_t *pgdat)
 	if (pram_zone_watermark_ok_safe(zone, mark))
 	{
 		add_candidate_nodes(nid);
-	        pram_local_policy(nid);
+	        //pram_local_policy(nid);
 		return true;
 	}
 

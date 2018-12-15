@@ -157,6 +157,7 @@ void add_candidate_nodes(int nid){
 	node_clear(nid, fat_nodes);
 	node_set(nid, candidate_nodes);
 	mutex_unlock(&mbs_counter);
+pram_local_policy(nid);
 }
 EXPORT_SYMBOL_GPL(add_candidate_nodes);
 void remove_candidate_nodes(int nid){
@@ -164,6 +165,7 @@ void remove_candidate_nodes(int nid){
 	node_clear(nid, candidate_nodes);
 	node_set(nid, fat_nodes);
 	mutex_unlock(&mbs_counter);
+pram_striping_policy(nid);
 }
 EXPORT_SYMBOL_GPL(remove_candidate_nodes);
 void init_nodes(void)
