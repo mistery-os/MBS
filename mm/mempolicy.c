@@ -148,9 +148,11 @@ EXPORT_SYMBOL_GPL(preferred_node_pram_policy);
 /**************************************/
 DEFINE_MUTEX(mbs_counter);
 DEFINE_MUTEX(mbs_policy);
+nodemask_t all_nodes;
 nodemask_t candidate_nodes;
 nodemask_t slim_nodes;
 nodemask_t fat_nodes;
+nodes_setall(all_nodes);
 //nodes_setall(candidate_nodes);
 void add_candidate_nodes(int nid){
 	mutex_lock(&mbs_counter);
@@ -195,6 +197,16 @@ void init_nodes(void)
 		node_test_and_set(nid, slim_nodes);
 	}
 }
+void pram_striping_policy2(void)
+{
+	preferred_node_pram_policy[nid] = (struct mempolicy) {
+	.refcnt = ATOMIC_INIT(1),
+	.mode = MPOL_INTERLEAVE,
+	. v = { .nodes = all_nodes,},
+	};
+}
+EXPORT_SYMBOL_GPL(pram_striping_policy2);
+
 void pram_striping_policy(int nid)
 {
 	mutex_lock(&mbs_policy);
@@ -2577,11 +2589,13 @@ static struct page *alloc_pram_interleave(gfp_t gfp, unsigned order,
 	struct page *page;
 
 	page = __alloc_prams(gfp, order, nid);
+#if 0
 	if (page && page_to_nid(page) == nid) {
 		preempt_disable();
 		__inc_nusa_state(page_zone(page), NUSA_INTERLEAVE_HIT);
 		preempt_enable();
 	}
+#endif
 	return page;
 }
 

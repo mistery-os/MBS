@@ -81,6 +81,7 @@ extern nodemask_t fat_node;
 extern void add_candidate_nodes(int nid);
 extern void remove_candidate_nodes(int nid);
 extern void pram_striping_policy(int nid);
+extern void pram_striping_policy2(void);
 extern void pram_local_policy(int nid);
 extern void wakeup_mbs_mntrd(struct zone *zone);
 /* prevent >1 _updater_ of zone percpu pageset ->high and ->batch fields */
@@ -3731,7 +3732,8 @@ get_pram_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
 /******************************************************/
 //works good interleave  : wakeup monitor needed
 		remove_candidate_nodes(nid);
-		pram_striping_policy(nid);
+		pram_striping_policy2();
+		//pram_striping_policy(nid);
 		wake_all_mbs_mntrds(order, ac);
 				goto try_this_zone;
 /******************************************************/
@@ -4798,7 +4800,7 @@ retry:
 	page = get_pram_from_freelist(gfp_mask, order, alloc_flags, ac);
 	if (page)
 		goto got_pg;
-#if 0
+
 	/* Caller is not willing to reclaim, we can't balance anything */
 	if (!can_direct_reclaim)
 		goto nopage;
@@ -4810,7 +4812,7 @@ retry:
 			jiffies_to_msecs(jiffies-alloc_start), order);
 		stall_timeout += 10 * HZ;
 	}
-
+#if 0
 	/* Avoid recursion of direct reclaim */
 	if (current->flags & PF_MEMALLOC)
 		goto nopage;
@@ -5378,7 +5380,7 @@ __alloc_prams_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
 		ac.nodemask = nodemask;
 /* ZONE_PRAM no need to call kswapd */
 //	ENOSPC /* No space left on device */
-	page = __alloc_prams_slowpath(alloc_mask, order, &ac);
+//	page = __alloc_prams_slowpath(alloc_mask, order, &ac);
 	//page = NULL;
 
 out:
