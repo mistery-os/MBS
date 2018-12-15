@@ -4701,7 +4701,7 @@ retry_cpuset:
 		goto nopage;
 
 //	if (gfp_mask & __GFP_KSWAPD_RECLAIM)
-//		wake_all_mbs_mntrds(order, ac);
+		wake_all_mbs_mntrds(order, ac);
 
 	/*
 	 * The adjusted alloc_flags might result in immediate success, so try
@@ -4758,7 +4758,7 @@ retry_cpuset:
 
 retry:
 	/* Ensure kswapd doesn't accidentally go to sleep as long as we loop */
-	if (gfp_mask & __GFP_KSWAPD_RECLAIM)
+//	if (gfp_mask & __GFP_KSWAPD_RECLAIM)
 		wake_all_mbs_mntrds(order, ac);
 
 	reserve_flags = __gfp_pfmemalloc_flags(gfp_mask);
@@ -4780,7 +4780,7 @@ retry:
 	page = get_pram_from_freelist(gfp_mask, order, alloc_flags, ac);
 	if (page)
 		goto got_pg;
-
+#if 0
 	/* Caller is not willing to reclaim, we can't balance anything */
 	if (!can_direct_reclaim)
 		goto nopage;
@@ -4798,13 +4798,13 @@ retry:
 		goto nopage;
 
 	/* Try direct reclaim and then allocating */
-	page = __alloc_pages_direct_reclaim(gfp_mask, order, alloc_flags, ac,
+	page = __alloc_prams_direct_reclaim(gfp_mask, order, alloc_flags, ac,
 							&did_some_progress);
 	if (page)
 		goto got_pg;
 
 	/* Try direct compaction and then allocating */
-	page = __alloc_pages_direct_compact(gfp_mask, order, alloc_flags, ac,
+	page = __alloc_prams_direct_compact(gfp_mask, order, alloc_flags, ac,
 					compact_priority, &compact_result);
 	if (page)
 		goto got_pg;
@@ -4903,6 +4903,7 @@ nopage:
 		cond_resched();
 		goto retry;
 	}
+#endif
 fail:
 	warn_alloc(gfp_mask, ac->nodemask,
 			"page allocation failure: order:%u", order);
@@ -5332,8 +5333,8 @@ __alloc_prams_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
 	//gfp_mask &= gfp_allowed_mask;
 	alloc_mask = gfp_mask;
 	//if (!prepare_alloc_pages(gfp_mask, order, preferred_nid, nodemask, &ac, &alloc_mask, &alloc_flags))
-	//if (!prepare_alloc_prams(gfp_mask, order, preferred_nid, nodemask, &ac, &alloc_mask, &alloc_flags))
-	//	return NULL;
+	if (!prepare_alloc_prams(gfp_mask, order, preferred_nid, nodemask, &ac, &alloc_mask, &alloc_flags))
+		return NULL;
 
 	finalise_ac(gfp_mask, order, &ac);
 
@@ -5360,7 +5361,7 @@ __alloc_prams_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
 		ac.nodemask = nodemask;
 /* ZONE_PRAM no need to call kswapd */
 //	ENOSPC /* No space left on device */
-//	page = __alloc_prams_slowpath(alloc_mask, order, &ac);
+	page = __alloc_prams_slowpath(alloc_mask, order, &ac);
 	page = NULL;
 
 out:
