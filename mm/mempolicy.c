@@ -152,7 +152,7 @@ nodemask_t all_nodes;
 nodemask_t candidate_nodes;
 nodemask_t slim_nodes;
 nodemask_t fat_nodes;
-nodes_setall(all_nodes);
+//nodes_setall(all_nodes);
 //nodes_setall(candidate_nodes);
 void add_candidate_nodes(int nid){
 	mutex_lock(&mbs_counter);
@@ -192,12 +192,14 @@ void init_nodes(void)
 	nodes_clear(candidate_nodes);
 	nodes_clear(slim_nodes);
 	nodes_clear(fat_nodes);
+	nodes_clear(all_nodes);
 	for_each_node(nid){
 		node_test_and_set(nid, candidate_nodes);
 		node_test_and_set(nid, slim_nodes);
+		node_test_and_set(nid, all_nodes);
 	}
 }
-void pram_striping_policy2(void)
+void pram_striping_policy2(int nid)
 {
 	preferred_node_pram_policy[nid] = (struct mempolicy) {
 	.refcnt = ATOMIC_INIT(1),

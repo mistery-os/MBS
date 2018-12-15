@@ -81,7 +81,7 @@ extern nodemask_t fat_node;
 extern void add_candidate_nodes(int nid);
 extern void remove_candidate_nodes(int nid);
 extern void pram_striping_policy(int nid);
-extern void pram_striping_policy2(void);
+extern void pram_striping_policy2(int nid);
 extern void pram_local_policy(int nid);
 extern void wakeup_mbs_mntrd(struct zone *zone);
 /* prevent >1 _updater_ of zone percpu pageset ->high and ->batch fields */
@@ -3732,7 +3732,7 @@ get_pram_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
 /******************************************************/
 //works good interleave  : wakeup monitor needed
 		remove_candidate_nodes(nid);
-		pram_striping_policy2();
+		pram_striping_policy2(nid);
 		//pram_striping_policy(nid);
 		wake_all_mbs_mntrds(order, ac);
 				goto try_this_zone;
