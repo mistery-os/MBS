@@ -595,7 +595,10 @@ asmlinkage long compat_sys_mbind(compat_ulong_t start, compat_ulong_t len,
 				 compat_ulong_t mode,
 				 compat_ulong_t __user *nmask,
 				 compat_ulong_t maxnode, compat_ulong_t flags);
-
+asmlinkage long compat_sys_prambind(compat_ulong_t start, compat_ulong_t len,
+				 compat_ulong_t mode,
+				 compat_ulong_t __user *nmask,
+				 compat_ulong_t maxnode, compat_ulong_t flags);
 asmlinkage long compat_sys_setsockopt(int fd, int level, int optname,
 				      char __user *optval, unsigned int optlen);
 asmlinkage long compat_sys_sendmsg(int fd, struct compat_msghdr __user *msg,

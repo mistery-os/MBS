@@ -1645,6 +1645,101 @@ static long do_mbind(unsigned long start, unsigned long len,
 	return err;
 }
 
+static long do_prambind(unsigned long start, unsigned long len,
+		     unsigned short mode, unsigned short mode_flags,
+		     nodemask_t *nmask, unsigned long flags)
+{
+	struct mm_struct *mm = current->mm;
+	struct mempolicy *new;
+	unsigned long end;
+	int err;
+	LIST_HEAD(pagelist);
+
+	if (flags & ~(unsigned long)MPOL_MF_VALID)
+		return -EINVAL;
+	if ((flags & MPOL_MF_MOVE_ALL) && !capable(CAP_SYS_NICE))
+		return -EPERM;
+
+	if (start & ~PAGE_MASK)
+		return -EINVAL;
+
+	if (mode == MPOL_DEFAULT)
+		flags &= ~MPOL_MF_STRICT;
+
+	len = (len + PAGE_SIZE - 1) & PAGE_MASK;
+	end = start + len;
+
+	if (end < start)
+		return -EINVAL;
+	if (end == start)
+		return 0;
+
+	new = mpol_new_pram(mode, mode_flags, nmask);
+	if (IS_ERR(new))
+		return PTR_ERR(new);
+
+	if (flags & MPOL_MF_LAZY)
+		new->flags |= MPOL_F_MOF;
+
+	/*
+	 * If we are using the default policy then operation
+	 * on discontinuous address spaces is okay after all
+	 */
+	if (!new)
+		flags |= MPOL_MF_DISCONTIG_OK;
+
+	pr_debug("prambind %lx-%lx mode:%d flags:%d nodes:%lx\n",
+		 start, start + len, mode, mode_flags,
+		 nmask ? nodes_addr(*nmask)[0] : NUMA_NO_NODE);
+
+	if (flags & (MPOL_MF_MOVE | MPOL_MF_MOVE_ALL)) {
+
+		err = migrate_prep();
+		if (err)
+			goto mpol_out;
+	}
+	{
+		NODEMASK_SCRATCH(scratch);
+		if (scratch) {
+			down_write(&mm->mmap_sem);
+			task_lock(current);
+			err = mpol_set_nodemask_pram(new, nmask, scratch);
+			task_unlock(current);
+			if (err)
+				up_write(&mm->mmap_sem);
+		} else
+			err = -ENOMEM;
+		NODEMASK_SCRATCH_FREE(scratch);
+	}
+	if (err)
+		goto mpol_out;
+
+	err = queue_pages_range(mm, start, end, nmask,
+			  flags | MPOL_MF_INVERT, &pagelist);
+	if (!err)
+		err = mbind_range(mm, start, end, new);
+
+	if (!err) {
+		int nr_failed = 0;
+
+		if (!list_empty(&pagelist)) {
+			WARN_ON_ONCE(flags & MPOL_MF_LAZY);
+			nr_failed = migrate_pages(&pagelist, new_page, NULL,
+				start, MIGRATE_SYNC, MR_MEMPOLICY_MBIND);
+			if (nr_failed)
+				putback_movable_pages(&pagelist);
+		}
+
+		if (nr_failed && (flags & MPOL_MF_STRICT))
+			err = -EIO;
+	} else
+		putback_movable_pages(&pagelist);
+
+	up_write(&mm->mmap_sem);
+ mpol_out:
+	mpol_put_pram(new);
+	return err;
+}
 /*
  * User space interface with variable sized bitmaps for nodelists.
  */
@@ -1732,7 +1827,26 @@ SYSCALL_DEFINE6(mbind, unsigned long, start, unsigned long, len,
 		return err;
 	return do_mbind(start, len, mode, mode_flags, &nodes, flags);
 }
+SYSCALL_DEFINE6(prambind, unsigned long, start, unsigned long, len,
+		unsigned long, mode, const unsigned long __user *, nmask,
+		unsigned long, maxnode, unsigned, flags)
+{
+	nodemask_t nodes;
+	int err;
+	unsigned short mode_flags;
 
+	mode_flags = mode & MPOL_MODE_FLAGS;
+	mode &= ~MPOL_MODE_FLAGS;
+	if (mode >= MPOL_MAX)
+		return -EINVAL;
+	if ((mode_flags & MPOL_F_STATIC_NODES) &&
+	    (mode_flags & MPOL_F_RELATIVE_NODES))
+		return -EINVAL;
+	err = get_nodes(&nodes, nmask, maxnode);
+	if (err)
+		return err;
+	return do_prambind(start, len, mode, mode_flags, &nodes, flags);
+}
 /* Set the process memory policy */
 SYSCALL_DEFINE3(set_mempolicy, int, mode, const unsigned long __user *, nmask,
 		unsigned long, maxnode)
@@ -2036,7 +2150,27 @@ COMPAT_SYSCALL_DEFINE6(mbind, compat_ulong_t, start, compat_ulong_t, len,
 
 	return sys_mbind(start, len, mode, nm, nr_bits+1, flags);
 }
+COMPAT_SYSCALL_DEFINE6(prambind, compat_ulong_t, start, compat_ulong_t, len,
+		       compat_ulong_t, mode, compat_ulong_t __user *, nmask,
+		       compat_ulong_t, maxnode, compat_ulong_t, flags)
+{
+	unsigned long __user *nm = NULL;
+	unsigned long nr_bits, alloc_size;
+	nodemask_t bm;
 
+	nr_bits = min_t(unsigned long, maxnode-1, MAX_NUMNODES);
+	alloc_size = ALIGN(nr_bits, BITS_PER_LONG) / 8;
+
+	if (nmask) {
+		if (compat_get_bitmap(nodes_addr(bm), nmask, nr_bits))
+			return -EFAULT;
+		nm = compat_alloc_user_space(alloc_size);
+		if (copy_to_user(nm, nodes_addr(bm), alloc_size))
+			return -EFAULT;
+	}
+
+	return sys_prambind(start, len, mode, nm, nr_bits+1, flags);
+}
 #endif
 
 struct mempolicy *__get_vma_policy(struct vm_area_struct *vma,

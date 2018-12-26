@@ -647,9 +647,11 @@ __SC_COMP(__NR_set_mempolicy, sys_set_mempolicy, compat_sys_set_mempolicy)
 __SC_COMP(__NR_migrate_pages, sys_migrate_pages, compat_sys_migrate_pages)
 #define __NR_move_pages 239
 __SC_COMP(__NR_move_pages, sys_move_pages, compat_sys_move_pages)
-#define __NR_get_prampolicy 255
+#define __NR_prambind 255
+__SC_COMP(__NR_prambind, sys_prambind, compat_sys_prambind)
+#define __NR_get_prampolicy 256
 __SC_COMP(__NR_get_prampolicy, sys_get_prampolicy, compat_sys_get_prampolicy)
-#define __NR_set_prampolicy 256
+#define __NR_set_prampolicy 257
 __SC_COMP(__NR_set_prampolicy, sys_set_prampolicy, compat_sys_set_mempolicy)
 
 #endif
